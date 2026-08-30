@@ -1,0 +1,9 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.bun-build
+
+# OS artifacts (created without the contributor opting in)
+.DS_Store
+._*
+Thumbs.db
