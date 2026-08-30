@@ -9,8 +9,8 @@ import { run } from "./run.ts";
 afterAll(cleanupTempDirs);
 
 test("a flag is recognised before the positional argument", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  const io = captureIo(dir, { randomHex: () => "7f3a" });
+  const dir = await initedRepo();
+  const io = captureIo(dir);
 
   const code = await run(["new", "--json", "Fix the login redirect"], io);
 
@@ -19,8 +19,8 @@ test("a flag is recognised before the positional argument", async () => {
 });
 
 test("a flag value may be given with an equals sign", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  const io = captureIo(dir, { randomHex: () => "7f3a" });
+  const dir = await initedRepo();
+  const io = captureIo(dir);
 
   await run(["new", "Fix login", "--body=Some details.", "--json"], io);
 
@@ -28,8 +28,8 @@ test("a flag value may be given with an equals sign", async () => {
 });
 
 test("a boolean flag does not consume the argument after it", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  const io = captureIo(dir, { randomHex: () => "7f3a" });
+  const dir = await initedRepo();
+  const io = captureIo(dir);
 
   await run(["new", "--json", "--body", "Details.", "Fix login"], io);
 
@@ -39,8 +39,8 @@ test("a boolean flag does not consume the argument after it", async () => {
 });
 
 test("an unrecognised flag is a usage error and writes nothing", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  const io = captureIo(dir, { randomHex: () => "7f3a" });
+  const dir = await initedRepo();
+  const io = captureIo(dir);
 
   const code = await run(["new", "Fix login", "--jsn"], io);
 
@@ -51,8 +51,8 @@ test("an unrecognised flag is a usage error and writes nothing", async () => {
 });
 
 test("a title beginning with a hyphen can be passed after a separator", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  const io = captureIo(dir, { randomHex: () => "7f3a", now: () => new Date(0) });
+  const dir = await initedRepo();
+  const io = captureIo(dir);
 
   const code = await run(["new", "--json", "--", "-fix the parser"], io);
 
@@ -61,8 +61,8 @@ test("a title beginning with a hyphen can be passed after a separator", async ()
 });
 
 test("a flag missing its value is a usage error", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  const io = captureIo(dir, { randomHex: () => "7f3a" });
+  const dir = await initedRepo();
+  const io = captureIo(dir);
 
   const code = await run(["new", "Fix login", "--body"], io);
 

@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0004
+---
+
 # Random ticket IDs, not sequential
 
 Ticket IDs are a configured prefix plus a random suffix (`MOTH-7f3a`), not a sequential counter (`MOTH-42`). Sequential IDs need a server to allocate them; moth has none, so two branches would allocate the same number independently.

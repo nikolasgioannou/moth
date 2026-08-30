@@ -3,16 +3,13 @@ import { captureIo } from "./io.ts";
 import { tempDir } from "./tmp.ts";
 
 export interface RepoOptions {
-  /** Directory name, which init derives the default prefix from. */
+  /** Directory name for the temp repo. */
   name?: string;
-  /** Ticket prefix to answer init's first question with. */
-  prefix?: string;
 }
 
-/** A temp directory with moth initialised, accepting defaults unless told otherwise. */
+/** A temp directory with moth initialised, accepting every default. */
 export async function initedRepo(options: RepoOptions = {}): Promise<string> {
   const dir = tempDir(options.name);
-  const answers = options.prefix === undefined ? [] : [options.prefix];
-  await run(["init"], captureIo(dir, { answers }));
+  await run(["init"], captureIo(dir, { answers: [] }));
   return dir;
 }

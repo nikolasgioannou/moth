@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { parseArgs } from "../args.ts";
 import { readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
-import { readTickets } from "../ticket.ts";
+import { duplicateNumbers, formatId, padNumber, readTickets } from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" } });
@@ -20,6 +20,12 @@ export async function list(argv: string[], io: Io): Promise<number> {
 
   const config = readConfig(mothDir);
   const tickets = readTickets(join(mothDir, "tickets"));
+
+  const duplicates = duplicateNumbers(tickets);
+  if (duplicates.length > 0) {
+    const list = duplicates.map(padNumber).join(", ");
+    io.stderr(`moth: duplicate ticket numbers: ${list}\n`);
+  }
 
   if (parsed.values.json === true) {
     // Bodies are omitted; a survey of the store should not carry every description.
@@ -41,7 +47,7 @@ export async function list(argv: string[], io: Io): Promise<number> {
   const paint = (code: string, text: string) => (io.isTty ? `\x1b[${code}m${text}\x1b[0m` : text);
 
   // Widths are computed across the whole store, so columns line up between groups too.
-  const idWidth = Math.max(...tickets.map((ticket) => ticket.id.length));
+  const idWidth = Math.max(...tickets.map((t) => formatId(t.id, config.prefix).length));
   const titleWidth = Math.max(...tickets.map((ticket) => ticket.title.length));
 
   for (const status of [...declared, ...extra]) {
@@ -49,7 +55,7 @@ export async function list(argv: string[], io: Io): Promise<number> {
     if (group.length === 0) continue;
     io.stdout(`${paint("1", status)}\n`);
     for (const ticket of group) {
-      const id = ticket.id.padEnd(idWidth);
+      const id = formatId(ticket.id, config.prefix).padEnd(idWidth);
       const title = ticket.title.padEnd(titleWidth);
       io.stdout(`  ${paint("2", id)}  ${title}  ${paint("2", ticket.priority)}\n`);
     }

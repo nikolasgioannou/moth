@@ -7,6 +7,7 @@
 **Status:** ready-for-agent
 
 - [ ] Check reports dangling blocking references
+- [ ] Check reports two tickets sharing a number, and renumbering one rewrites every reference to it so none silently points at a different ticket (moved from ticket 20)
 - [ ] Check reports parent-child cycles and nesting deeper than one level
 - [ ] Check reports undeclared fields and statuses absent from config
 - [ ] Check exits 0 on a clean store and non-zero when it finds problems

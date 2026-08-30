@@ -7,7 +7,7 @@
 **Status:** ready-for-agent
 
 - [x] Creating a ticket with only a title succeeds and writes exactly one file
-- [x] The ID uses the configured prefix and a random suffix, and repeated creation never collides
+- [x] ~~The ID uses the configured prefix and a random suffix~~ superseded by ticket 20: ids are sequential
 - [x] The filename carries both the ID and a slug derived from the title
 - [x] Frontmatter records the id, title, status, priority, and both timestamps
 - [x] A new ticket defaults to the first status in the backlog category, and to no priority

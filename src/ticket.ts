@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export interface Ticket {
-  id: string;
+  id: number;
   title: string;
   status: string;
   priority: string;
@@ -22,8 +22,43 @@ function parse(raw: string): Ticket {
   return { ...data, body: body.replace(/^\n/, "") };
 }
 
+/** How an id is shown: padded, and prefixed only when the repo asked for one. */
+export function formatId(id: number, prefix: string): string {
+  const padded = padNumber(id);
+  return prefix === "" ? padded : `${prefix}-${padded}`;
+}
+
+/** Ticket numbers are padded so a directory listing sorts correctly past ninety-nine. */
+export function padNumber(id: number): string {
+  return String(id).padStart(3, "0");
+}
+
+/** The next unused number, derived from the tickets already on disk. */
+export function nextNumber(ticketsDir: string): number {
+  const used = readdirSync(ticketsDir)
+    .map((file) => /^(\d+)[-.]/.exec(file)?.[1])
+    .filter((match): match is string => match !== undefined)
+    .map(Number);
+  return used.length === 0 ? 1 : Math.max(...used) + 1;
+}
+
 export function readTickets(ticketsDir: string): Ticket[] {
   return readdirSync(ticketsDir)
     .filter((name) => name.endsWith(".md"))
     .map((name) => parse(readFileSync(join(ticketsDir, name), "utf8")));
+}
+
+/**
+ * Numbers held by more than one ticket. Two branches can each allocate the
+ * same number and git will merge both files cleanly, so this is how that
+ * situation surfaces rather than passing unnoticed.
+ */
+export function duplicateNumbers(tickets: Ticket[]): number[] {
+  const seen = new Set<number>();
+  const duplicates = new Set<number>();
+  for (const ticket of tickets) {
+    if (seen.has(ticket.id)) duplicates.add(ticket.id);
+    seen.add(ticket.id);
+  }
+  return [...duplicates].sort((a, b) => a - b);
 }

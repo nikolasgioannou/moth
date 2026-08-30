@@ -87,9 +87,9 @@ Filenames are `<ID>-<slug>.md`. The slug is a one-time convenience so directory 
 
 ### Ticket identity
 
-`<PREFIX>-<random suffix>`, e.g. `MOTH-7f3a`. The prefix is configurable and defaults from the repo name.
+Tickets are numbered sequentially and stored as `NNN-slug.md`, zero-padded to three digits so a directory listing sorts correctly past ninety-nine. The number is the id; a configured prefix, if any, is presentation applied to filenames and output, and defaults to none.
 
-Sequential IDs were considered and rejected. They require a coordinating server; without one, two branches both allocate the same number. Worse, given filenames carry a slug, two tickets numbered identically but titled differently produce *different filenames*, so git merges both cleanly and never reports a conflict — silent corruption rather than a loud failure. The cost of random IDs is that they are less pleasant to say aloud, which is mitigated by resolution ergonomics rather than by changing the scheme: unambiguous prefix matching, fuzzy title resolution, and shell completion.
+A random suffix was chosen first and reversed; see ADR-0004. The residual hazard is that two branches can allocate the same number and git will merge both files cleanly, since their slugs differ. That is tolerable only because reading the store reports numbers held by more than one ticket, making the collision loud at the next command.
 
 ### Schema and enforcement
 
@@ -103,13 +103,13 @@ The shape of a ticket, which encodes several of the above decisions more precise
 
 ```yaml
 ---
-id: MOTH-7f3a
+id: 20                     # the number is the id; padding and prefix are presentation
 title: Reject writes containing undeclared fields
 status: in-progress        # a repo-defined status; its category is resolved via config
 priority: high             # none | low | medium | high | urgent
 labels: [cli, validation]  # free-form
-parent: MOTH-1a2b          # optional, at most one level of nesting
-blocked_by: [MOTH-9c4d]    # forward direction only; the reverse is derived on read
+parent: 12                 # optional, at most one level of nesting
+blocked_by: [18]           # forward direction only; the reverse is derived on read
 created_at: 2026-08-30T11:04:22Z
 updated_at: 2026-08-30T14:51:09Z
 ---
@@ -123,7 +123,7 @@ The config it is validated against, written by `moth init` and hand-edited there
 
 ```yaml
 # .moth/config.yml
-prefix: MOTH
+prefix: ""                 # optional display prefix, e.g. ENG-020
 statuses:
   - name: backlog
     category: backlog        # the six categories are fixed; the names are the repo's
@@ -213,7 +213,7 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 - **Projects, epics, initiatives, cycles, sprints, estimates, and story points.**
 - **Manual ticket ordering.** A rank value across many files rewrites on every reorder, which is the merge-hostile shared state moth exists to avoid. Priority plus age is the ordering.
 - **Nesting beyond one level.**
-- **Storing tickets outside the repo.** Considered as a way to make sequential IDs safe; rejected because tickets travelling with the code is the point, and supporting both modes would be the anti-opinionated move.
+- **Storing tickets outside the repo.** Considered as a way to make sequential ids collision-free; rejected because tickets travelling with the code is the point, and supporting both modes would be the anti-opinionated move.
 - **A routing or readiness field.** Considered as `ready-for-agent` / `ready-for-human`, following the triage roles moth's interim tracker uses. Rejected for two reasons: the `backlog`/`unstarted` boundary already encodes the triage decision, so it would be a second field expressing a distinction the categories carry; and an agent-versus-human split encodes a capability boundary that moves every few months, which is a poor thing to freeze into a fixed, non-configurable schema. Anyone wanting the signal can use a label. Reconsider from evidence in real use, not from prediction.
 - **A claim field.** Moving a ticket into a `started` status is the claim. A dedicated `claimed_by` brings stale-claim handling — timeouts, manual clearing — for a problem an ordinary stale `in-progress` ticket already expresses in a way people know how to resolve.
 - **A `duplicate_of` relation.** moth takes Linear's `duplicate` status category but not the pointer Linear pairs it with, so a duplicated ticket records *that* it is a duplicate and not *of what*. The argument for adding it is that agents filing tickets will duplicate existing ones often, and the blocking graph could then traverse through a duplicate to its canonical ticket. Left out as a third relation type; the strongest candidate for the first post-v1 addition.

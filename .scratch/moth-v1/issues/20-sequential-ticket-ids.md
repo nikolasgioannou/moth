@@ -8,11 +8,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] A new ticket takes the next unused number, derived from the tickets already on disk
-- [ ] Numbers are zero-padded to three digits so a directory listing sorts correctly past ninety-nine
-- [ ] A ticket's file is named `NNN-slug.md` and its frontmatter records the same number
-- [ ] Two tickets sharing a number are reported rather than silently tolerated, on read
-- [ ] Renumbering a duplicate rewrites every reference to it, so no reference silently points at a different ticket
-- [ ] Whether an id prefix is used at all is a config choice, defaulting to none
-- [ ] ADR-0001 is superseded by a new ADR recording why the earlier reasoning no longer holds
-- [ ] The spec's ticket shape and Out of Scope entries reflect the new scheme
+- [x] A new ticket takes the next unused number, derived from the tickets already on disk
+- [x] Numbers are zero-padded to three digits so a directory listing sorts correctly past ninety-nine
+- [x] A ticket's file is named `NNN-slug.md` and its frontmatter records the same number
+- [x] Two tickets sharing a number are reported rather than silently tolerated, on read
+- [ ] ~~Renumbering a duplicate rewrites every reference~~ moved to ticket 14: there is no renumber command and no references until `blocked_by` exists
+- [x] Whether an id prefix is used at all is a config choice, defaulting to none
+- [x] ADR-0001 is superseded by a new ADR recording why the earlier reasoning no longer holds
+- [x] The spec's ticket shape and Out of Scope entries reflect the new scheme

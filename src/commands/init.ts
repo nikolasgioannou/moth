@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
 import { parseArgs } from "../args.ts";
 import { CATEGORIES } from "../config.ts";
@@ -7,18 +7,13 @@ import type { Io } from "../io.ts";
 
 const CONFIG_HEADER = `# moth configuration.
 #
-# prefix    Ticket IDs are this prefix plus a random suffix, e.g. MOTH-7f3a.
+# prefix    Optional. Shown before a ticket's number, e.g. ENG-001. Empty for
+#           bare numbers, which is the default.
 # statuses  Each status belongs to one of six fixed categories:
 #           backlog, unstarted, started, completed, canceled, duplicate.
 #           Add your own statuses here; the categories cannot change.
 
 `;
-
-function defaultPrefix(cwd: string): string {
-  return basename(cwd)
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
-}
 
 export async function init(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), {});
@@ -35,8 +30,6 @@ export async function init(argv: string[], io: Io): Promise<number> {
     return 0;
   }
 
-  const prefix = await io.prompt("Ticket prefix", defaultPrefix(io.cwd));
-
   const statuses: { name: string; category: string }[] = [];
   for (const { category, defaultStatus } of CATEGORIES) {
     const answer = await io.prompt(`Statuses in '${category}'`, defaultStatus);
@@ -47,6 +40,6 @@ export async function init(argv: string[], io: Io): Promise<number> {
   }
 
   mkdirSync(join(mothDir, "tickets"), { recursive: true });
-  writeFileSync(configPath, CONFIG_HEADER + stringifyYaml({ prefix, statuses }));
+  writeFileSync(configPath, CONFIG_HEADER + stringifyYaml({ prefix: "", statuses }));
   return 0;
 }

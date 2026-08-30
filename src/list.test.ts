@@ -1,4 +1,6 @@
 import { afterAll, expect, test } from "bun:test";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { captureIo } from "../test/io.ts";
 import { initedRepo } from "../test/repo.ts";
 import { givenTicket } from "../test/tickets.ts";
@@ -8,9 +10,9 @@ import { run } from "./run.ts";
 afterAll(cleanupTempDirs);
 
 test("list groups tickets under their status", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  await givenTicket(dir, { title: "Write the parser", hex: "0001", status: "in-progress" });
-  await givenTicket(dir, { title: "Ship the binary", hex: "0002" });
+  const dir = await initedRepo();
+  await givenTicket(dir, { title: "Write the parser", status: "in-progress" });
+  await givenTicket(dir, { title: "Ship the binary" });
   const io = captureIo(dir);
 
   const code = await run(["list"], io);
@@ -25,7 +27,7 @@ test("list groups tickets under their status", async () => {
 });
 
 test("listing an empty store says so and still succeeds", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
+  const dir = await initedRepo();
   const io = captureIo(dir);
 
   const code = await run(["list"], io);
@@ -36,9 +38,9 @@ test("listing an empty store says so and still succeeds", async () => {
 });
 
 test("columns stay aligned regardless of title length", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  await givenTicket(dir, { title: "Short", hex: "0001" });
-  await givenTicket(dir, { title: "A considerably longer ticket title", hex: "0002" });
+  const dir = await initedRepo();
+  await givenTicket(dir, { title: "Short" });
+  await givenTicket(dir, { title: "A considerably longer ticket title" });
   const io = captureIo(dir);
 
   await run(["list"], io);
@@ -46,30 +48,30 @@ test("columns stay aligned regardless of title length", async () => {
   const rows = io
     .out()
     .split("\n")
-    .filter((line) => line.includes("ENG-"));
+    .filter((line) => /^\s+\d{3}\s/.test(line));
   expect(rows).toHaveLength(2);
   expect(rows.every((row) => row.includes("none"))).toBe(true);
   expect(new Set(rows.map((row) => row.indexOf("none"))).size).toBe(1);
 });
 
 test("list emits machine-readable json even on a terminal", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  await givenTicket(dir, { title: "Write the parser", hex: "0001", status: "in-progress" });
-  await givenTicket(dir, { title: "Ship the binary", hex: "0002" });
+  const dir = await initedRepo();
+  await givenTicket(dir, { title: "Write the parser", status: "in-progress" });
+  await givenTicket(dir, { title: "Ship the binary" });
   const io = captureIo(dir, { isTty: true });
 
   const code = await run(["list", "--json"], io);
 
   expect(code).toBe(0);
-  const tickets = JSON.parse(io.out()) as { id: string }[];
-  expect(tickets.map((ticket) => ticket.id).sort()).toEqual(["ENG-0001", "ENG-0002"]);
+  const tickets = JSON.parse(io.out()) as { id: number }[];
+  expect(tickets.map((ticket) => ticket.id).sort()).toEqual([1, 2]);
   expect(tickets[0]).not.toHaveProperty("body");
   expect(io.out()).not.toContain(String.fromCharCode(27));
 });
 
 test("colour appears on a terminal and is absent when piped", async () => {
-  const dir = await initedRepo({ prefix: "ENG" });
-  await givenTicket(dir, { title: "Write the parser", hex: "0001" });
+  const dir = await initedRepo();
+  await givenTicket(dir, { title: "Write the parser" });
   const ansiEscape = String.fromCharCode(27);
 
   const terminal = captureIo(dir, { isTty: true });
@@ -92,4 +94,34 @@ test("list outside a moth repo reports on stderr and leaves stdout clean", async
   expect(code).toBe(1);
   expect(io.err()).toContain("init");
   expect(io.out()).toBe("");
+});
+
+test("two tickets sharing a number are reported, and both still listed", async () => {
+  const dir = await initedRepo();
+  const tickets = join(dir, ".moth", "tickets");
+  const front = (title: string) =>
+    `---\nid: 1\ntitle: ${title}\nstatus: backlog\npriority: none\n---\n\n`;
+  writeFileSync(join(tickets, "001-alpha.md"), front("Alpha"));
+  writeFileSync(join(tickets, "001-beta.md"), front("Beta"));
+  const io = captureIo(dir);
+
+  const code = await run(["list"], io);
+
+  expect(code).toBe(0);
+  expect(io.err().toLowerCase()).toContain("duplicate");
+  expect(io.err()).toContain("001");
+  expect(io.out()).toContain("Alpha");
+  expect(io.out()).toContain("Beta");
+});
+
+test("a configured prefix is shown alongside the ticket number", async () => {
+  const dir = await initedRepo();
+  await run(["new", "Fix the login redirect"], captureIo(dir));
+  const configPath = join(dir, ".moth", "config.yml");
+  writeFileSync(configPath, readFileSync(configPath, "utf8").replace('prefix: ""', "prefix: ENG"));
+  const io = captureIo(dir);
+
+  await run(["list"], io);
+
+  expect(io.out()).toContain("ENG-001");
 });

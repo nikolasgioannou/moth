@@ -18,28 +18,6 @@ test("init creates a config and a ticket store", async () => {
   expect(existsSync(join(dir, ".moth", "tickets"))).toBe(true);
 });
 
-test("init records the ticket prefix you choose", async () => {
-  const dir = tempDir();
-  const io = captureIo(dir, { answers: ["ENG"] });
-
-  await run(["init"], io);
-
-  const config = Bun.YAML.parse(readFileSync(join(dir, ".moth", "config.yml"), "utf8")) as {
-    prefix?: string;
-  };
-  expect(config.prefix).toBe("ENG");
-});
-
-test("init offers a ticket prefix derived from the directory name", async () => {
-  const dir = tempDir("my-project");
-  const io = captureIo(dir, { answers: [] });
-
-  await run(["init"], io);
-
-  const asked = io.asked().find((entry) => /prefix/i.test(entry.question));
-  expect(asked?.defaultValue).toBe("MYPROJECT");
-});
-
 test("init records a default status for each of the six categories", async () => {
   const dir = tempDir();
   const io = captureIo(dir, { answers: [] });
@@ -62,7 +40,7 @@ test("init records a default status for each of the six categories", async () =>
 test("init accepts several statuses in one category", async () => {
   const dir = tempDir();
   const io = captureIo(dir, {
-    answers: ["ENG", "", "", "in-progress, in-review", "", "", ""],
+    answers: ["", "", "in-progress, in-review", "", "", ""],
   });
 
   await run(["init"], io);
@@ -80,10 +58,10 @@ test("init accepts several statuses in one category", async () => {
 test("re-running init leaves an existing config untouched", async () => {
   const dir = tempDir();
   const configPath = join(dir, ".moth", "config.yml");
-  await run(["init"], captureIo(dir, { answers: ["ENG"] }));
+  await run(["init"], captureIo(dir, { answers: [] }));
   const before = readFileSync(configPath, "utf8");
 
-  const io = captureIo(dir, { answers: ["SOMETHINGELSE"] });
+  const io = captureIo(dir, { answers: ["different"] });
   const code = await run(["init"], io);
 
   expect(code).toBe(0);
@@ -93,12 +71,21 @@ test("re-running init leaves an existing config untouched", async () => {
 
 test("init writes a config you can hand-edit", async () => {
   const dir = tempDir();
-  const io = captureIo(dir, { answers: ["ENG"] });
+  const io = captureIo(dir, { answers: [] });
 
   await run(["init"], io);
 
   const raw = readFileSync(join(dir, ".moth", "config.yml"), "utf8");
   expect(raw).toContain("\nstatuses:\n");
   expect(raw).not.toContain("{prefix");
-  expect(Bun.YAML.parse(raw)).toMatchObject({ prefix: "ENG" });
+  expect(Bun.YAML.parse(raw)).toMatchObject({ prefix: "" });
+});
+
+test("init does not ask for a ticket prefix", async () => {
+  const dir = tempDir();
+  const io = captureIo(dir, { answers: [] });
+
+  await run(["init"], io);
+
+  expect(io.asked().some((entry) => /prefix/i.test(entry.question))).toBe(false);
 });

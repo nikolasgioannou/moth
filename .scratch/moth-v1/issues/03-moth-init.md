@@ -4,6 +4,8 @@
 
 **Blocked by:** 01 (project scaffold)
 
+**Superseded in part:** ticket 20 removed the prefix question; init now asks only about statuses.
+
 **Status:** ready-for-agent
 
 - [x] Running init in a repo without moth creates the config file and the ticket directory
