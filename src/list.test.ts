@@ -98,7 +98,7 @@ test("list outside a moth repo reports on stderr and leaves stdout clean", async
 
 test("two tickets sharing a number are reported, and both still listed", async () => {
   const dir = await initedRepo();
-  const tickets = join(dir, ".moth", "tickets");
+  const tickets = join(dir, ".moth");
   const front = (title: string) =>
     `---\nid: 1\ntitle: ${title}\nstatus: backlog\npriority: none\n---\n\n`;
   writeFileSync(join(tickets, "001-alpha.md"), front("Alpha"));
@@ -117,7 +117,7 @@ test("two tickets sharing a number are reported, and both still listed", async (
 test("a configured prefix is shown alongside the ticket number", async () => {
   const dir = await initedRepo();
   await run(["new", "Fix the login redirect"], captureIo(dir));
-  const configPath = join(dir, ".moth", "config.yml");
+  const configPath = join(dir, "moth.config.yml");
   writeFileSync(configPath, readFileSync(configPath, "utf8").replace('prefix: ""', "prefix: ENG"));
   const io = captureIo(dir);
 

@@ -34,12 +34,12 @@ test("board prints markdown grouped by status", async () => {
 test("board writes nothing to disk", async () => {
   const dir = await initedRepo();
   await givenTicket(dir, { title: "Write the parser" });
-  const before = readdirSync(join(dir, ".moth", "tickets"));
+  const before = readdirSync(join(dir, ".moth"));
   const rootBefore = readdirSync(dir);
 
   await board(dir);
 
-  expect(readdirSync(join(dir, ".moth", "tickets"))).toEqual(before);
+  expect(readdirSync(join(dir, ".moth"))).toEqual(before);
   expect(readdirSync(dir)).toEqual(rootBefore);
 });
 

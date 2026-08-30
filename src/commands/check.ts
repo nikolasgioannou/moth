@@ -1,9 +1,10 @@
-import { existsSync, renameSync } from "node:fs";
+import { renameSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { parseArgs } from "../args.ts";
-import { legalFields, readConfig } from "../config.ts";
+import { type Config, legalFields } from "../config.ts";
 import type { Io } from "../io.ts";
 import { categoryLookup } from "../query.ts";
+import { openRepo } from "../repo.ts";
 import {
   blockingView,
   duplicateNumbers,
@@ -22,7 +23,7 @@ interface Finding {
   fixable: boolean;
 }
 
-function findings(tickets: Ticket[], config: ReturnType<typeof readConfig>): Finding[] {
+function findings(tickets: Ticket[], config: Config): Finding[] {
   const found: Finding[] = [];
   const categoryOf = categoryLookup(config);
 
@@ -100,14 +101,13 @@ export async function check(argv: string[], io: Io): Promise<number> {
     return 2;
   }
 
-  const mothDir = join(io.cwd, ".moth");
-  if (!existsSync(join(mothDir, "config.yml"))) {
-    io.stderr("moth: not a moth repo, run 'moth init' first\n");
+  const opened = openRepo(io.cwd);
+  if (!opened.ok) {
+    io.stderr(`moth: ${opened.message}
+`);
     return 1;
   }
-
-  const ticketsDir = join(mothDir, "tickets");
-  const config = readConfig(mothDir);
+  const { config, ticketsDir } = opened.repo;
 
   if (parsed.values.fix === true) {
     const before = readTickets(ticketsDir);

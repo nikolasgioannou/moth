@@ -47,7 +47,7 @@ test("an unrecognised flag is a usage error and writes nothing", async () => {
   expect(code).toBe(2);
   expect(io.err()).toContain("jsn");
   expect(io.out()).toBe("");
-  expect(readdirSync(join(dir, ".moth", "tickets"))).toHaveLength(0);
+  expect(readdirSync(join(dir, ".moth"))).toHaveLength(0);
 });
 
 test("a title beginning with a hyphen can be passed after a separator", async () => {
@@ -67,7 +67,7 @@ test("a flag missing its value is a usage error", async () => {
   const code = await run(["new", "Fix login", "--body"], io);
 
   expect(code).toBe(2);
-  expect(readdirSync(join(dir, ".moth", "tickets"))).toHaveLength(0);
+  expect(readdirSync(join(dir, ".moth"))).toHaveLength(0);
 });
 
 test("an unrecognised flag is rejected by every command, not just new", async () => {
@@ -78,5 +78,5 @@ test("an unrecognised flag is rejected by every command, not just new", async ()
 
   expect(code).toBe(2);
   expect(io.err()).toContain("jsn");
-  expect(existsSync(join(dir, ".moth"))).toBe(false);
+  expect(existsSync(join(dir, "moth.config.yml"))).toBe(false);
 });

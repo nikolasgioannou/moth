@@ -14,8 +14,8 @@ test("init creates a config and a ticket store", async () => {
   const code = await run(["init"], io);
 
   expect(code).toBe(0);
-  expect(existsSync(join(dir, ".moth", "config.yml"))).toBe(true);
-  expect(existsSync(join(dir, ".moth", "tickets"))).toBe(true);
+  expect(existsSync(join(dir, "moth.config.yml"))).toBe(true);
+  expect(existsSync(join(dir, "moth.config.yml"))).toBe(true);
 });
 
 test("init records a default status for each of the six categories", async () => {
@@ -24,7 +24,7 @@ test("init records a default status for each of the six categories", async () =>
 
   await run(["init"], io);
 
-  const config = Bun.YAML.parse(readFileSync(join(dir, ".moth", "config.yml"), "utf8")) as {
+  const config = Bun.YAML.parse(readFileSync(join(dir, "moth.config.yml"), "utf8")) as {
     statuses?: { name: string; category: string }[];
   };
   expect(config.statuses).toEqual([
@@ -45,7 +45,7 @@ test("init accepts several statuses in one category", async () => {
 
   await run(["init"], io);
 
-  const config = Bun.YAML.parse(readFileSync(join(dir, ".moth", "config.yml"), "utf8")) as {
+  const config = Bun.YAML.parse(readFileSync(join(dir, "moth.config.yml"), "utf8")) as {
     statuses: { name: string; category: string }[];
   };
   const started = config.statuses.filter((s) => s.category === "started");
@@ -57,7 +57,7 @@ test("init accepts several statuses in one category", async () => {
 
 test("re-running init leaves an existing config untouched", async () => {
   const dir = tempDir();
-  const configPath = join(dir, ".moth", "config.yml");
+  const configPath = join(dir, "moth.config.yml");
   await run(["init"], captureIo(dir, { answers: [] }));
   const before = readFileSync(configPath, "utf8");
 
@@ -75,7 +75,7 @@ test("init writes a config you can hand-edit", async () => {
 
   await run(["init"], io);
 
-  const raw = readFileSync(join(dir, ".moth", "config.yml"), "utf8");
+  const raw = readFileSync(join(dir, "moth.config.yml"), "utf8");
   expect(raw).toContain("\nstatuses:\n");
   expect(raw).not.toContain("{prefix");
   expect(Bun.YAML.parse(raw)).toMatchObject({ prefix: "" });

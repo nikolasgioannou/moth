@@ -75,7 +75,7 @@ The logic is file I/O, parsing, and filtering. If size or speed ever justifies i
 
 ### Storage
 
-`.moth/` at the repo root, committed. Config at `.moth/config.yml`. Tickets at `.moth/tickets/`, flat — one markdown file per ticket, YAML frontmatter for structured data, body for the description.
+Config lives at `moth.config.yml` in the repo root, where a tool's configuration is looked for, and it names the directory tickets live in — `.moth/` by default, but a repo may choose `tickets/` or anything else. The two go together: once the directory is configurable, moth can no longer find its config by looking inside a fixed directory, so the config has to sit somewhere known. Tickets are one markdown file each, flat in that directory, YAML frontmatter for structured data and the body for the description. Commands run from a subdirectory walk up to find the root.
 
 **The filesystem is a database, not a user interface.** Status is a frontmatter field, not a directory. Directory-as-status would create two sources of truth that can drift, would break single-file reads (an agent reading one file could no longer see its status), would make every status change a git rename, and would privilege one of six queryable dimensions for no reason. The legible view is a command, not `ls`.
 
@@ -122,8 +122,9 @@ A ticket cannot exist without a title: it is the only field a caller must supply
 The config it is validated against, written by `moth init` and hand-edited thereafter:
 
 ```yaml
-# .moth/config.yml
+# moth.config.yml
 prefix: ""                 # optional display prefix, e.g. ENG-020
+tickets: .moth             # where ticket files live, relative to this file
 statuses:
   - name: backlog
     category: backlog        # the six categories are fixed; the names are the repo's

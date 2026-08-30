@@ -1,9 +1,8 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { parseArgs } from "../args.ts";
-import { readConfig } from "../config.ts";
+
 import type { Io } from "../io.ts";
 import { FILTER_OPTIONS, filterTickets, statusOrder } from "../query.ts";
+import { openRepo } from "../repo.ts";
 import { formatId, readTickets } from "../ticket.ts";
 
 export async function board(argv: string[], io: Io): Promise<number> {
@@ -13,14 +12,15 @@ export async function board(argv: string[], io: Io): Promise<number> {
     return 2;
   }
 
-  const mothDir = join(io.cwd, ".moth");
-  if (!existsSync(join(mothDir, "config.yml"))) {
-    io.stderr("moth: not a moth repo, run 'moth init' first\n");
+  const opened = openRepo(io.cwd);
+  if (!opened.ok) {
+    io.stderr(`moth: ${opened.message}
+`);
     return 1;
   }
+  const { config, ticketsDir } = opened.repo;
 
-  const config = readConfig(mothDir);
-  const all = readTickets(join(mothDir, "tickets"));
+  const all = readTickets(ticketsDir);
   const tickets = filterTickets(all, parsed.values, config);
 
   io.stdout("# Tickets\n");

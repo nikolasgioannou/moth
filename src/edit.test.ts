@@ -9,9 +9,9 @@ import { run } from "./run.ts";
 
 afterAll(cleanupTempDirs);
 
-const files = (dir: string) => readdirSync(join(dir, ".moth", "tickets")).sort();
+const files = (dir: string) => readdirSync(join(dir, ".moth")).sort();
 const read = (dir: string, name: string) =>
-  parseFrontmatter(readFileSync(join(dir, ".moth", "tickets", name), "utf8"));
+  parseFrontmatter(readFileSync(join(dir, ".moth", name), "utf8"));
 
 test("changing a title renames the file and keeps the number", async () => {
   const dir = await initedRepo();
@@ -88,15 +88,13 @@ test("setting a value that is already set changes nothing and succeeds", async (
   const dir = await initedRepo();
   await run(["new", "Fix login redirect"], captureIo(dir));
   await run(["edit", "1", "--priority", "high"], captureIo(dir));
-  const before = readFileSync(join(dir, ".moth", "tickets", "001-fix-login-redirect.md"), "utf8");
+  const before = readFileSync(join(dir, ".moth", "001-fix-login-redirect.md"), "utf8");
   const io = captureIo(dir, { now: () => new Date("2030-01-01T00:00:00.000Z") });
 
   const code = await run(["edit", "1", "--priority", "high"], io);
 
   expect(code).toBe(0);
-  expect(readFileSync(join(dir, ".moth", "tickets", "001-fix-login-redirect.md"), "utf8")).toBe(
-    before,
-  );
+  expect(readFileSync(join(dir, ".moth", "001-fix-login-redirect.md"), "utf8")).toBe(before);
 });
 
 test("a real edit touches the updated timestamp and not the created one", async () => {

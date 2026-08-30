@@ -1,8 +1,7 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { parseArgs } from "../args.ts";
-import { CATEGORIES, CORE_FIELDS, PRIORITIES, readConfig } from "../config.ts";
+import { CATEGORIES, CORE_FIELDS, PRIORITIES } from "../config.ts";
 import type { Io } from "../io.ts";
+import { openRepo } from "../repo.ts";
 
 /**
  * Everything an agent needs to construct a valid ticket without reading config
@@ -15,13 +14,14 @@ export async function schema(argv: string[], io: Io): Promise<number> {
     return 2;
   }
 
-  const mothDir = join(io.cwd, ".moth");
-  if (!existsSync(join(mothDir, "config.yml"))) {
-    io.stderr("moth: not a moth repo, run 'moth init' first\n");
+  const opened = openRepo(io.cwd);
+  if (!opened.ok) {
+    io.stderr(`moth: ${opened.message}
+`);
     return 1;
   }
+  const { config } = opened.repo;
 
-  const config = readConfig(mothDir);
   const document = {
     prefix: config.prefix,
     categories: CATEGORIES.map((entry) => entry.category),

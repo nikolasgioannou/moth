@@ -1,9 +1,10 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
 import { parseArgs } from "../args.ts";
-import { type Config, readConfig } from "../config.ts";
+import type { Config } from "../config.ts";
 import type { Io } from "../io.ts";
+import { openRepo } from "../repo.ts";
 import { formatId, nextNumber, padNumber, readTickets, resolve } from "../ticket.ts";
 
 /** New tickets open in the first status belonging to the backlog category. */
@@ -35,14 +36,14 @@ export async function create(argv: string[], io: Io): Promise<number> {
   }
   const { values, positionals } = parsed;
 
-  const mothDir = join(io.cwd, ".moth");
-  if (!existsSync(join(mothDir, "config.yml"))) {
-    io.stderr("moth: not a moth repo, run 'moth init' first\n");
+  const opened = openRepo(io.cwd);
+  if (!opened.ok) {
+    io.stderr(`moth: ${opened.message}
+`);
     return 1;
   }
+  const { config, ticketsDir } = opened.repo;
 
-  const config = readConfig(mothDir);
-  const ticketsDir = join(mothDir, "tickets");
   const title = (positionals[0] ?? "").trim();
   if (title === "") {
     io.stderr('moth: a ticket needs a title, as in: moth new "Fix the login redirect"\n');

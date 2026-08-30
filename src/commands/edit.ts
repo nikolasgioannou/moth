@@ -1,8 +1,7 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { parseArgs, stringList } from "../args.ts";
-import { legalFields, PRIORITIES, readConfig } from "../config.ts";
+import { legalFields, PRIORITIES } from "../config.ts";
 import type { Io } from "../io.ts";
+import { openRepo } from "../repo.ts";
 import {
   formatId,
   metadataOf,
@@ -29,15 +28,16 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     return 2;
   }
 
-  const mothDir = join(io.cwd, ".moth");
-  if (!existsSync(join(mothDir, "config.yml"))) {
-    io.stderr("moth: not a moth repo, run 'moth init' first\n");
+  const opened = openRepo(io.cwd);
+  if (!opened.ok) {
+    io.stderr(`moth: ${opened.message}
+`);
     return 1;
   }
+  const { config, ticketsDir } = opened.repo;
 
   const reference = parsed.positionals[0] ?? "";
-  const config = readConfig(mothDir);
-  const found = resolve(readTickets(join(mothDir, "tickets")), reference, config.prefix);
+  const found = resolve(readTickets(ticketsDir), reference, config.prefix);
 
   if (found.kind === "none") {
     io.stderr(`moth: no ticket matches '${reference}'\n`);
@@ -66,7 +66,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     return 1;
   }
 
-  const all = readTickets(join(mothDir, "tickets"));
+  const all = readTickets(ticketsDir);
   let parent = ticket.parent;
   if (typeof values.parent === "string") {
     const parentRef = resolve(all, values.parent, config.prefix);

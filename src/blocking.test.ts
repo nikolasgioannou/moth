@@ -10,7 +10,7 @@ import { run } from "./run.ts";
 afterAll(cleanupTempDirs);
 
 function frontmatter(dir: string, number: number) {
-  const tickets = join(dir, ".moth", "tickets");
+  const tickets = join(dir, ".moth");
   const file = readdirSync(tickets).find((name) =>
     name.startsWith(String(number).padStart(3, "0")),
   );
@@ -72,7 +72,7 @@ test("a blocker in a canceled or duplicate status no longer blocks", async () =>
 
 test("a reference to a ticket that does not exist warns without failing", async () => {
   const dir = await repoWith("Build the writer");
-  const tickets = join(dir, ".moth", "tickets");
+  const tickets = join(dir, ".moth");
   const file = join(tickets, readdirSync(tickets)[0] ?? "");
   writeFileSync(
     file,

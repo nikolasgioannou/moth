@@ -8,7 +8,7 @@ import { run } from "./run.ts";
 
 afterAll(cleanupTempDirs);
 
-const tickets = (dir: string) => join(dir, ".moth", "tickets");
+const tickets = (dir: string) => join(dir, ".moth");
 const files = (dir: string) => readdirSync(tickets(dir)).sort();
 const read = (dir: string, name: string) => readFileSync(join(tickets(dir), name), "utf8");
 

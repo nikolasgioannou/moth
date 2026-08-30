@@ -40,7 +40,7 @@ test("a number resolves with or without zero padding", async () => {
 test("a number resolves when written with the repo's prefix", async () => {
   const dir = await initedRepo();
   await run(["new", "Fix the login redirect"], captureIo(dir));
-  const configPath = join(dir, ".moth", "config.yml");
+  const configPath = join(dir, "moth.config.yml");
   writeFileSync(configPath, readFileSync(configPath, "utf8").replace('prefix: ""', "prefix: ENG"));
 
   const io = captureIo(dir);
@@ -96,7 +96,7 @@ test("a reference matching nothing says so, distinctly from an ambiguous one", a
 
 test("two tickets sharing a number are an ambiguous reference", async () => {
   const dir = await initedRepo();
-  const tickets = join(dir, ".moth", "tickets");
+  const tickets = join(dir, ".moth");
   const front = (title: string) =>
     `---\nid: 1\ntitle: ${title}\nstatus: backlog\npriority: none\n---\n\n`;
   writeFileSync(join(tickets, "001-alpha.md"), front("Alpha"));

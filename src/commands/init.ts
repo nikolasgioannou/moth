@@ -4,11 +4,13 @@ import { stringify as stringifyYaml } from "yaml";
 import { parseArgs } from "../args.ts";
 import { CATEGORIES } from "../config.ts";
 import type { Io } from "../io.ts";
+import { CONFIG_FILENAME, DEFAULT_TICKETS_DIR } from "../repo.ts";
 
 const CONFIG_HEADER = `# moth configuration.
 #
 # prefix    Optional. Shown before a ticket's number, e.g. ENG-001. Empty for
 #           bare numbers, which is the default.
+# tickets   Directory the tickets live in, relative to this file.
 # statuses  Each status belongs to one of six fixed categories:
 #           backlog, unstarted, started, completed, canceled, duplicate.
 #           Add your own statuses here; the categories cannot change.
@@ -22,8 +24,7 @@ export async function init(argv: string[], io: Io): Promise<number> {
     return 2;
   }
 
-  const mothDir = join(io.cwd, ".moth");
-  const configPath = join(mothDir, "config.yml");
+  const configPath = join(io.cwd, CONFIG_FILENAME);
 
   if (existsSync(configPath)) {
     io.stdout("moth: already initialised, leaving the existing config alone\n");
@@ -39,7 +40,10 @@ export async function init(argv: string[], io: Io): Promise<number> {
     }
   }
 
-  mkdirSync(join(mothDir, "tickets"), { recursive: true });
-  writeFileSync(configPath, CONFIG_HEADER + stringifyYaml({ prefix: "", statuses }));
+  mkdirSync(join(io.cwd, DEFAULT_TICKETS_DIR), { recursive: true });
+  writeFileSync(
+    configPath,
+    CONFIG_HEADER + stringifyYaml({ prefix: "", tickets: DEFAULT_TICKETS_DIR, statuses }),
+  );
   return 0;
 }

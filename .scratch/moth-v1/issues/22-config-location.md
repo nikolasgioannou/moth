@@ -8,9 +8,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Config is read from `moth.config.yml` at the repo root
-- [ ] The config names the directory tickets live in, defaulting to a sensible choice
-- [ ] Init creates the ticket directory wherever the config points
-- [ ] Every command finds the ticket directory through the config rather than a hardcoded path
-- [ ] Running a command from a subdirectory still finds the repo root
-- [ ] A config naming a directory that does not exist fails with a message saying which directory is missing
+- [x] Config is read from `moth.config.yml` at the repo root
+- [x] The config names the directory tickets live in, defaulting to a sensible choice
+- [x] Init creates the ticket directory wherever the config points
+- [x] Every command finds the ticket directory through the config rather than a hardcoded path
+- [x] Running a command from a subdirectory still finds the repo root
+- [x] A config naming a directory that does not exist fails with a message saying which directory is missing

@@ -10,7 +10,7 @@ import { run } from "./run.ts";
 afterAll(cleanupTempDirs);
 
 function ticket(dir: string, number: number) {
-  const tickets = join(dir, ".moth", "tickets");
+  const tickets = join(dir, ".moth");
   const file = readdirSync(tickets).find((name) =>
     name.startsWith(String(number).padStart(3, "0")),
   );

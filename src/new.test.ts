@@ -16,7 +16,7 @@ test("new writes exactly one ticket file", async () => {
   const code = await run(["new", "Fix the login redirect"], io);
 
   expect(code).toBe(0);
-  expect(readdirSync(join(dir, ".moth", "tickets"))).toHaveLength(1);
+  expect(readdirSync(join(dir, ".moth"))).toHaveLength(1);
 });
 
 test("new outside an initialised repo fails and names init as the fix", async () => {
@@ -38,7 +38,7 @@ test("the ticket records its metadata in frontmatter", async () => {
 
   await run(["new", "Fix the login redirect"], io);
 
-  const raw = readFileSync(join(dir, ".moth", "tickets", "001-fix-the-login-redirect.md"), "utf8");
+  const raw = readFileSync(join(dir, ".moth", "001-fix-the-login-redirect.md"), "utf8");
   expect(parseFrontmatter(raw).data).toEqual({
     id: 1,
     title: "Fix the login redirect",
@@ -57,7 +57,7 @@ test("a new ticket opens in the repo's own backlog status", async () => {
 
   await run(["new", "Something"], io);
 
-  const raw = readFileSync(join(dir, ".moth", "tickets", "001-something.md"), "utf8");
+  const raw = readFileSync(join(dir, ".moth", "001-something.md"), "utf8");
   expect(parseFrontmatter(raw).data.status).toBe("icebox");
 });
 
@@ -67,7 +67,7 @@ test("new accepts a description from a flag", async () => {
 
   await run(["new", "Something", "--body", "The description."], io);
 
-  const raw = readFileSync(join(dir, ".moth", "tickets", "001-something.md"), "utf8");
+  const raw = readFileSync(join(dir, ".moth", "001-something.md"), "utf8");
   expect(parseFrontmatter(raw).body).toBe("The description.\n");
 });
 
@@ -87,7 +87,7 @@ test("a piped description survives quotes, backticks and code fences intact", as
 
   await run(["new", "Stale token", "--body-file", "-"], io);
 
-  const raw = readFileSync(join(dir, ".moth", "tickets", "001-stale-token.md"), "utf8");
+  const raw = readFileSync(join(dir, ".moth", "001-stale-token.md"), "utf8");
   expect(parseFrontmatter(raw).body).toBe(`${description}\n`);
 });
 
@@ -128,8 +128,8 @@ test("the first ticket is number one, padded in the filename", async () => {
 
   await run(["new", "Fix the login redirect"], io);
 
-  expect(readdirSync(join(dir, ".moth", "tickets"))).toEqual(["001-fix-the-login-redirect.md"]);
-  const raw = readFileSync(join(dir, ".moth", "tickets", "001-fix-the-login-redirect.md"), "utf8");
+  expect(readdirSync(join(dir, ".moth"))).toEqual(["001-fix-the-login-redirect.md"]);
+  const raw = readFileSync(join(dir, ".moth", "001-fix-the-login-redirect.md"), "utf8");
   expect(parseFrontmatter(raw).data.id).toBe(1);
 });
 
@@ -140,7 +140,7 @@ test("each new ticket takes the next unused number", async () => {
   await run(["new", "Second"], captureIo(dir));
   await run(["new", "Third"], captureIo(dir));
 
-  expect(readdirSync(join(dir, ".moth", "tickets")).sort()).toEqual([
+  expect(readdirSync(join(dir, ".moth")).sort()).toEqual([
     "001-first.md",
     "002-second.md",
     "003-third.md",
@@ -149,12 +149,12 @@ test("each new ticket takes the next unused number", async () => {
 
 test("numbering continues correctly past ninety-nine", async () => {
   const dir = await initedRepo();
-  writeFileSync(join(dir, ".moth", "tickets", "099-existing.md"), "---\nid: 99\n---\n\n");
+  writeFileSync(join(dir, ".moth", "099-existing.md"), "---\nid: 99\n---\n\n");
 
   await run(["new", "After ninety nine"], captureIo(dir));
 
   // The sorted order is the point: padding keeps 099 before 100.
-  expect(readdirSync(join(dir, ".moth", "tickets")).sort()).toEqual([
+  expect(readdirSync(join(dir, ".moth")).sort()).toEqual([
     "099-existing.md",
     "100-after-ninety-nine.md",
   ]);
@@ -169,7 +169,7 @@ test("creating a ticket with no title fails and writes nothing", async () => {
   expect(code).toBe(2);
   expect(io.err().toLowerCase()).toContain("title");
   expect(io.out()).toBe("");
-  expect(readdirSync(join(dir, ".moth", "tickets"))).toHaveLength(0);
+  expect(readdirSync(join(dir, ".moth"))).toHaveLength(0);
 });
 
 test("a title of only whitespace is rejected the same way", async () => {
@@ -180,5 +180,5 @@ test("a title of only whitespace is rejected the same way", async () => {
 
   expect(code).toBe(2);
   expect(io.err().toLowerCase()).toContain("title");
-  expect(readdirSync(join(dir, ".moth", "tickets"))).toHaveLength(0);
+  expect(readdirSync(join(dir, ".moth"))).toHaveLength(0);
 });

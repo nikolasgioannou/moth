@@ -9,12 +9,12 @@ import { run } from "./run.ts";
 afterAll(cleanupTempDirs);
 
 function declareField(dir: string, name: string): void {
-  const path = join(dir, ".moth", "config.yml");
+  const path = join(dir, "moth.config.yml");
   writeFileSync(path, `${readFileSync(path, "utf8")}\nfields:\n  - ${name}\n`);
 }
 
 function ticketPath(dir: string): string {
-  const tickets = join(dir, ".moth", "tickets");
+  const tickets = join(dir, ".moth");
   return join(tickets, readdirSync(tickets)[0] ?? "");
 }
 

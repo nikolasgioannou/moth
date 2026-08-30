@@ -9,7 +9,7 @@ import { run } from "./run.ts";
 
 afterAll(cleanupTempDirs);
 
-const file = (dir: string) => join(dir, ".moth", "tickets", "001-fix-the-redirect.md");
+const file = (dir: string) => join(dir, ".moth", "001-fix-the-redirect.md");
 
 async function repoWithTicket(body?: string): Promise<string> {
   const dir = await initedRepo();
@@ -67,7 +67,7 @@ test("delete removes the ticket file when confirmed", async () => {
   const code = await run(["delete", "1", "--yes"], captureIo(dir));
 
   expect(code).toBe(0);
-  expect(readdirSync(join(dir, ".moth", "tickets"))).toEqual([]);
+  expect(readdirSync(join(dir, ".moth"))).toEqual([]);
 });
 
 test("delete without confirmation refuses, does not prompt, and keeps the file", async () => {

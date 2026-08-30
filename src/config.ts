@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-
 /** The six status categories, fixed for every repo. */
 export const CATEGORIES = [
   { category: "backlog", defaultStatus: "backlog" },
@@ -32,6 +29,8 @@ export interface Config {
   statuses: { name: string; category: string }[];
   /** Extra fields this repo permits on a ticket. Anything else is refused. */
   fields?: string[];
+  /** Where tickets live, relative to the repo root. */
+  tickets?: string;
 }
 
 /** Every field name a ticket may carry in this repo. */
@@ -39,6 +38,6 @@ export function legalFields(config: Config): string[] {
   return [...CORE_FIELDS, ...(config.fields ?? [])];
 }
 
-export function readConfig(mothDir: string): Config {
-  return Bun.YAML.parse(readFileSync(join(mothDir, "config.yml"), "utf8")) as Config;
+export function readConfigFile(contents: string): Config {
+  return Bun.YAML.parse(contents) as Config;
 }

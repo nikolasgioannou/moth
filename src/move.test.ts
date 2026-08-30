@@ -9,8 +9,7 @@ import { run } from "./run.ts";
 
 afterAll(cleanupTempDirs);
 
-const ticketFile = (dir: string, name: string) =>
-  readFileSync(join(dir, ".moth", "tickets", name), "utf8");
+const ticketFile = (dir: string, name: string) => readFileSync(join(dir, ".moth", name), "utf8");
 
 test("move puts a ticket in a status the repo defined", async () => {
   const dir = await initedRepo();
