@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "moth": "./dist/moth"
+    "moth": "./dist/moth",
+    "moth-dev": "./bin/moth-dev"
   },
   "scripts": {
     "test": "bun test",
