@@ -30,11 +30,10 @@ asked to configure a global gitignore:
     bun run moth list --status todo
 
 runs the CLI straight from source, reflecting uncommitted changes with no build
-step, and shows up in `bun run` so it is discoverable. `./bin/moth-dev` does the
-same thing and is shorter to type.
+step, and shows up in `bun run` so it is discoverable.
 
-Putting either on PATH is a personal convenience, not a setup step, and
-CONTRIBUTING should not ask for it. `dist/moth` is the compiled binary and needs
+Putting it on PATH is a personal convenience, not a setup step, and CONTRIBUTING
+should not ask for it: an alias is one line of somebody's own shell config. `dist/moth` is the compiled binary and needs
 `bun run build` first; it is what users will install once distribution exists.
 
 - [ ] CONTRIBUTING explains how to run moth from source while developing
