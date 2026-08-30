@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "bun test",
-    "build": "bun build --compile src/cli.ts --outfile dist/moth",
+    "build": "bun run scripts/build.ts",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write .",
     "lint": "biome check --error-on-warnings .",

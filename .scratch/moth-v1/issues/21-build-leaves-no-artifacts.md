@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Building leaves no `.bun-build` temp file in the repo root
-- [ ] Running the test suite leaves none either, including when a test fails part way
-- [ ] Repeated builds do not accumulate files
-- [ ] The repository is byte-identical before and after a build, ignoring the intended output
+- [x] Building leaves no `.bun-build` temp file in the repo root
+- [x] Running the test suite leaves none either, including when a test fails part way
+- [x] Repeated builds do not accumulate files
+- [x] The repository is byte-identical before and after a build, ignoring the intended output

@@ -1,12 +1,8 @@
 import { beforeAll, expect, test } from "bun:test";
+import { BINARY, buildBinary } from "../scripts/build.ts";
 
-const BINARY = "dist/moth";
-
-beforeAll(async () => {
-  const build = Bun.spawnSync(["bun", "build", "--compile", "src/cli.ts", "--outfile", BINARY]);
-  if (build.exitCode !== 0) {
-    throw new Error(`build failed:\n${build.stderr.toString()}`);
-  }
+beforeAll(() => {
+  buildBinary();
 });
 
 test("the compiled binary reports the version", () => {
