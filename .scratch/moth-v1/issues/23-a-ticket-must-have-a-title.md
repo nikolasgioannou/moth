@@ -8,7 +8,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Creating a ticket with no title exits 2 and writes no file
-- [ ] The error states that a title is required
-- [ ] A title of only whitespace is rejected the same way
-- [ ] The spec records that a ticket cannot exist without a title
+- [x] Creating a ticket with no title exits 2 and writes no file
+- [x] The error states that a title is required
+- [x] A title of only whitespace is rejected the same way
+- [x] The spec records that a ticket cannot exist without a title

@@ -42,7 +42,11 @@ export async function create(argv: string[], io: Io): Promise<number> {
 
   const config = readConfig(mothDir);
   const ticketsDir = join(mothDir, "tickets");
-  const title = positionals[0] ?? "";
+  const title = (positionals[0] ?? "").trim();
+  if (title === "") {
+    io.stderr('moth: a ticket needs a title, as in: moth new "Fix the login redirect"\n');
+    return 2;
+  }
 
   const id = nextNumber(ticketsDir);
   const padded = padNumber(id);

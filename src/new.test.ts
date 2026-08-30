@@ -157,3 +157,26 @@ test("numbering continues correctly past ninety-nine", async () => {
     "100-after-ninety-nine.md",
   ]);
 });
+
+test("creating a ticket with no title fails and writes nothing", async () => {
+  const dir = await initedRepo();
+  const io = captureIo(dir);
+
+  const code = await run(["new"], io);
+
+  expect(code).toBe(2);
+  expect(io.err().toLowerCase()).toContain("title");
+  expect(io.out()).toBe("");
+  expect(readdirSync(join(dir, ".moth", "tickets"))).toHaveLength(0);
+});
+
+test("a title of only whitespace is rejected the same way", async () => {
+  const dir = await initedRepo();
+  const io = captureIo(dir);
+
+  const code = await run(["new", "   "], io);
+
+  expect(code).toBe(2);
+  expect(io.err().toLowerCase()).toContain("title");
+  expect(readdirSync(join(dir, ".moth", "tickets"))).toHaveLength(0);
+});
