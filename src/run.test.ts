@@ -3,7 +3,7 @@ import { captureIo } from "../test/io.ts";
 import { run } from "./run.ts";
 
 test("--version reports the version and succeeds", async () => {
-  const io = captureIo();
+  const io = captureIo(process.cwd());
 
   const code = await run(["--version"], io);
 
@@ -12,7 +12,7 @@ test("--version reports the version and succeeds", async () => {
 });
 
 test("an unrecognised command is rejected on stderr, leaving stdout clean", async () => {
-  const io = captureIo();
+  const io = captureIo(process.cwd());
 
   const code = await run(["frobnicate"], io);
 

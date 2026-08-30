@@ -8,6 +8,7 @@ const code = await run(process.argv.slice(2), {
   stderr: (text) => {
     process.stderr.write(text);
   },
+  prompt: async (question, defaultValue) => prompt(question, defaultValue) ?? defaultValue,
 });
 
 process.exit(code);

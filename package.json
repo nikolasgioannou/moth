@@ -20,5 +20,8 @@
     "@commitlint/types": "^21.2.0",
     "@types/bun": "latest",
     "lefthook": "^2.1.12"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0"
   }
 }
