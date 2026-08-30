@@ -1,5 +1,5 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
 
 export interface Ticket {
@@ -9,6 +9,7 @@ export interface Ticket {
   title: string;
   status: string;
   priority: string;
+  labels: string[];
   created_at: string;
   updated_at: string;
   body: string;
@@ -22,7 +23,7 @@ function parse(raw: string, path: string): Ticket {
     throw new Error("ticket has no frontmatter");
   }
   const data = Bun.YAML.parse(frontmatter) as Omit<Ticket, "body" | "path">;
-  return { ...data, path, body: body.replace(/^\n/, "") };
+  return { ...data, labels: data.labels ?? [], path, body: body.replace(/^\n/, "") };
 }
 
 /** How an id is shown: padded, and prefixed only when the repo asked for one. */
@@ -103,4 +104,34 @@ export function metadataOf(ticket: Ticket): Omit<Ticket, "path" | "body"> {
 export function writeTicket(ticket: Ticket): void {
   const body = ticket.body === "" || ticket.body.endsWith("\n") ? ticket.body : `${ticket.body}\n`;
   writeFileSync(ticket.path, `---\n${stringifyYaml(metadataOf(ticket))}---\n\n${body}`);
+}
+
+/** A readable filename fragment, derived from the title. */
+export function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50)
+    .replace(/-+$/, "");
+}
+
+export function filenameFor(id: number, title: string): string {
+  const slug = slugify(title);
+  return slug === "" ? `${padNumber(id)}.md` : `${padNumber(id)}-${slug}.md`;
+}
+
+/**
+ * Writes a ticket, moving its file when the title no longer matches the slug.
+ * The filename is derived from the title; frontmatter is the source of truth.
+ */
+export function saveTicket(ticket: Ticket): Ticket {
+  const directory = dirname(ticket.path);
+  const wanted = join(directory, filenameFor(ticket.id, ticket.title));
+  if (wanted !== ticket.path) {
+    renameSync(ticket.path, wanted);
+  }
+  const moved = { ...ticket, path: wanted };
+  writeTicket(moved);
+  return moved;
 }

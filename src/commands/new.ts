@@ -60,6 +60,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
     title,
     status: defaultStatus(config),
     priority: "none",
+    labels: [] as string[],
     created_at: timestamp,
     updated_at: timestamp,
   };

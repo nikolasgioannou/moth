@@ -44,6 +44,7 @@ export async function show(argv: string[], io: Io): Promise<number> {
   io.stdout(`${formatId(ticket.id, config.prefix)}  ${ticket.title}\n`);
   io.stdout(`status    ${ticket.status}\n`);
   io.stdout(`priority  ${ticket.priority}\n`);
+  if (ticket.labels.length > 0) io.stdout(`labels    ${ticket.labels.join(", ")}\n`);
   io.stdout(`created   ${ticket.created_at}\n`);
   io.stdout(`updated   ${ticket.updated_at}\n`);
   if (ticket.body !== "") io.stdout(`\n${ticket.body}`);

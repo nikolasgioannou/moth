@@ -130,3 +130,15 @@ test("show emits the ticket as json, body included", async () => {
     body: "It loops on a stale cookie.\n",
   });
 });
+
+test("show renders a ticket's labels", async () => {
+  const dir = await initedRepo();
+  await run(["new", "Fix the login redirect"], captureIo(dir));
+  await run(["edit", "1", "--label", "cli", "--label", "auth"], captureIo(dir));
+  const io = captureIo(dir);
+
+  await run(["show", "1"], io);
+
+  expect(io.out()).toContain("auth");
+  expect(io.out()).toContain("cli");
+});

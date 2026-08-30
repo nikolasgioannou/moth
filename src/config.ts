@@ -11,6 +11,9 @@ export const CATEGORIES = [
   { category: "duplicate", defaultStatus: "duplicate" },
 ] as const;
 
+/** The priority values, fixed for every repo. "none" is the default. */
+export const PRIORITIES = ["none", "low", "medium", "high", "urgent"] as const;
+
 export interface Config {
   prefix: string;
   statuses: { name: string; category: string }[];

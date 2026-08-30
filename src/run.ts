@@ -1,4 +1,5 @@
 import pkg from "../package.json";
+import { edit } from "./commands/edit.ts";
 import { init } from "./commands/init.ts";
 import { list } from "./commands/list.ts";
 import { move } from "./commands/move.ts";
@@ -14,6 +15,7 @@ type Command = (argv: string[], io: Io) => Promise<number>;
 const COMMANDS: Record<string, Command> = {
   init,
   new: create,
+  edit,
   list,
   move,
   show,

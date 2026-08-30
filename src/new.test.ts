@@ -44,6 +44,7 @@ test("the ticket records its metadata in frontmatter", async () => {
     title: "Fix the login redirect",
     status: "backlog",
     priority: "none",
+    labels: [],
     created_at: "2026-08-30T12:00:00.000Z",
     updated_at: "2026-08-30T12:00:00.000Z",
   });
@@ -114,6 +115,7 @@ test("new emits the created ticket as json on request", async () => {
     title: "Fix the login redirect",
     status: "backlog",
     priority: "none",
+    labels: [],
     created_at: "2026-08-30T12:00:00.000Z",
     updated_at: "2026-08-30T12:00:00.000Z",
     body: "Details.",
