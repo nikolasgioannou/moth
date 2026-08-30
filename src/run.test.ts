@@ -1,6 +1,6 @@
-import { test, expect } from "bun:test";
-import { run } from "./run.ts";
+import { expect, test } from "bun:test";
 import { captureIo } from "../test/io.ts";
+import { run } from "./run.ts";
 
 test("--version reports the version and succeeds", async () => {
   const io = captureIo();

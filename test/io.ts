@@ -10,8 +10,12 @@ export function captureIo(cwd = process.cwd()): CapturedIo {
   let err = "";
   return {
     cwd,
-    stdout: (text) => { out += text; },
-    stderr: (text) => { err += text; },
+    stdout: (text) => {
+      out += text;
+    },
+    stderr: (text) => {
+      err += text;
+    },
     out: () => out,
     err: () => err,
   };

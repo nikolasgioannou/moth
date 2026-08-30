@@ -6,10 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] A commit message that does not follow Conventional Commits is rejected before the commit is created
-- [ ] A conforming message commits with no friction
-- [ ] The accepted commit types are documented in the repo
-- [ ] Formatting and linting each run over the whole codebase from a single command
-- [ ] Staged files are formatted and linted before a commit completes, and a failure blocks it
-- [ ] Hooks install as part of installing dependencies, with no separate manual step
-- [ ] A clean checkout passes the formatter and the linter with no changes needed
+- [x] A commit message that does not follow Conventional Commits is rejected before the commit is created
+- [x] A conforming message commits with no friction
+- [x] Formatting and linting each run over the whole codebase from a single command
+- [x] Staged files are formatted and linted before a commit completes, and a failure blocks it
+- [x] Hooks install as part of installing dependencies, with no separate manual step
+- [x] A clean checkout passes the formatter and the linter with no changes needed
