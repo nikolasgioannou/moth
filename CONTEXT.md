@@ -21,7 +21,7 @@ Where a ticket sits in this repo's workflow. Each repo defines its own.
 _Avoid_: state, workflow state, stage
 
 **Status category**:
-One of five fixed groupings — backlog, unstarted, started, completed, canceled — that every status belongs to. Identical in every repo, which is what makes a query portable. Bare "category" always means this.
+One of six fixed groupings — backlog, unstarted, started, completed, canceled, duplicate — that every status belongs to. Identical in every repo, which is what makes a query portable. The last three are terminal: a ticket in them is finished with. Bare "category" always means this.
 _Avoid_: status type, phase, bucket
 
 **Backlog**:
@@ -43,7 +43,7 @@ _Avoid_: tag, category
 ### Relationships
 
 **Blocker**:
-A ticket that must reach a completed or canceled category before another ticket can begin.
+A ticket that must reach a terminal category — completed, canceled, or duplicate — before another ticket can begin.
 
 **Blocked**:
 Having at least one blocker outstanding. Orthogonal to status — a ticket can be blocked in any status.

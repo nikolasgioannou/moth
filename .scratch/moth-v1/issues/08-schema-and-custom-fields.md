@@ -4,6 +4,8 @@
 
 **Blocked by:** 07 (statuses and move)
 
+**Note:** config is written by `moth init` only and hand-edited thereafter (decided during ticket 03), so declaring a custom field is an editor action, not a moth command. The generated config carries explanatory comments that a programmatic rewrite would destroy.
+
 **Status:** ready-for-agent
 
 - [ ] Querying the schema returns every legal field, every status with its category, and every priority value

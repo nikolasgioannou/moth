@@ -35,7 +35,7 @@ Everything else follows from those two ideas. Tickets are committed to the repo,
 9. As a coding agent, I want writes containing unrecognised fields to be rejected with an error naming the offending key, so that I cannot silently corrupt the structure for future sessions.
 10. As a coding agent, I want writes containing an unrecognised status to be rejected with the legal values listed, so that I can correct myself in one retry.
 11. As a developer, I want to define my own workflow statuses, so that moth fits how my project actually works.
-12. As a coding agent, I want every status to belong to one of five fixed categories, so that I can query "what work has started?" in any repo without knowing that repo's status names.
+12. As a coding agent, I want every status to belong to one of six fixed categories, so that I can query "what work has started?" in any repo without knowing that repo's status names.
 13. As a developer, I want to declare custom fields in config, so that I can track something moth doesn't model without abandoning enforcement.
 14. As a developer, I want undeclared fields rejected even though custom fields exist, so that configurability never becomes drift.
 15. As a developer, I want free-form labels, so that I have an escape hatch that requires no configuration at all.
@@ -93,7 +93,7 @@ Sequential IDs were considered and rejected. They require a coordinating server;
 
 ### Schema and enforcement
 
-Five **status categories** are fixed and not configurable: `backlog`, `unstarted`, `started`, `completed`, `canceled`. A repo names its own statuses within them, so a repo may define "In Review" inside `started`. Queries work on categories, so a query written against categories is portable across every repo; queries against status names are not, and that is the intended trade.
+Six **status categories** are fixed and not configurable: `backlog`, `unstarted`, `started`, `completed`, `canceled`, `duplicate`. `duplicate` is separate from `canceled` because the distinction is real: canceled work is not happening, duplicated work is happening under a different ticket. All three are terminal for the purposes of blocking. A repo names its own statuses within them, so a repo may define "In Review" inside `started`. Queries work on categories, so a query written against categories is portable across every repo; queries against status names are not, and that is the intended trade.
 
 Priority is a fixed enum including an explicit "none", which is the default. Defaulting to a middle value would mean agents fill the field arbitrarily and the signal is lost.
 
@@ -115,6 +115,20 @@ updated_at: 2026-08-30T14:51:09Z
 ---
 
 Body is the description. `## Notes` accumulates appended findings.
+```
+
+These are the whole of a v1 ticket's structured fields. There is no assignee, no routing or readiness field, and no stored activity. Anything else a repo needs is either a label or a custom field declared in config.
+
+The config it is validated against, written by `moth init` and hand-edited thereafter:
+
+```yaml
+# .moth/config.yml
+prefix: MOTH
+statuses:
+  - name: backlog
+    category: backlog        # the six categories are fixed; the names are the repo's
+  - name: in-progress
+    category: started
 ```
 
 ### Relationships
@@ -200,6 +214,9 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 - **Manual ticket ordering.** A rank value across many files rewrites on every reorder, which is the merge-hostile shared state moth exists to avoid. Priority plus age is the ordering.
 - **Nesting beyond one level.**
 - **Storing tickets outside the repo.** Considered as a way to make sequential IDs safe; rejected because tickets travelling with the code is the point, and supporting both modes would be the anti-opinionated move.
+- **A routing or readiness field.** Considered as `ready-for-agent` / `ready-for-human`, following the triage roles moth's interim tracker uses. Rejected for two reasons: the `backlog`/`unstarted` boundary already encodes the triage decision, so it would be a second field expressing a distinction the categories carry; and an agent-versus-human split encodes a capability boundary that moves every few months, which is a poor thing to freeze into a fixed, non-configurable schema. Anyone wanting the signal can use a label. Reconsider from evidence in real use, not from prediction.
+- **A claim field.** Moving a ticket into a `started` status is the claim. A dedicated `claimed_by` brings stale-claim handling — timeouts, manual clearing — for a problem an ordinary stale `in-progress` ticket already expresses in a way people know how to resolve.
+- **A `duplicate_of` relation.** moth takes Linear's `duplicate` status category but not the pointer Linear pairs it with, so a duplicated ticket records *that* it is a duplicate and not *of what*. The argument for adding it is that agents filing tickets will duplicate existing ones often, and the blocking graph could then traverse through a duplicate to its canonical ticket. Left out as a third relation type; the strongest candidate for the first post-v1 addition.
 - **Importing from an existing tracker.**
 
 ## Further Notes

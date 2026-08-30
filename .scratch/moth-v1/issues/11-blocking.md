@@ -10,4 +10,4 @@
 - [ ] Viewing a blocking ticket shows what it blocks, derived at read time rather than stored
 - [ ] Only the forward direction is ever written to disk
 - [ ] A reference to a ticket that does not exist produces a warning and does not fail the command
-- [ ] Blocked and unblocked filters work, where blocked means at least one blocker is in neither a completed nor a canceled category
+- [ ] Blocked and unblocked filters work, where blocked means at least one blocker is not in a terminal category (completed, canceled, duplicate)
