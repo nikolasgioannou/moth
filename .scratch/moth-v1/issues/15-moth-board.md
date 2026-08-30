@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Board prints a markdown board to stdout
-- [ ] The board groups tickets by status and reads well when rendered
-- [ ] Board writes nothing to disk
-- [ ] Board honours the same filters as list
+- [x] Board prints a markdown board to stdout
+- [x] The board groups tickets by status and reads well when rendered
+- [x] Board writes nothing to disk
+- [x] Board honours the same filters as list
