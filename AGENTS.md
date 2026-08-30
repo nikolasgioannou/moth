@@ -6,7 +6,7 @@ An opinionated issue tracker that lives in your repo. Tickets are markdown files
 
 ### Issue tracker
 
-Issues live as markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+This repository tracks its own work in moth: tickets are markdown files in `.moth/`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

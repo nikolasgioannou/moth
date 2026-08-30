@@ -1,10 +1,16 @@
-# 15: moth board
+---
+id: 15
+title: moth board
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.216Z
+updated_at: 2026-08-30T23:31:02.279Z
+blocked_by:
+  - 10
+---
 
 **What to build:** Someone browsing the repo on the web can see the backlog, without moth ever writing a file that every ticket change would conflict on.
-
-**Blocked by:** 10 (list filters)
-
-**Status:** ready-for-agent
 
 - [x] Board prints a markdown board to stdout
 - [x] The board groups tickets by status and reads well when rendered

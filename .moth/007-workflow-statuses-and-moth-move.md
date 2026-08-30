@@ -1,10 +1,17 @@
-# 07: Workflow statuses and moth move
+---
+id: 7
+title: Workflow statuses and moth move
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.030Z
+updated_at: 2026-08-30T23:31:01.818Z
+blocked_by:
+  - 3
+  - 6
+---
 
 **What to build:** A ticket moves through the statuses this repo defined at init, with moth refusing statuses it does not recognise and telling the caller what it would accept instead.
-
-**Blocked by:** 03 (moth init), 06 (ID resolution)
-
-**Status:** ready-for-agent
 
 - [x] Moving a ticket to a status defined in config succeeds and updates the file
 - [x] Moving to an undefined status fails and lists the legal statuses in the error

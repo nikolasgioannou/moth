@@ -1,10 +1,17 @@
-# 11: Blocking relations
+---
+id: 11
+title: Blocking relations
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.122Z
+updated_at: 2026-08-30T23:31:02.046Z
+blocked_by:
+  - 9
+  - 10
+---
 
 **What to build:** A ticket records what must finish before it can start, and a developer can ask what is actually startable right now.
-
-**Blocked by:** 09 (moth edit), 10 (list filters)
-
-**Status:** ready-for-agent
 
 - [x] A ticket records the tickets that block it
 - [x] Viewing a blocking ticket shows what it blocks, derived at read time rather than stored

@@ -1,10 +1,17 @@
-# 18: README and CONTRIBUTING
+---
+id: 18
+title: README and CONTRIBUTING
+status: todo
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.383Z
+updated_at: 2026-08-30T23:31:02.477Z
+blocked_by:
+  - 16
+  - 17
+---
 
 **What to build:** Someone arriving at the repository can work out what moth is, install it, and make a correct first contribution without having to ask anyone.
-
-**Blocked by:** 16 (help text audit), 17 (distribution)
-
-**Status:** ready-for-agent
 
 - [ ] The README states what moth is, and what it deliberately does not do
 - [ ] The README documents installation for every supported route

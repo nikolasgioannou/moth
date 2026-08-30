@@ -1,10 +1,16 @@
-# 05: moth list default view
+---
+id: 5
+title: moth list default view
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:00.983Z
+updated_at: 2026-08-30T23:31:01.704Z
+blocked_by:
+  - 4
+---
 
 **What to build:** A developer sees their whole backlog at a glance, grouped and aligned, and an agent gets the same data as JSON. This is the point at which moth becomes minimally useful.
-
-**Blocked by:** 04 (moth new)
-
-**Status:** ready-for-agent
 
 - [x] Listing shows every ticket, grouped by status
 - [x] Columns stay aligned regardless of title length

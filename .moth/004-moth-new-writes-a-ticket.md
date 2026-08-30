@@ -1,10 +1,16 @@
-# 04: moth new writes a ticket
+---
+id: 4
+title: moth new writes a ticket
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:00.677Z
+updated_at: 2026-08-30T23:31:01.660Z
+blocked_by:
+  - 3
+---
 
 **What to build:** An agent or a developer files a ticket with nothing but a title, and it lands on disk as a well-formed file that later commands can read.
-
-**Blocked by:** 03 (moth init)
-
-**Status:** ready-for-agent
 
 - [x] Creating a ticket with only a title succeeds and writes exactly one file
 - [x] ~~The ID uses the configured prefix and a random suffix~~ superseded by ticket 20: ids are sequential

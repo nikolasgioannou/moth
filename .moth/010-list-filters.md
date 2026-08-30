@@ -1,10 +1,17 @@
-# 10: List filters
+---
+id: 10
+title: List filters
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.098Z
+updated_at: 2026-08-30T23:31:01.977Z
+blocked_by:
+  - 5
+  - 9
+---
 
 **What to build:** A developer narrows the backlog to the slice they care about, and an agent answers questions like "what urgent work is outstanding" in one command rather than by grepping.
-
-**Blocked by:** 05 (moth list), 09 (moth edit)
-
-**Status:** ready-for-agent
 
 - [x] Filtering by status, by category, by priority, and by label each narrow the results correctly
 - [x] Multiple filters combine in one invocation and narrow cumulatively

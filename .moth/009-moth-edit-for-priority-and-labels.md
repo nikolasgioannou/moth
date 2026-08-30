@@ -1,10 +1,16 @@
-# 09: moth edit for priority and labels
+---
+id: 9
+title: moth edit for priority and labels
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.075Z
+updated_at: 2026-08-30T23:31:01.908Z
+blocked_by:
+  - 7
+---
 
 **What to build:** A developer or agent changes a ticket's priority and labels after creation, with the same validation that applies at creation.
-
-**Blocked by:** 07 (statuses and move)
-
-**Status:** ready-for-agent
 
 - [x] A ticket's title can be changed
 - [x] Changing a title renames the file so its slug matches, and the ticket keeps its number

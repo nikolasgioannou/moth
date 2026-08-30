@@ -1,12 +1,18 @@
-# 03: moth init
+---
+id: 3
+title: moth init
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:00.566Z
+updated_at: 2026-08-30T23:31:01.614Z
+blocked_by:
+  - 1
+---
 
 **What to build:** A developer turns any repo into a moth repo with one command, answering a couple of questions about how they want work labelled.
 
-**Blocked by:** 01 (project scaffold)
-
 **Superseded in part:** ticket 20 removed the prefix question; init now asks only about statuses.
-
-**Status:** ready-for-agent
 
 - [x] Running init in a repo without moth creates the config file and the ticket directory
 - [x] Init asks for the ID prefix and offers a default derived from the repo name

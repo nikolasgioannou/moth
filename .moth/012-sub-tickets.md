@@ -1,10 +1,16 @@
-# 12: Sub-tickets
+---
+id: 12
+title: Sub-tickets
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.145Z
+updated_at: 2026-08-30T23:31:02.094Z
+blocked_by:
+  - 9
+---
 
 **What to build:** An agent decomposing a large ticket has somewhere structured to put the pieces, with the hierarchy kept shallow and always traversable.
-
-**Blocked by:** 09 (moth edit)
-
-**Status:** ready-for-agent
 
 - [x] A ticket can be given a parent at creation or by editing
 - [x] A ticket has at most one parent

@@ -1,12 +1,18 @@
-# 06: Ticket resolution and moth show
+---
+id: 6
+title: Ticket resolution and moth show
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.007Z
+updated_at: 2026-08-30T23:31:01.749Z
+blocked_by:
+  - 4
+---
 
 **What to build:** A developer refers to a ticket the way they actually hold it in their head — its number, however they happen to write it, or a few words from its title — and moth either shows it or says plainly that the reference was ambiguous.
 
-**Blocked by:** 04 (moth new)
-
 **Note:** Rewritten after ticket 20 replaced random ids with sequential numbers. Prefix matching is gone: it made sense for `MOTH-7f3a`, where a fragment narrows the field, but for numbers it would make `1` mean "1, or 10, or 100", which is worse than useless. Resolution is now an exact number, tolerant of how it is written.
-
-**Status:** ready-for-agent
 
 - [x] A ticket is found by its number, with or without zero padding, so `20` and `020` both work
 - [x] A ticket is found by its number carrying the repo's configured prefix, if it uses one

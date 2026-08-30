@@ -1,10 +1,16 @@
-# 02: Commit messages and formatting, enforced locally
+---
+id: 2
+title: Commit messages and formatting, enforced locally
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:00.424Z
+updated_at: 2026-08-30T23:31:01.569Z
+blocked_by:
+  - 1
+---
 
 **What to build:** A contributor writing a bad commit message or unformatted code is stopped on their own machine, before the commit exists, rather than finding out in review. Biome provides formatting and linting in one tool; lefthook runs both it and commitlint as git hooks.
-
-**Blocked by:** 01 (project scaffold)
-
-**Status:** ready-for-agent
 
 - [x] A commit message that does not follow Conventional Commits is rejected before the commit is created
 - [x] A conforming message commits with no friction

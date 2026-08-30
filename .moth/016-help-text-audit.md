@@ -1,10 +1,18 @@
-# 16: Help text audit
+---
+id: 16
+title: Help text audit
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.337Z
+updated_at: 2026-08-30T23:31:02.367Z
+blocked_by:
+  - 13
+  - 14
+  - 15
+---
 
 **What to build:** An agent that has never seen moth before can learn to use it correctly from help output alone. No skill ships with moth, so this is the whole of its usage guidance and a release requirement rather than polish.
-
-**Blocked by:** 13 (append and delete), 14 (moth check), 15 (moth board)
-
-**Status:** ready-for-agent
 
 - [x] Every command's help contains at least one worked example with realistic values
 - [x] Help documents what each exit code means

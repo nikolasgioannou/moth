@@ -1,10 +1,18 @@
-# 14: moth check
+---
+id: 14
+title: moth check
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.192Z
+updated_at: 2026-08-30T23:31:02.233Z
+blocked_by:
+  - 8
+  - 11
+  - 12
+---
 
 **What to build:** Before reporting a task complete, an agent can verify it has not left the store corrupted — and a developer can find out what drifted after a merge.
-
-**Blocked by:** 08 (schema and custom fields), 11 (blocking relations), 12 (sub-tickets)
-
-**Status:** ready-for-agent
 
 - [x] Check reports a filename whose slug no longer matches its title, and --fix renames it
 - [x] Check reports dangling blocking references

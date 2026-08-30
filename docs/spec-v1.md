@@ -222,7 +222,7 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 
 ## Further Notes
 
-**Dogfooding is the v1 completion criterion.** moth is being built with its own backlog tracked as markdown files under `.scratch/`, in a format that is an unenforced approximation of what moth produces: sequential numbering, `Status:` lines, `Blocked by:` as prose. When moth can list and filter, that backlog migrates into `.moth/` and the interim tracker configuration is retired. That migration is the most honest test of whether v1 is actually usable.
+**Dogfooding was the v1 completion criterion, and it has happened.** moth was built with its own backlog tracked as markdown files under `.scratch/`, in a format that was an unenforced approximation of what moth produces: sequential numbering, `Status:` lines, `Blocked by:` as prose. Once moth could create, list, move and relate tickets, that backlog was migrated into `.moth/` through the compiled binary rather than by writing files, every ticket keeping its number and its blocking edges, and the interim tracker configuration was retired. `moth check` reports a clean store, and `moth list --status todo --unblocked` now answers what to work on next.
 
 **A known gap in that migration.** The interim tracker's protocol includes a *claim* operation — marking a ticket as taken before work starts, so two agents don't collide on it. moth as specified cannot express this, because assignees are out of scope, so there is nothing to claim with. This is the first concrete cost of that cut. It is cheap to close later with a single field or a dedicated command, and is recorded here so it is recognised as a known omission rather than rediscovered as a bug.
 

@@ -1,10 +1,14 @@
-# 01: Project scaffold and the run(argv, io) seam
+---
+id: 1
+title: Project scaffold and the run(argv, io) seam
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:00.216Z
+updated_at: 2026-08-30T23:31:01.518Z
+---
 
 **What to build:** A developer can clone the repo, install dependencies, run the test suite, and build a binary that answers `moth --version`. This is the thinnest complete path through every layer, and it establishes the single testing seam every later ticket depends on.
-
-**Blocked by:** None (can start immediately)
-
-**Status:** ready-for-agent
 
 - [x] `moth --version` prints the version and exits 0, both in-process and from the compiled binary
 - [x] A single entry point accepts an argument vector plus an injected working directory, stdout, and stderr, and returns an exit code

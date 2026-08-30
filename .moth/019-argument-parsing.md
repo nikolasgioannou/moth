@@ -1,12 +1,18 @@
-# 19: Argument parsing
+---
+id: 19
+title: Argument parsing
+status: done
+priority: none
+labels: []
+created_at: 2026-08-30T23:31:01.406Z
+updated_at: 2026-08-30T23:31:02.520Z
+blocked_by:
+  - 4
+---
 
 **What to build:** A command's flags mean the same thing wherever they appear, so `moth new --json "Fix login"` and `moth new "Fix login" --json` behave identically, and a mistyped flag is reported rather than silently ignored.
 
-**Blocked by:** 04 (moth new)
-
 **Note:** Worth taking before the remaining command tickets. Commands currently scan `argv` positionally with `indexOf`, so every command added first reproduces the weakness and then has to be changed. `node:util`'s `parseArgs` is available in the runtime and covers flag position, `--flag=value`, boolean flags, and positionals without a dependency.
-
-**Status:** ready-for-agent
 
 - [x] A flag is recognised wherever it appears relative to positional arguments
 - [x] A flag's value is accepted as both `--flag value` and `--flag=value`
