@@ -125,3 +125,18 @@ test("a configured prefix is shown alongside the ticket number", async () => {
 
   expect(io.out()).toContain("ENG-001");
 });
+
+test("tickets are ordered by priority, then by age", async () => {
+  const dir = await initedRepo();
+  await run(["new", "First filed"], captureIo(dir));
+  await run(["new", "Second filed"], captureIo(dir));
+  await run(["new", "Third filed"], captureIo(dir));
+  await run(["edit", "3", "--priority", "urgent"], captureIo(dir));
+  await run(["edit", "2", "--priority", "low"], captureIo(dir));
+  const io = captureIo(dir);
+
+  await run(["list", "--json"], io);
+
+  // urgent, then low, then none; ties would fall back to age
+  expect((JSON.parse(io.out()) as { id: number }[]).map((t) => t.id)).toEqual([3, 2, 1]);
+});

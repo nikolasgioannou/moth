@@ -47,13 +47,25 @@ export function nextNumber(ticketsDir: string): number {
   return used.length === 0 ? 1 : Math.max(...used) + 1;
 }
 
+const PRIORITY_ORDER = ["urgent", "high", "medium", "low", "none"];
+
+/** Most urgent first, then oldest first. Manual ordering is deliberately absent. */
+function byPriorityThenAge(a: Ticket, b: Ticket): number {
+  const rank = (ticket: Ticket) => {
+    const index = PRIORITY_ORDER.indexOf(ticket.priority);
+    return index === -1 ? PRIORITY_ORDER.length : index;
+  };
+  return rank(a) - rank(b) || a.id - b.id;
+}
+
 export function readTickets(ticketsDir: string): Ticket[] {
   return readdirSync(ticketsDir)
     .filter((name) => name.endsWith(".md"))
     .map((name) => {
       const path = join(ticketsDir, name);
       return parse(readFileSync(path, "utf8"), path);
-    });
+    })
+    .sort(byPriorityThenAge);
 }
 
 /**
