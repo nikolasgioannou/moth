@@ -214,3 +214,31 @@ export function blocks(tickets: Ticket[], ticket: Ticket): number[] {
     .map((candidate) => candidate.id)
     .sort((a, b) => a - b);
 }
+
+export interface TicketProblem {
+  id: number;
+  reason: string;
+}
+
+/**
+ * What is wrong with the tickets on disk. Reported rather than thrown: a repo
+ * with one odd ticket should still list the other nineteen.
+ */
+export function validate(
+  tickets: Ticket[],
+  legalFields: string[],
+  knownStatuses: string[],
+): TicketProblem[] {
+  const problems: TicketProblem[] = [];
+  for (const ticket of tickets) {
+    for (const field of Object.keys(metadataOf(ticket))) {
+      if (!legalFields.includes(field)) {
+        problems.push({ id: ticket.id, reason: `undeclared field '${field}'` });
+      }
+    }
+    if (!knownStatuses.includes(ticket.status)) {
+      problems.push({ id: ticket.id, reason: `status '${ticket.status}' is not in config` });
+    }
+  }
+  return problems;
+}

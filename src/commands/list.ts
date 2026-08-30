@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "../args.ts";
-import { readConfig } from "../config.ts";
+import { legalFields, readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
 import { categoryLookup, FILTER_OPTIONS, filterTickets, statusOrder } from "../query.ts";
 import {
@@ -11,6 +11,7 @@ import {
   metadataOf,
   padNumber,
   readTickets,
+  validate,
 } from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
@@ -30,6 +31,14 @@ export async function list(argv: string[], io: Io): Promise<number> {
   const all = readTickets(join(mothDir, "tickets"));
 
   const tickets = filterTickets(all, parsed.values, config);
+
+  for (const problem of validate(
+    all,
+    legalFields(config),
+    config.statuses.map((entry) => entry.name),
+  )) {
+    io.stderr(`moth: ticket ${padNumber(problem.id)}: ${problem.reason}\n`);
+  }
 
   const categoryOf = categoryLookup(config);
   const dangling = new Set<number>();

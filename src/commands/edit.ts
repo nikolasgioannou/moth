@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs, stringList } from "../args.ts";
-import { PRIORITIES, readConfig } from "../config.ts";
+import { legalFields, PRIORITIES, readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
 import {
   formatId,
@@ -22,6 +22,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     parent: { type: "string" },
     "blocked-by": { type: "string", multiple: true },
     unblock: { type: "string", multiple: true },
+    set: { type: "string", multiple: true },
   });
   if (!parsed.ok) {
     io.stderr(`moth: ${parsed.message}\n`);
@@ -101,6 +102,16 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     .filter((id) => !removedBlockers.includes(id))
     .sort((a, b) => a - b);
 
+  const custom: Record<string, string> = {};
+  for (const assignment of stringList(values.set)) {
+    const [key = "", ...rest] = assignment.split("=");
+    if (!legalFields(config).includes(key)) {
+      io.stderr(`moth: '${key}' is not a field in this repo. Declare it in config to use it.\n`);
+      return 1;
+    }
+    custom[key] = rest.join("=");
+  }
+
   const added = stringList(values.label);
   const removed = stringList(values["remove-label"]);
   const labels = [...new Set([...ticket.labels, ...added])]
@@ -111,11 +122,13 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     title !== ticket.title ||
     priority !== ticket.priority ||
     parent !== ticket.parent ||
+    Object.keys(custom).length > 0 ||
     blockedBy.join(",") !== (ticket.blocked_by ?? []).join(",") ||
     labels.join("\u0000") !== ticket.labels.join("\u0000");
   const updated = changed
     ? saveTicket({
         ...ticket,
+        ...custom,
         title,
         priority,
         labels,
