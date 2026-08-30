@@ -1,6 +1,7 @@
 import pkg from "../package.json";
 import { append } from "./commands/append.ts";
 import { board } from "./commands/board.ts";
+import { check } from "./commands/check.ts";
 import { edit } from "./commands/edit.ts";
 import { init } from "./commands/init.ts";
 import { list } from "./commands/list.ts";
@@ -21,6 +22,8 @@ const COMMANDS: Record<string, Command> = {
   new: create,
   append,
   board,
+  check,
+  doctor: check,
   edit,
   list,
   move,

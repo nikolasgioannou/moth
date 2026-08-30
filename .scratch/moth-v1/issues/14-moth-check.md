@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] Check reports a filename whose slug no longer matches its title, and --fix renames it
-- [ ] Check reports dangling blocking references
-- [ ] Check reports two tickets sharing a number, and renumbering one rewrites every reference to it so none silently points at a different ticket (moved from ticket 20)
-- [ ] Check reports parent-child cycles and nesting deeper than one level
-- [ ] Check reports undeclared fields and statuses absent from config
-- [ ] Check exits 0 on a clean store and non-zero when it finds problems
-- [ ] The fix mode repairs what can be repaired safely and reports what it deliberately left alone
-- [ ] The command is reachable under a doctor alias
+- [x] Check reports a filename whose slug no longer matches its title, and --fix renames it
+- [x] Check reports dangling blocking references
+- [x] Check reports two tickets sharing a number, and renumbering one rewrites every reference to it so none silently points at a different ticket (moved from ticket 20)
+- [x] Check reports parent-child cycles and nesting deeper than one level
+- [x] Check reports undeclared fields and statuses absent from config
+- [x] Check exits 0 on a clean store and non-zero when it finds problems
+- [x] The fix mode repairs what can be repaired safely and reports what it deliberately left alone
+- [x] The command is reachable under a doctor alias
