@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Filtering by status, by category, by priority, and by label each narrow the results correctly
-- [ ] Multiple filters combine in one invocation and narrow cumulatively
-- [ ] Search matches text in both titles and bodies
-- [ ] A filter matching nothing exits 0 with an empty result rather than erroring
-- [ ] Filtering by category works without knowing this repo's status names
+- [x] Filtering by status, by category, by priority, and by label each narrow the results correctly
+- [x] Multiple filters combine in one invocation and narrow cumulatively
+- [x] Search matches text in both titles and bodies
+- [x] A filter matching nothing exits 0 with an empty result rather than erroring
+- [x] Filtering by category works without knowing this repo's status names

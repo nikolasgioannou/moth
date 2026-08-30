@@ -1,12 +1,19 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { parseArgs } from "../args.ts";
+import { parseArgs, stringList } from "../args.ts";
 import { readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
 import { duplicateNumbers, formatId, metadataOf, padNumber, readTickets } from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
-  const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" } });
+  const parsed = parseArgs(argv.slice(1), {
+    json: { type: "boolean" },
+    status: { type: "string" },
+    category: { type: "string" },
+    priority: { type: "string" },
+    label: { type: "string", multiple: true },
+    search: { type: "string" },
+  });
   if (!parsed.ok) {
     io.stderr(`moth: ${parsed.message}\n`);
     return 2;
@@ -19,9 +26,32 @@ export async function list(argv: string[], io: Io): Promise<number> {
   }
 
   const config = readConfig(mothDir);
-  const tickets = readTickets(join(mothDir, "tickets"));
+  const all = readTickets(join(mothDir, "tickets"));
 
-  const duplicates = duplicateNumbers(tickets);
+  // A ticket's category is looked up through config, so a query by category
+  // is portable across repos that name their statuses differently.
+  const categoryOf = (status: string) =>
+    config.statuses.find((entry) => entry.name === status)?.category;
+
+  const values = parsed.values;
+  const wantedLabels = stringList(values.label);
+  const search = typeof values.search === "string" ? values.search.toLowerCase() : undefined;
+
+  const tickets = all.filter((ticket) => {
+    if (typeof values.status === "string" && ticket.status !== values.status) return false;
+    if (typeof values.category === "string" && categoryOf(ticket.status) !== values.category) {
+      return false;
+    }
+    if (typeof values.priority === "string" && ticket.priority !== values.priority) return false;
+    if (!wantedLabels.every((label) => ticket.labels.includes(label))) return false;
+    if (search !== undefined) {
+      const haystack = `${ticket.title}\n${ticket.body}`.toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  const duplicates = duplicateNumbers(all);
   if (duplicates.length > 0) {
     const list = duplicates.map(padNumber).join(", ");
     io.stderr(`moth: duplicate ticket numbers: ${list}\n`);
