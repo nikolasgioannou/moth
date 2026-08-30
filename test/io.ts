@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { Io } from "../src/run.ts";
 
 export interface CapturedIo extends Io {
@@ -9,6 +10,12 @@ export interface CapturedIo extends Io {
 export interface CaptureOptions {
   /** Scripted answers. Omit entirely to make any prompt a test failure. */
   answers?: string[];
+  /** Piped input. Omit entirely to make any stdin read a test failure. */
+  stdin?: string;
+  /** Fixed clock. Defaults to the real one. */
+  now?: () => Date;
+  /** Scripted randomness. Defaults to the real source. */
+  randomHex?: (bytes: number) => string;
 }
 
 export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo {
@@ -33,6 +40,14 @@ export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo
       const answer = options.answers[next++];
       return answer === undefined || answer === "" ? defaultValue : answer;
     },
+    stdin: async () => {
+      if (options.stdin === undefined) {
+        throw new Error("unexpected read of stdin");
+      }
+      return options.stdin;
+    },
+    now: options.now ?? (() => new Date()),
+    randomHex: options.randomHex ?? ((bytes) => randomBytes(bytes).toString("hex")),
     out: () => out,
     err: () => err,
     asked: () => asked,
