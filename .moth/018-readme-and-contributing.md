@@ -23,12 +23,19 @@ blocked_by:
 
 ## Notes
 
-Local development setup, worth documenting in CONTRIBUTING:
+Local development, worth documenting in CONTRIBUTING. Running moth from source
+must need nothing outside the repository, the same way contributors are not
+asked to configure a global gitignore:
 
-`bin/moth-dev` runs the CLI straight from source, so it reflects uncommitted changes with no build step. Symlink it onto PATH once:
+    bun run moth list --status todo
 
-    ln -s "$PWD/bin/moth-dev" ~/.local/bin/moth-dev
+runs the CLI straight from source, reflecting uncommitted changes with no build
+step, and shows up in `bun run` so it is discoverable. `./bin/moth-dev` does the
+same thing and is shorter to type.
 
-`moth` itself is the compiled binary at `dist/moth`, which needs `bun run build` first and only changes when you rebuild. Having both means you can compare source behaviour against the last build.
+Putting either on PATH is a personal convenience, not a setup step, and
+CONTRIBUTING should not ask for it. `dist/moth` is the compiled binary and needs
+`bun run build` first; it is what users will install once distribution exists.
 
 - [ ] CONTRIBUTING explains how to run moth from source while developing
+- [ ] Nothing in CONTRIBUTING asks a contributor to configure anything outside the repository, beyond installing bun
