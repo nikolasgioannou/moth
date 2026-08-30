@@ -2,7 +2,7 @@
 
 **What to build:** An agent records findings on a ticket mid-task without rewriting the file, and a genuine mistake can be removed rather than living in the backlog forever.
 
-**Blocked by:** 07 (states and move)
+**Blocked by:** 07 (statuses and move)
 
 **Status:** ready-for-agent
 

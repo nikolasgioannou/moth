@@ -2,7 +2,7 @@
 
 **What to build:** A developer or agent changes a ticket's priority and labels after creation, with the same validation that applies at creation.
 
-**Blocked by:** 07 (states and move)
+**Blocked by:** 07 (statuses and move)
 
 **Status:** ready-for-agent
 

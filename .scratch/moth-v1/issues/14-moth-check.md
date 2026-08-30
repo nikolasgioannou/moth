@@ -8,7 +8,7 @@
 
 - [ ] Check reports dangling blocking references
 - [ ] Check reports parent-child cycles and nesting deeper than one level
-- [ ] Check reports undeclared fields and states absent from config
+- [ ] Check reports undeclared fields and statuses absent from config
 - [ ] Check exits 0 on a clean store and non-zero when it finds problems
 - [ ] The fix mode repairs what can be repaired safely and reports what it deliberately left alone
 - [ ] The command is reachable under a doctor alias

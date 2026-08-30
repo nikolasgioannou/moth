@@ -34,8 +34,8 @@ Everything else follows from those two ideas. Tickets are committed to the repo,
 8. As a coding agent, I want to query the schema for this repo, so that I can discover the legal fields and values without guessing or reading config by hand.
 9. As a coding agent, I want writes containing unrecognised fields to be rejected with an error naming the offending key, so that I cannot silently corrupt the structure for future sessions.
 10. As a coding agent, I want writes containing an unrecognised status to be rejected with the legal values listed, so that I can correct myself in one retry.
-11. As a developer, I want to define my own workflow states, so that moth fits how my project actually works.
-12. As a coding agent, I want every state to belong to one of five fixed categories, so that I can query "what work has started?" in any repo without knowing that repo's state names.
+11. As a developer, I want to define my own workflow statuses, so that moth fits how my project actually works.
+12. As a coding agent, I want every status to belong to one of five fixed categories, so that I can query "what work has started?" in any repo without knowing that repo's status names.
 13. As a developer, I want to declare custom fields in config, so that I can track something moth doesn't model without abandoning enforcement.
 14. As a developer, I want undeclared fields rejected even though custom fields exist, so that configurability never becomes drift.
 15. As a developer, I want free-form labels, so that I have an escape hatch that requires no configuration at all.
@@ -77,7 +77,7 @@ The logic is file I/O, parsing, and filtering. If size or speed ever justifies i
 
 `.moth/` at the repo root, committed. Config at `.moth/config.yml`. Tickets at `.moth/tickets/`, flat — one markdown file per ticket, YAML frontmatter for structured data, body for the description.
 
-**The filesystem is a database, not a user interface.** Status is a frontmatter field, not a directory. Directory-as-status would create two sources of truth that can drift, would break single-file reads (an agent reading one file could no longer see its status), would make every state change a git rename, and would privilege one of six queryable dimensions for no reason. The legible view is a command, not `ls`.
+**The filesystem is a database, not a user interface.** Status is a frontmatter field, not a directory. Directory-as-status would create two sources of truth that can drift, would break single-file reads (an agent reading one file could no longer see its status), would make every status change a git rename, and would privilege one of six queryable dimensions for no reason. The legible view is a command, not `ls`.
 
 **No central index file.** Nothing that every write touches. An index, a counter, or a generated board committed by moth itself would conflict on every parallel branch, and that would be the most-hated thing about the tool.
 
@@ -93,7 +93,7 @@ Sequential IDs were considered and rejected. They require a coordinating server;
 
 ### Schema and enforcement
 
-Five **status categories** are fixed and not configurable: `backlog`, `unstarted`, `started`, `completed`, `canceled`. A repo names its own states within them, so a repo may define "In Review" inside `started`. Queries work on categories, so a query written against categories is portable across every repo; queries against state names are not, and that is the intended trade.
+Five **status categories** are fixed and not configurable: `backlog`, `unstarted`, `started`, `completed`, `canceled`. A repo names its own statuses within them, so a repo may define "In Review" inside `started`. Queries work on categories, so a query written against categories is portable across every repo; queries against status names are not, and that is the intended trade.
 
 Priority is a fixed enum including an explicit "none", which is the default. Defaulting to a middle value would mean agents fill the field arbitrarily and the signal is lost.
 
@@ -105,7 +105,7 @@ The shape of a ticket, which encodes several of the above decisions more precise
 ---
 id: MOTH-7f3a
 title: Reject writes containing undeclared fields
-status: in-progress        # a repo-defined state; its category is resolved via config
+status: in-progress        # a repo-defined status; its category is resolved via config
 priority: high             # none | low | medium | high | urgent
 labels: [cli, validation]  # free-form
 parent: MOTH-1a2b          # optional, at most one level of nesting
@@ -125,7 +125,7 @@ Dangling blocking references warn rather than error. On a feature branch, pointi
 
 Sub-tickets nest **one level only**. Arbitrary trees complicate every list view and traversal for a case that rarely earns it. Cycles are rejected at write time.
 
-There is no project or epic concept above the ticket. Labels already group, and a project concept would require a registry, project states, and project queries.
+There is no project or epic concept above the ticket. Labels already group, and a project concept would require a registry, project statuses, and project queries.
 
 ### Command surface
 
@@ -139,9 +139,9 @@ Conventions, all of which exist to make the tool safe for a non-interactive call
 - Exit codes: `0` success, `1` operation failed, `2` usage error. Documented, because agents branch on them.
 - No command prompts interactively, with exactly one exception: `moth init`, which is human-only setup.
 - Every mutation prints the resulting ticket, so confirming a change never costs a second invocation.
-- Mutations are idempotent. Moving a ticket to a state it already occupies exits `0`. Agents retry, and a retry should not look like a failure.
+- Mutations are idempotent. Moving a ticket to a status it already occupies exits `0`. Agents retry, and a retry should not look like a failure.
 
-`moth check [--fix]` validates the store: dangling blocking references, parent-child cycles, undeclared fields, states not present in config. Aliased as `doctor`, which is the word people reach for, though `check` is the more accurate name since it validates data rather than an installation.
+`moth check [--fix]` validates the store: dangling blocking references, parent-child cycles, undeclared fields, statuses not present in config. Aliased as `doctor`, which is the word people reach for, though `check` is the more accurate name since it validates data rather than an installation.
 
 `moth board` prints a markdown board to stdout. It is derived and never authoritative; committing it is the user's choice via their own hook, which keeps it out of moth's write path and off the list of things that can conflict.
 
@@ -191,7 +191,7 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 
 - **Assignees.** No user registry, no accounts, no "me". Nothing in moth records who is working on what; coordination lives outside it.
 - **A `moth next` command.** Composable filters on `moth list` cover it.
-- **Git integration.** No branch creation, no branch-name parsing, no auto-transition on commit or merge. Hooks are per-clone and therefore unreliable, and tickets changing state without anyone asking contradicts the passive model.
+- **Git integration.** No branch creation, no branch-name parsing, no auto-transition on commit or merge. Hooks are per-clone and therefore unreliable, and tickets changing status without anyone asking contradicts the passive model.
 - **An activity log and comments.** Git is the history; notes append to the body.
 - **A TUI.**
 - **An MCP server.**
