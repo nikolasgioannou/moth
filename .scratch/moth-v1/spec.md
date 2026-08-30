@@ -81,7 +81,7 @@ The logic is file I/O, parsing, and filtering. If size or speed ever justifies i
 
 **No central index file.** Nothing that every write touches. An index, a counter, or a generated board committed by moth itself would conflict on every parallel branch, and that would be the most-hated thing about the tool.
 
-Filenames are `<ID>-<slug>.md`. The slug is a one-time convenience so directory listings are readable; it is **not** updated when the title changes, because renaming on every title edit pollutes history for no gain. The ID is authoritative.
+Filenames are `NNN-slug.md`. The slug is derived from the title and re-synced whenever moth changes the title, so a directory listing never misinforms. A frozen slug was tried first and reversed; see ADR-0005. Because moth cannot see a title edited by hand in an editor, `moth check` reports slug drift and repairs it, the same way it reports duplicate numbers. The number is authoritative; the slug is derived.
 
 `created_at` and `updated_at` are stored in frontmatter. Deriving them from git would mean one git invocation per ticket on every list.
 
@@ -117,7 +117,7 @@ updated_at: 2026-08-30T14:51:09Z
 Body is the description. `## Notes` accumulates appended findings.
 ```
 
-These are the whole of a v1 ticket's structured fields. There is no assignee, no routing or readiness field, and no stored activity. Anything else a repo needs is either a label or a custom field declared in config.
+A ticket cannot exist without a title: it is the only field a caller must supply, and moth refuses a creation that omits it. These are the whole of a v1 ticket's structured fields. There is no assignee, no routing or readiness field, and no stored activity. Anything else a repo needs is either a label or a custom field declared in config.
 
 The config it is validated against, written by `moth init` and hand-edited thereafter:
 

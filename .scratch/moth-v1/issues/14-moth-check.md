@@ -6,6 +6,7 @@
 
 **Status:** ready-for-agent
 
+- [ ] Check reports a filename whose slug no longer matches its title, and --fix renames it
 - [ ] Check reports dangling blocking references
 - [ ] Check reports two tickets sharing a number, and renumbering one rewrites every reference to it so none silently points at a different ticket (moved from ticket 20)
 - [ ] Check reports parent-child cycles and nesting deeper than one level

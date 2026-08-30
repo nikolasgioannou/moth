@@ -56,7 +56,7 @@ _Avoid_: sub-issue, subtask, child ticket
 ### Artifacts
 
 **Slug**:
-The readable part of a ticket's filename, derived from the title when the ticket is created and never updated afterwards. Never authoritative; the ID is.
+The readable part of a ticket's filename, derived from its title. Re-synced when moth changes the title, so it does not drift. Never authoritative; the number is.
 
 **Board**:
 A generated markdown view of the store. Derived output, never a source of truth.
