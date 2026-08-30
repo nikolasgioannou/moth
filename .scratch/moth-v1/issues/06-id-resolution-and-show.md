@@ -8,11 +8,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] A ticket is found by its number, with or without zero padding, so `20` and `020` both work
-- [ ] A ticket is found by its number carrying the repo's configured prefix, if it uses one
-- [ ] A ticket is found by a fuzzy match against its title
-- [ ] A reference that looks like a number is never matched against titles, so `moth show 20` cannot resolve to a ticket titled "20 things to fix"
-- [ ] A reference matching more than one ticket exits non-zero and lists the candidates rather than guessing, including when two tickets share a number
-- [ ] A reference matching nothing exits non-zero, with a message distinguishing it from an ambiguous match
-- [ ] Show renders the ticket's metadata and its body, with a JSON form available
-- [ ] The JSON form includes the body, unlike list, since showing one ticket is asking for its content
+- [x] A ticket is found by its number, with or without zero padding, so `20` and `020` both work
+- [x] A ticket is found by its number carrying the repo's configured prefix, if it uses one
+- [x] A ticket is found by a fuzzy match against its title
+- [x] A reference that looks like a number is never matched against titles, so `moth show 20` cannot resolve to a ticket titled "20 things to fix"
+- [x] A reference matching more than one ticket exits non-zero and lists the candidates rather than guessing, including when two tickets share a number
+- [x] A reference matching nothing exits non-zero, with a message distinguishing it from an ambiguous match
+- [x] Show renders the ticket's metadata and its body, with a JSON form available
+- [x] The JSON form includes the body, unlike list, since showing one ticket is asking for its content

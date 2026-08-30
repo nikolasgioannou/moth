@@ -62,3 +62,28 @@ export function duplicateNumbers(tickets: Ticket[]): number[] {
   }
   return [...duplicates].sort((a, b) => a - b);
 }
+
+export type Resolution =
+  | { kind: "found"; ticket: Ticket }
+  | { kind: "ambiguous"; tickets: Ticket[] }
+  | { kind: "none" };
+
+/**
+ * Finds the ticket a reference names. A reference that reads as a number is
+ * only ever matched against numbers, never against titles, so `20` cannot
+ * resolve to a ticket merely titled "20 things to fix".
+ */
+export function resolve(tickets: Ticket[], reference: string, prefix: string): Resolution {
+  const bare =
+    prefix !== "" && reference.toLowerCase().startsWith(`${prefix.toLowerCase()}-`)
+      ? reference.slice(prefix.length + 1)
+      : reference;
+
+  const matches = /^\d+$/.test(bare)
+    ? tickets.filter((ticket) => ticket.id === Number(bare))
+    : tickets.filter((ticket) => ticket.title.toLowerCase().includes(bare.toLowerCase()));
+
+  if (matches.length === 1) return { kind: "found", ticket: matches[0] as Ticket };
+  if (matches.length > 1) return { kind: "ambiguous", tickets: matches };
+  return { kind: "none" };
+}
