@@ -1,7 +1,10 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { stringify as stringifyYaml } from "yaml";
 
 export interface Ticket {
+  /** Where the ticket is stored. Local detail, never part of output. */
+  path: string;
   id: number;
   title: string;
   status: string;
@@ -11,15 +14,15 @@ export interface Ticket {
   body: string;
 }
 
-function parse(raw: string): Ticket {
+function parse(raw: string, path: string): Ticket {
   const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(raw);
   const frontmatter = match?.[1];
   const body = match?.[2];
   if (frontmatter === undefined || body === undefined) {
     throw new Error("ticket has no frontmatter");
   }
-  const data = Bun.YAML.parse(frontmatter) as Omit<Ticket, "body">;
-  return { ...data, body: body.replace(/^\n/, "") };
+  const data = Bun.YAML.parse(frontmatter) as Omit<Ticket, "body" | "path">;
+  return { ...data, path, body: body.replace(/^\n/, "") };
 }
 
 /** How an id is shown: padded, and prefixed only when the repo asked for one. */
@@ -45,7 +48,10 @@ export function nextNumber(ticketsDir: string): number {
 export function readTickets(ticketsDir: string): Ticket[] {
   return readdirSync(ticketsDir)
     .filter((name) => name.endsWith(".md"))
-    .map((name) => parse(readFileSync(join(ticketsDir, name), "utf8")));
+    .map((name) => {
+      const path = join(ticketsDir, name);
+      return parse(readFileSync(path, "utf8"), path);
+    });
 }
 
 /**
@@ -86,4 +92,15 @@ export function resolve(tickets: Ticket[], reference: string, prefix: string): R
   if (matches.length === 1) return { kind: "found", ticket: matches[0] as Ticket };
   if (matches.length > 1) return { kind: "ambiguous", tickets: matches };
   return { kind: "none" };
+}
+
+/** A ticket's structured fields, without local storage detail or its body. */
+export function metadataOf(ticket: Ticket): Omit<Ticket, "path" | "body"> {
+  const { path: _path, body: _body, ...metadata } = ticket;
+  return metadata;
+}
+
+export function writeTicket(ticket: Ticket): void {
+  const body = ticket.body === "" || ticket.body.endsWith("\n") ? ticket.body : `${ticket.body}\n`;
+  writeFileSync(ticket.path, `---\n${stringifyYaml(metadataOf(ticket))}---\n\n${body}`);
 }

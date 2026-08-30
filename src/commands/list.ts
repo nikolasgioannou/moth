@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { parseArgs } from "../args.ts";
 import { readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
-import { duplicateNumbers, formatId, padNumber, readTickets } from "../ticket.ts";
+import { duplicateNumbers, formatId, metadataOf, padNumber, readTickets } from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" } });
@@ -29,7 +29,7 @@ export async function list(argv: string[], io: Io): Promise<number> {
 
   if (parsed.values.json === true) {
     // Bodies are omitted; a survey of the store should not carry every description.
-    const summaries = tickets.map(({ body: _body, ...rest }) => rest);
+    const summaries = tickets.map(metadataOf);
     io.stdout(`${JSON.stringify(summaries, null, 2)}\n`);
     return 0;
   }

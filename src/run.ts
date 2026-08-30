@@ -1,6 +1,7 @@
 import pkg from "../package.json";
 import { init } from "./commands/init.ts";
 import { list } from "./commands/list.ts";
+import { move } from "./commands/move.ts";
 import { create } from "./commands/new.ts";
 import { show } from "./commands/show.ts";
 import type { Io } from "./io.ts";
@@ -14,6 +15,7 @@ const COMMANDS: Record<string, Command> = {
   init,
   new: create,
   list,
+  move,
   show,
 };
 
