@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Listing shows every ticket, grouped by status
-- [ ] Columns stay aligned regardless of title length
-- [ ] The JSON form emits machine-readable output with no colour or decoration
-- [ ] Colour and decoration are suppressed automatically when output is not a terminal, with no flag required
-- [ ] Listing an empty store prints a message and exits 0 rather than printing nothing
-- [ ] Ticket data goes to stdout; any diagnostics go to stderr
+- [x] Listing shows every ticket, grouped by status
+- [x] Columns stay aligned regardless of title length
+- [x] The JSON form emits machine-readable output with no colour or decoration
+- [x] Colour and decoration are suppressed automatically when output is not a terminal, with no flag required
+- [x] Listing an empty store prints a message and exits 0 rather than printing nothing
+- [x] Ticket data goes to stdout; any diagnostics go to stderr

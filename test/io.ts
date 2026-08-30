@@ -16,6 +16,8 @@ export interface CaptureOptions {
   now?: () => Date;
   /** Scripted randomness. Defaults to the real source. */
   randomHex?: (bytes: number) => string;
+  /** Whether to pretend stdout is a terminal. Defaults to false, as when piped. */
+  isTty?: boolean;
 }
 
 export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo {
@@ -48,6 +50,7 @@ export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo
     },
     now: options.now ?? (() => new Date()),
     randomHex: options.randomHex ?? ((bytes) => randomBytes(bytes).toString("hex")),
+    isTty: options.isTty ?? false,
     out: () => out,
     err: () => err,
     asked: () => asked,

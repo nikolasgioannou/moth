@@ -13,6 +13,7 @@ const code = await run(process.argv.slice(2), {
   stdin: async () => await Bun.stdin.text(),
   now: () => new Date(),
   randomHex: (bytes) => randomBytes(bytes).toString("hex"),
+  isTty: process.stdout.isTTY === true,
 });
 
 process.exit(code);

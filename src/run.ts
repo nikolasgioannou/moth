@@ -1,5 +1,6 @@
 import pkg from "../package.json";
 import { init } from "./commands/init.ts";
+import { list } from "./commands/list.ts";
 import { create } from "./commands/new.ts";
 import type { Io } from "./io.ts";
 
@@ -11,6 +12,7 @@ type Command = (argv: string[], io: Io) => Promise<number>;
 const COMMANDS: Record<string, Command> = {
   init,
   new: create,
+  list,
 };
 
 export async function run(argv: string[], io: Io): Promise<number> {

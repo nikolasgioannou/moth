@@ -7,4 +7,6 @@ export interface Io {
   stdin(): Promise<string>;
   now(): Date;
   randomHex(bytes: number): string;
+  /** Whether stdout is a terminal, so output can drop colour when piped. */
+  isTty: boolean;
 }
