@@ -8,10 +8,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] A flag is recognised wherever it appears relative to positional arguments
-- [ ] A flag's value is accepted as both `--flag value` and `--flag=value`
-- [ ] A boolean flag does not consume the argument that follows it
-- [ ] An unrecognised flag exits 2 with a usage error naming the offending flag
-- [ ] A positional argument beginning with a hyphen can still be passed, after `--`
-- [ ] A flag given without its required value exits 2 rather than silently taking the next argument
-- [ ] Every existing command keeps its behaviour, evidenced by the existing tests passing unchanged
+- [x] A flag is recognised wherever it appears relative to positional arguments
+- [x] A flag's value is accepted as both `--flag value` and `--flag=value`
+- [x] A boolean flag does not consume the argument that follows it
+- [x] An unrecognised flag exits 2 with a usage error naming the offending flag
+- [x] A positional argument beginning with a hyphen can still be passed, after `--`
+- [x] A flag given without its required value exits 2 rather than silently taking the next argument
+- [x] Every existing command keeps its behaviour, evidenced by the existing tests passing unchanged

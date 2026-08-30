@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
+import { parseArgs } from "../args.ts";
 import { CATEGORIES } from "../config.ts";
 import type { Io } from "../io.ts";
 
@@ -19,7 +20,13 @@ function defaultPrefix(cwd: string): string {
     .replace(/[^A-Z0-9]/g, "");
 }
 
-export async function init(_argv: string[], io: Io): Promise<number> {
+export async function init(argv: string[], io: Io): Promise<number> {
+  const parsed = parseArgs(argv.slice(1), {});
+  if (!parsed.ok) {
+    io.stderr(`moth: ${parsed.message}\n`);
+    return 2;
+  }
+
   const mothDir = join(io.cwd, ".moth");
   const configPath = join(mothDir, "config.yml");
 

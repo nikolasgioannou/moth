@@ -1,13 +1,9 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
+import { parseArgs } from "../args.ts";
 import { type Config, readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
-
-function flagValue(argv: string[], flag: string): string | undefined {
-  const index = argv.indexOf(flag);
-  return index === -1 ? undefined : argv[index + 1];
-}
 
 /** New tickets open in the first status belonging to the backlog category. */
 function defaultStatus(config: Config): string {
@@ -37,6 +33,17 @@ function allocateId(io: Io, prefix: string, ticketsDir: string): string | null {
 }
 
 export async function create(argv: string[], io: Io): Promise<number> {
+  const parsed = parseArgs(argv.slice(1), {
+    json: { type: "boolean" },
+    body: { type: "string" },
+    "body-file": { type: "string" },
+  });
+  if (!parsed.ok) {
+    io.stderr(`moth: ${parsed.message}\n`);
+    return 2;
+  }
+  const { values, positionals } = parsed;
+
   const mothDir = join(io.cwd, ".moth");
   if (!existsSync(join(mothDir, "config.yml"))) {
     io.stderr("moth: not a moth repo, run 'moth init' first\n");
@@ -45,7 +52,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
 
   const config = readConfig(mothDir);
   const ticketsDir = join(mothDir, "tickets");
-  const title = argv[1] ?? "";
+  const title = positionals[0] ?? "";
 
   const id = allocateId(io, config.prefix, ticketsDir);
   if (id === null) {
@@ -66,18 +73,18 @@ export async function create(argv: string[], io: Io): Promise<number> {
     updated_at: timestamp,
   };
 
-  const bodyFile = flagValue(argv, "--body-file");
-  let body = flagValue(argv, "--body") ?? "";
+  const bodyFile = values["body-file"];
+  let body = typeof values.body === "string" ? values.body : "";
   if (bodyFile === "-") {
     body = (await io.stdin()).replace(/\n+$/, "");
-  } else if (bodyFile !== undefined) {
+  } else if (typeof bodyFile === "string") {
     body = readFileSync(join(io.cwd, bodyFile), "utf8").replace(/\n+$/, "");
   }
 
   const document = `---\n${stringifyYaml(metadata)}---\n\n${body === "" ? "" : `${body}\n`}`;
   writeFileSync(join(ticketsDir, filename), document);
 
-  if (argv.includes("--json")) {
+  if (values.json === true) {
     io.stdout(`${JSON.stringify({ ...metadata, body }, null, 2)}\n`);
   } else {
     io.stdout(`${id}  ${title}\n`);
