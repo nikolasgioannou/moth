@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Every command's help contains at least one worked example with realistic values
-- [ ] Help documents what each exit code means
-- [ ] Top-level help lists every command with a one-line description
-- [ ] Help is reachable from the top level and from every subcommand
-- [ ] Given only the help output, an agent can initialise a repo, create a ticket, find it again, and move it, without any other documentation
+- [x] Every command's help contains at least one worked example with realistic values
+- [x] Help documents what each exit code means
+- [x] Top-level help lists every command with a one-line description
+- [x] Help is reachable from the top level and from every subcommand
+- [x] Given only the help output, an agent can initialise a repo, create a ticket, find it again, and move it, without any other documentation

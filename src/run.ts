@@ -10,6 +10,7 @@ import { create } from "./commands/new.ts";
 import { remove } from "./commands/remove.ts";
 import { schema } from "./commands/schema.ts";
 import { show } from "./commands/show.ts";
+import { commandHelp, topLevelHelp } from "./help.ts";
 import type { Io } from "./io.ts";
 
 export type { Io } from "./io.ts";
@@ -38,6 +39,20 @@ export async function run(argv: string[], io: Io): Promise<number> {
   if (command === "--version") {
     io.stdout(`${pkg.version}\n`);
     return 0;
+  }
+
+  // Help is answered here so every command has it without implementing it.
+  const wantsHelp = argv.includes("--help") || argv.includes("-h");
+  if (command === undefined || command === "help" || (wantsHelp && command.startsWith("-"))) {
+    io.stdout(topLevelHelp(pkg.version));
+    return 0;
+  }
+  if (wantsHelp) {
+    const text = commandHelp(command);
+    if (text !== null) {
+      io.stdout(text);
+      return 0;
+    }
   }
 
   const handler = command === undefined ? undefined : COMMANDS[command];
