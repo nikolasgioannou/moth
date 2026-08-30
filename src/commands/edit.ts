@@ -3,7 +3,14 @@ import { join } from "node:path";
 import { parseArgs, stringList } from "../args.ts";
 import { PRIORITIES, readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
-import { formatId, metadataOf, readTickets, resolve, saveTicket } from "../ticket.ts";
+import {
+  formatId,
+  metadataOf,
+  parentProblem,
+  readTickets,
+  resolve,
+  saveTicket,
+} from "../ticket.ts";
 
 export async function edit(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), {
@@ -12,6 +19,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     priority: { type: "string" },
     label: { type: "string", multiple: true },
     "remove-label": { type: "string", multiple: true },
+    parent: { type: "string" },
   });
   if (!parsed.ok) {
     io.stderr(`moth: ${parsed.message}\n`);
@@ -55,6 +63,22 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     return 1;
   }
 
+  const all = readTickets(join(mothDir, "tickets"));
+  let parent = ticket.parent;
+  if (typeof values.parent === "string") {
+    const parentRef = resolve(all, values.parent, config.prefix);
+    if (parentRef.kind !== "found") {
+      io.stderr(`moth: no single ticket matches parent '${values.parent}'\n`);
+      return 1;
+    }
+    const problem = parentProblem(all, ticket, parentRef.ticket.id);
+    if (problem !== null) {
+      io.stderr(`moth: ${problem.reason}\n`);
+      return 1;
+    }
+    parent = parentRef.ticket.id;
+  }
+
   const added = stringList(values.label);
   const removed = stringList(values["remove-label"]);
   const labels = [...new Set([...ticket.labels, ...added])]
@@ -64,9 +88,10 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const changed =
     title !== ticket.title ||
     priority !== ticket.priority ||
+    parent !== ticket.parent ||
     labels.join("\u0000") !== ticket.labels.join("\u0000");
   const updated = changed
-    ? saveTicket({ ...ticket, title, priority, labels, updated_at: io.now().toISOString() })
+    ? saveTicket({ ...ticket, title, priority, labels, parent, updated_at: io.now().toISOString() })
     : ticket;
 
   if (parsed.values.json === true) {

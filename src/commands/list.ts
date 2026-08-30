@@ -87,7 +87,9 @@ export async function list(argv: string[], io: Io): Promise<number> {
     for (const ticket of group) {
       const id = formatId(ticket.id, config.prefix).padEnd(idWidth);
       const title = ticket.title.padEnd(titleWidth);
-      io.stdout(`  ${paint("2", id)}  ${title}  ${paint("2", ticket.priority)}\n`);
+      const parent =
+        ticket.parent === undefined ? "" : paint("2", `  \u21b3 ${padNumber(ticket.parent)}`);
+      io.stdout(`  ${paint("2", id)}  ${title}  ${paint("2", ticket.priority)}${parent}\n`);
     }
     io.stdout("\n");
   }

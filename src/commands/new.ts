@@ -4,7 +4,7 @@ import { stringify as stringifyYaml } from "yaml";
 import { parseArgs } from "../args.ts";
 import { type Config, readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
-import { formatId, nextNumber, padNumber } from "../ticket.ts";
+import { formatId, nextNumber, padNumber, readTickets, resolve } from "../ticket.ts";
 
 /** New tickets open in the first status belonging to the backlog category. */
 function defaultStatus(config: Config): string {
@@ -27,6 +27,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
     json: { type: "boolean" },
     body: { type: "string" },
     "body-file": { type: "string" },
+    parent: { type: "string" },
   });
   if (!parsed.ok) {
     io.stderr(`moth: ${parsed.message}\n`);
@@ -48,6 +49,17 @@ export async function create(argv: string[], io: Io): Promise<number> {
     return 2;
   }
 
+  const existing = readTickets(ticketsDir);
+  let parentId: number | undefined;
+  if (typeof values.parent === "string") {
+    const parentRef = resolve(existing, values.parent, config.prefix);
+    if (parentRef.kind !== "found") {
+      io.stderr(`moth: no single ticket matches parent '${values.parent}'\n`);
+      return 1;
+    }
+    parentId = parentRef.ticket.id;
+  }
+
   const id = nextNumber(ticketsDir);
   const padded = padNumber(id);
 
@@ -61,6 +73,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
     status: defaultStatus(config),
     priority: "none",
     labels: [] as string[],
+    ...(parentId === undefined ? {} : { parent: parentId }),
     created_at: timestamp,
     updated_at: timestamp,
   };

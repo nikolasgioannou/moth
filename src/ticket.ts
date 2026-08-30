@@ -10,6 +10,7 @@ export interface Ticket {
   status: string;
   priority: string;
   labels: string[];
+  parent?: number;
   created_at: string;
   updated_at: string;
   body: string;
@@ -134,4 +135,28 @@ export function saveTicket(ticket: Ticket): Ticket {
   const moved = { ...ticket, path: wanted };
   writeTicket(moved);
   return moved;
+}
+
+export type ParentProblem = { reason: string } | null;
+
+/**
+ * Why a ticket may not take this parent, or null when it may. Nesting is held
+ * to one level, which also rules out cycles: a ticket that has a parent cannot
+ * be one, and a ticket that is one cannot take a parent.
+ */
+export function parentProblem(tickets: Ticket[], child: Ticket, parentId: number): ParentProblem {
+  if (parentId === child.id) {
+    return { reason: "a ticket cannot be its own parent" };
+  }
+  const parent = tickets.find((ticket) => ticket.id === parentId);
+  if (parent === undefined) {
+    return { reason: `no ticket ${padNumber(parentId)} to be the parent` };
+  }
+  if (parent.parent !== undefined) {
+    return { reason: "sub-tickets nest one level, and that ticket is already a sub-ticket" };
+  }
+  if (tickets.some((ticket) => ticket.parent === child.id)) {
+    return { reason: "sub-tickets nest one level, and that ticket already has sub-tickets" };
+  }
+  return null;
 }
