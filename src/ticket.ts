@@ -11,6 +11,7 @@ export interface Ticket {
   priority: string;
   labels: string[];
   parent?: number;
+  blocked_by?: number[];
   created_at: string;
   updated_at: string;
   body: string;
@@ -171,4 +172,45 @@ export function parentProblem(tickets: Ticket[], child: Ticket, parentId: number
     return { reason: "sub-tickets nest one level, and that ticket already has sub-tickets" };
   }
   return null;
+}
+
+/** Categories in which a ticket is finished with, so it no longer blocks anything. */
+const TERMINAL = ["completed", "canceled", "duplicate"];
+
+export interface BlockingView {
+  /** Blockers still open, so this ticket cannot start. */
+  open: number[];
+  /** Blockers naming a ticket that is not in the store. */
+  dangling: number[];
+}
+
+/**
+ * Only `blocked_by` is stored. What a ticket blocks is derived here, so the two
+ * directions cannot drift and a link costs one file write rather than two.
+ */
+export function blockingView(
+  tickets: Ticket[],
+  ticket: Ticket,
+  categoryOf: (status: string) => string | undefined,
+): BlockingView {
+  const open: number[] = [];
+  const dangling: number[] = [];
+  for (const id of ticket.blocked_by ?? []) {
+    const blocker = tickets.find((candidate) => candidate.id === id);
+    if (blocker === undefined) {
+      dangling.push(id);
+      continue;
+    }
+    const category = categoryOf(blocker.status);
+    if (category === undefined || !TERMINAL.includes(category)) open.push(id);
+  }
+  return { open, dangling };
+}
+
+/** The tickets this one blocks, derived rather than stored. */
+export function blocks(tickets: Ticket[], ticket: Ticket): number[] {
+  return tickets
+    .filter((candidate) => (candidate.blocked_by ?? []).includes(ticket.id))
+    .map((candidate) => candidate.id)
+    .sort((a, b) => a - b);
 }

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { parseArgs } from "../args.ts";
 import { readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
-import { formatId, metadataOf, readTickets, resolve } from "../ticket.ts";
+import { blocks, formatId, metadataOf, padNumber, readTickets, resolve } from "../ticket.ts";
 
 export async function show(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" } });
@@ -20,7 +20,8 @@ export async function show(argv: string[], io: Io): Promise<number> {
 
   const reference = parsed.positionals[0] ?? "";
   const config = readConfig(mothDir);
-  const found = resolve(readTickets(join(mothDir, "tickets")), reference, config.prefix);
+  const tickets = readTickets(join(mothDir, "tickets"));
+  const found = resolve(tickets, reference, config.prefix);
 
   if (found.kind === "none") {
     io.stderr(`moth: no ticket matches '${reference}'\n`);
@@ -45,6 +46,11 @@ export async function show(argv: string[], io: Io): Promise<number> {
   io.stdout(`status    ${ticket.status}\n`);
   io.stdout(`priority  ${ticket.priority}\n`);
   if (ticket.labels.length > 0) io.stdout(`labels    ${ticket.labels.join(", ")}\n`);
+  if (ticket.blocked_by !== undefined && ticket.blocked_by.length > 0) {
+    io.stdout(`blocked by ${ticket.blocked_by.map(padNumber).join(", ")}\n`);
+  }
+  const blocking = blocks(tickets, ticket);
+  if (blocking.length > 0) io.stdout(`blocks    ${blocking.map(padNumber).join(", ")}\n`);
   io.stdout(`created   ${ticket.created_at}\n`);
   io.stdout(`updated   ${ticket.updated_at}\n`);
   if (ticket.body !== "") io.stdout(`\n${ticket.body}`);

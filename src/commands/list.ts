@@ -3,7 +3,14 @@ import { join } from "node:path";
 import { parseArgs, stringList } from "../args.ts";
 import { readConfig } from "../config.ts";
 import type { Io } from "../io.ts";
-import { duplicateNumbers, formatId, metadataOf, padNumber, readTickets } from "../ticket.ts";
+import {
+  blockingView,
+  duplicateNumbers,
+  formatId,
+  metadataOf,
+  padNumber,
+  readTickets,
+} from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), {
@@ -13,6 +20,8 @@ export async function list(argv: string[], io: Io): Promise<number> {
     priority: { type: "string" },
     label: { type: "string", multiple: true },
     search: { type: "string" },
+    blocked: { type: "boolean" },
+    unblocked: { type: "boolean" },
   });
   if (!parsed.ok) {
     io.stderr(`moth: ${parsed.message}\n`);
@@ -37,6 +46,18 @@ export async function list(argv: string[], io: Io): Promise<number> {
   const wantedLabels = stringList(values.label);
   const search = typeof values.search === "string" ? values.search.toLowerCase() : undefined;
 
+  const dangling = new Set<number>();
+  for (const ticket of all) {
+    for (const id of blockingView(all, ticket, categoryOf).dangling) dangling.add(id);
+  }
+  if (dangling.size > 0) {
+    const missing = [...dangling]
+      .sort((a, b) => a - b)
+      .map(padNumber)
+      .join(", ");
+    io.stderr(`moth: blocked_by names tickets that do not exist: ${missing}\n`);
+  }
+
   const tickets = all.filter((ticket) => {
     if (typeof values.status === "string" && ticket.status !== values.status) return false;
     if (typeof values.category === "string" && categoryOf(ticket.status) !== values.category) {
@@ -44,6 +65,11 @@ export async function list(argv: string[], io: Io): Promise<number> {
     }
     if (typeof values.priority === "string" && ticket.priority !== values.priority) return false;
     if (!wantedLabels.every((label) => ticket.labels.includes(label))) return false;
+    if (values.blocked === true || values.unblocked === true) {
+      const isBlocked = blockingView(all, ticket, categoryOf).open.length > 0;
+      if (values.blocked === true && !isBlocked) return false;
+      if (values.unblocked === true && isBlocked) return false;
+    }
     if (search !== undefined) {
       const haystack = `${ticket.title}\n${ticket.body}`.toLowerCase();
       if (!haystack.includes(search)) return false;

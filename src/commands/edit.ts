@@ -20,6 +20,8 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     label: { type: "string", multiple: true },
     "remove-label": { type: "string", multiple: true },
     parent: { type: "string" },
+    "blocked-by": { type: "string", multiple: true },
+    unblock: { type: "string", multiple: true },
   });
   if (!parsed.ok) {
     io.stderr(`moth: ${parsed.message}\n`);
@@ -79,6 +81,26 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     parent = parentRef.ticket.id;
   }
 
+  const toNumbers = (references: string[]): number[] | null => {
+    const numbers: number[] = [];
+    for (const reference of references) {
+      const match = resolve(all, reference, config.prefix);
+      if (match.kind !== "found") {
+        io.stderr(`moth: no single ticket matches '${reference}'\n`);
+        return null;
+      }
+      numbers.push(match.ticket.id);
+    }
+    return numbers;
+  };
+
+  const addedBlockers = toNumbers(stringList(values["blocked-by"]));
+  const removedBlockers = toNumbers(stringList(values.unblock));
+  if (addedBlockers === null || removedBlockers === null) return 1;
+  const blockedBy = [...new Set([...(ticket.blocked_by ?? []), ...addedBlockers])]
+    .filter((id) => !removedBlockers.includes(id))
+    .sort((a, b) => a - b);
+
   const added = stringList(values.label);
   const removed = stringList(values["remove-label"]);
   const labels = [...new Set([...ticket.labels, ...added])]
@@ -89,9 +111,18 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     title !== ticket.title ||
     priority !== ticket.priority ||
     parent !== ticket.parent ||
+    blockedBy.join(",") !== (ticket.blocked_by ?? []).join(",") ||
     labels.join("\u0000") !== ticket.labels.join("\u0000");
   const updated = changed
-    ? saveTicket({ ...ticket, title, priority, labels, parent, updated_at: io.now().toISOString() })
+    ? saveTicket({
+        ...ticket,
+        title,
+        priority,
+        labels,
+        parent,
+        ...(blockedBy.length === 0 ? {} : { blocked_by: blockedBy }),
+        updated_at: io.now().toISOString(),
+      })
     : ticket;
 
   if (parsed.values.json === true) {
