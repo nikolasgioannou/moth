@@ -128,3 +128,15 @@ test("tickets are ordered by priority, then by age", async () => {
   // urgent, then low, then none; ties would fall back to age
   expect((JSON.parse(io.out()) as { id: number }[]).map((t) => t.id)).toEqual([3, 2, 1]);
 });
+
+test("a filter matching nothing says so, rather than claiming the store is empty", async () => {
+  const dir = await initedRepo();
+  await run(["new", "Parse the frontmatter"], captureIo(dir));
+  const io = captureIo(dir);
+
+  const code = await run(["list", "--priority", "urgent"], io);
+
+  expect(code).toBe(0);
+  expect(io.out().toLowerCase()).not.toContain("no tickets yet");
+  expect(io.out().toLowerCase()).toContain("no tickets match");
+});

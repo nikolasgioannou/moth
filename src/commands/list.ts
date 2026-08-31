@@ -67,7 +67,13 @@ export async function list(argv: string[], io: Io): Promise<number> {
   }
 
   if (tickets.length === 0) {
-    io.stdout("No tickets yet. Create one with 'moth new \"a title\"'.\n");
+    // An empty store and a filter that matched nothing are different situations,
+    // and saying the first when the second is true is actively misleading.
+    io.stdout(
+      all.length === 0
+        ? "No tickets yet. Create one with 'moth new \"a title\"'.\n"
+        : "No tickets match those filters.\n",
+    );
     return 0;
   }
 
