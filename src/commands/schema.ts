@@ -23,7 +23,6 @@ export async function schema(argv: string[], io: Io): Promise<number> {
   const { config } = opened.repo;
 
   const document = {
-    prefix: config.prefix,
     categories: CATEGORIES.map((entry) => entry.category),
     statuses: config.statuses,
     priorities: PRIORITIES,

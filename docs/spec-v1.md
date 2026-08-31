@@ -27,7 +27,7 @@ Everything else follows from those two ideas. Tickets are committed to the repo,
 1. As a developer, I want to start tracking work with a single command in an existing repo, so that I don't need an account, a network connection, or a signup flow.
 2. As a developer, I want moth to ask me its setup questions interactively on first run, so that I don't have to read documentation to configure it.
 3. As a developer, I want my tickets committed alongside my code, so that they travel with the repo through clones, branches, and pull requests.
-4. As a developer, I want to choose my own ticket ID prefix, so that IDs read naturally for my project.
+4. ~~As a developer, I want to choose my own ticket ID prefix, so that IDs read naturally for my project.~~ Dropped; see Out of Scope.
 5. As a coding agent, I want to create a ticket with only a title, so that filing work is cheap enough that I actually do it.
 6. As a coding agent, I want to pipe a multi-paragraph description into a new ticket via stdin, so that markdown containing quotes, backticks, and code fences survives intact instead of being mangled by shell quoting.
 7. As a coding agent, I want every command to work without an interactive prompt, so that I never deadlock waiting on input I cannot provide.
@@ -45,8 +45,8 @@ Everything else follows from those two ideas. Tickets are committed to the repo,
 19. As a coding agent, I want data on stdout and diagnostics on stderr, so that I can pipe moth's output without contaminating it.
 20. As a coding agent, I want colour and decoration suppressed when output is not a terminal, so that I get clean text without passing a flag.
 21. As a developer, I want to search ticket titles and bodies, so that I can find a ticket whose ID I don't remember.
-22. As a developer, I want to reference a ticket by an unambiguous prefix of its ID, so that I don't have to type the whole thing.
-23. As a developer, I want an error when a prefix matches more than one ticket, so that I never act on the wrong one by accident.
+22. As a developer, I want to reference a ticket by its number however I write it, padded or not, so that I don't have to be careful about leading zeros.
+23. As a developer, I want an error when a reference matches more than one ticket, so that I never act on the wrong one by accident.
 24. As a coding agent, I want to record that one ticket blocks another, so that the dependency is data rather than prose in a description.
 25. As a developer, I want to list only blocked or only unblocked tickets, so that I can see what is actually startable right now.
 26. As a coding agent, I want to break a ticket into sub-tickets, so that a large piece of work has somewhere structured to be decomposed.
@@ -87,7 +87,7 @@ Filenames are `NNN-slug.md`. The slug is derived from the title and re-synced wh
 
 ### Ticket identity
 
-Tickets are numbered sequentially and stored as `NNN-slug.md`, zero-padded to three digits so a directory listing sorts correctly past ninety-nine. The number is the id; a configured prefix, if any, is presentation applied to filenames and output, and defaults to none.
+Tickets are numbered sequentially and stored as `NNN-slug.md`, zero-padded to three digits so a directory listing sorts correctly past ninety-nine. The number is the id, and padding is presentation applied to filenames and output.
 
 A random suffix was chosen first and reversed; see ADR-0004. The residual hazard is that two branches can allocate the same number and git will merge both files cleanly, since their slugs differ. That is tolerable only because reading the store reports numbers held by more than one ticket, making the collision loud at the next command.
 
@@ -103,7 +103,7 @@ The shape of a ticket, which encodes several of the above decisions more precise
 
 ```yaml
 ---
-id: 20                     # the number is the id; padding and prefix are presentation
+id: 20                     # the number is the id; padding is presentation
 title: Reject writes containing undeclared fields
 status: in-progress        # a repo-defined status; its category is resolved via config
 priority: high             # none | low | medium | high | urgent
@@ -123,7 +123,6 @@ The config it is validated against, written by `moth init` and hand-edited there
 
 ```yaml
 # moth.config.yml
-prefix: ""                 # optional display prefix, e.g. ENG-020
 tickets: .moth             # where ticket files live, relative to this file
 statuses:
   - name: backlog
@@ -219,6 +218,7 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 - **Storing tickets outside the repo.** Considered as a way to make sequential ids collision-free; rejected because tickets travelling with the code is the point, and supporting both modes would be the anti-opinionated move.
 - **A routing or readiness field.** Considered as `ready-for-agent` / `ready-for-human`, following the triage roles moth's interim tracker uses. Rejected for two reasons: the `backlog`/`unstarted` boundary already encodes the triage decision, so it would be a second field expressing a distinction the categories carry; and an agent-versus-human split encodes a capability boundary that moves every few months, which is a poor thing to freeze into a fixed, non-configurable schema. Anyone wanting the signal can use a label. Reconsider from evidence in real use, not from prediction.
 - **A claim field.** Moving a ticket into a `started` status is the claim. A dedicated `claimed_by` brings stale-claim handling — timeouts, manual clearing — for a problem an ordinary stale `in-progress` ticket already expresses in a way people know how to resolve.
+- **A configurable id prefix.** Config once carried a `prefix`, so a repo could show `ENG-020` instead of `020`. It was introduced alongside random ids, where `MOTH-7f3a` needed a namespace to be distinguishable, and it outlived that reason: a sequential number inside a repo-local tracker has nothing to disambiguate against. It failed the deletion test outright, since removing it made all twenty-one call sites simpler rather than concentrating anything, and it sat awkwardly beside moth's refusal of configurability that does not earn itself. Reconsider only with a concrete case that labels cannot serve.
 - **A `duplicate_of` relation.** moth has a `duplicate` status category but no pointer to the ticket a duplicate defers to, so a duplicated ticket records *that* it is a duplicate and not *of what*. The argument for adding it is that agents filing tickets will duplicate existing ones often, and the blocking graph could then traverse through a duplicate to its canonical ticket. Left out as a third relation type; the strongest candidate for the first post-v1 addition.
 - **Importing from an existing tracker.**
 

@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "../src/run.ts";
 import { captureIo } from "./helpers/capture-io.ts";
@@ -112,18 +112,6 @@ test("two tickets sharing a number are reported, and both still listed", async (
   expect(io.err()).toContain("001");
   expect(io.out()).toContain("Alpha");
   expect(io.out()).toContain("Beta");
-});
-
-test("a configured prefix is shown alongside the ticket number", async () => {
-  const dir = await initedRepo();
-  await run(["new", "Fix the login redirect"], captureIo(dir));
-  const configPath = join(dir, "moth.config.yml");
-  writeFileSync(configPath, readFileSync(configPath, "utf8").replace('prefix: ""', "prefix: ENG"));
-  const io = captureIo(dir);
-
-  await run(["list"], io);
-
-  expect(io.out()).toContain("ENG-001");
 });
 
 test("tickets are ordered by priority, then by age", async () => {

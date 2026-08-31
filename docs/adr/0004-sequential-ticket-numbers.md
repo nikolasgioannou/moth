@@ -20,4 +20,4 @@ Padding to three digits matters: with two, `100` sorts before `99` and a directo
 
 The remaining hazard is renumbering. Resolving a duplicate by renumbering must rewrite every reference to it, or a reference silently points at a different ticket — worse than a dangling one, because it resolves. That obligation belongs with the command that does the renumbering.
 
-The id in frontmatter is the number itself. YAML parses an unquoted `020` as `20`, so storing it padded would lose the padding on the first round-trip. Padding and any configured prefix are presentation, applied to filenames and output.
+The id in frontmatter is the number itself. YAML parses an unquoted `020` as `20`, so storing it padded would lose the padding on the first round-trip. Padding is presentation, applied to filenames and output. (A configurable prefix was presentation too, and was later removed; see the spec's Out of Scope.)

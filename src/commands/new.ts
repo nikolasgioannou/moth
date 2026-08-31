@@ -53,7 +53,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
   const existing = readTickets(ticketsDir);
   let parentId: number | undefined;
   if (typeof values.parent === "string") {
-    const parentRef = resolve(existing, values.parent, config.prefix);
+    const parentRef = resolve(existing, values.parent);
     if (parentRef.kind !== "found") {
       io.stderr(`moth: no single ticket matches parent '${values.parent}'\n`);
       return 1;
@@ -93,7 +93,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
   if (values.json === true) {
     io.stdout(`${JSON.stringify({ ...metadata, body }, null, 2)}\n`);
   } else {
-    io.stdout(`${formatId(id, config.prefix)}  ${title}\n`);
+    io.stdout(`${formatId(id)}  ${title}\n`);
   }
   return 0;
 }

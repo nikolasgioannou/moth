@@ -78,7 +78,7 @@ test("init writes a config you can hand-edit", async () => {
   const raw = readFileSync(join(dir, "moth.config.yml"), "utf8");
   expect(raw).toContain("\nstatuses:\n");
   expect(raw).not.toContain("{prefix");
-  expect(Bun.YAML.parse(raw)).toMatchObject({ prefix: "" });
+  expect(Bun.YAML.parse(raw)).toMatchObject({ tickets: ".moth" });
 });
 
 test("init does not ask for a ticket prefix", async () => {

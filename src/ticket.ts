@@ -28,10 +28,9 @@ function parse(raw: string, path: string): Ticket {
   return { ...data, labels: data.labels ?? [], path, body: body.replace(/^\n/, "") };
 }
 
-/** How an id is shown: padded, and prefixed only when the repo asked for one. */
-export function formatId(id: number, prefix: string): string {
-  const padded = padNumber(id);
-  return prefix === "" ? padded : `${prefix}-${padded}`;
+/** How an id is shown. */
+export function formatId(id: number): string {
+  return padNumber(id);
 }
 
 /** Ticket numbers are padded so a directory listing sorts correctly past ninety-nine. */
@@ -94,15 +93,10 @@ export type Resolution =
  * only ever matched against numbers, never against titles, so `20` cannot
  * resolve to a ticket merely titled "20 things to fix".
  */
-export function resolve(tickets: Ticket[], reference: string, prefix: string): Resolution {
-  const bare =
-    prefix !== "" && reference.toLowerCase().startsWith(`${prefix.toLowerCase()}-`)
-      ? reference.slice(prefix.length + 1)
-      : reference;
-
-  const matches = /^\d+$/.test(bare)
-    ? tickets.filter((ticket) => ticket.id === Number(bare))
-    : tickets.filter((ticket) => ticket.title.toLowerCase().includes(bare.toLowerCase()));
+export function resolve(tickets: Ticket[], reference: string): Resolution {
+  const matches = /^\d+$/.test(reference)
+    ? tickets.filter((ticket) => ticket.id === Number(reference))
+    : tickets.filter((ticket) => ticket.title.toLowerCase().includes(reference.toLowerCase()));
 
   if (matches.length === 1) return { kind: "found", ticket: matches[0] as Ticket };
   if (matches.length > 1) return { kind: "ambiguous", tickets: matches };

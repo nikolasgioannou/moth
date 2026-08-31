@@ -30,7 +30,7 @@ export async function board(argv: string[], io: Io): Promise<number> {
     io.stdout(`\n## ${status}\n\n`);
     for (const ticket of group) {
       const priority = ticket.priority === "none" ? "" : ` _(${ticket.priority})_`;
-      io.stdout(`- **${formatId(ticket.id, config.prefix)}** ${ticket.title}${priority}\n`);
+      io.stdout(`- **${formatId(ticket.id)}** ${ticket.title}${priority}\n`);
     }
   }
   return 0;

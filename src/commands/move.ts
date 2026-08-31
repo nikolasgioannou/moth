@@ -20,7 +20,7 @@ export async function move(argv: string[], io: Io): Promise<number> {
   const { config, ticketsDir } = opened.repo;
 
   const [reference = "", status = ""] = parsed.positionals;
-  const found = resolve(readTickets(ticketsDir), reference, config.prefix);
+  const found = resolve(readTickets(ticketsDir), reference);
 
   if (found.kind === "none") {
     io.stderr(`moth: no ticket matches '${reference}'\n`);
@@ -29,7 +29,7 @@ export async function move(argv: string[], io: Io): Promise<number> {
   if (found.kind === "ambiguous") {
     io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
     for (const candidate of found.tickets) {
-      io.stderr(`  ${formatId(candidate.id, config.prefix)}  ${candidate.title}\n`);
+      io.stderr(`  ${formatId(candidate.id)}  ${candidate.title}\n`);
     }
     return 1;
   }
@@ -52,7 +52,7 @@ export async function move(argv: string[], io: Io): Promise<number> {
   if (parsed.values.json === true) {
     io.stdout(`${JSON.stringify(metadataOf(updated), null, 2)}\n`);
   } else {
-    io.stdout(`${formatId(updated.id, config.prefix)}  ${updated.title}  ${updated.status}\n`);
+    io.stdout(`${formatId(updated.id)}  ${updated.title}  ${updated.status}\n`);
   }
   return 0;
 }

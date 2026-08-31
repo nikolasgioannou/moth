@@ -20,6 +20,6 @@ blocked_by:
 - [x] A ticket's file is named `NNN-slug.md` and its frontmatter records the same number
 - [x] Two tickets sharing a number are reported rather than silently tolerated, on read
 (Renumbering a duplicate rewrites every reference: moved to ticket 14, where the renumber command lives.)
-- [x] Whether an id prefix is used at all is a config choice, defaulting to none
+- [x] ~~Whether an id prefix is used at all is a config choice, defaulting to none~~ superseded by ticket 26: the prefix was removed
 - [x] ADR-0001 is superseded by a new ADR recording why the earlier reasoning no longer holds
 - [x] The spec's ticket shape and Out of Scope entries reflect the new scheme

@@ -17,11 +17,11 @@ export async function show(argv: string[], io: Io): Promise<number> {
 `);
     return 1;
   }
-  const { config, ticketsDir } = opened.repo;
+  const { ticketsDir } = opened.repo;
 
   const reference = parsed.positionals[0] ?? "";
   const tickets = readTickets(ticketsDir);
-  const found = resolve(tickets, reference, config.prefix);
+  const found = resolve(tickets, reference);
 
   if (found.kind === "none") {
     io.stderr(`moth: no ticket matches '${reference}'\n`);
@@ -31,7 +31,7 @@ export async function show(argv: string[], io: Io): Promise<number> {
   if (found.kind === "ambiguous") {
     io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
     for (const candidate of found.tickets) {
-      io.stderr(`  ${formatId(candidate.id, config.prefix)}  ${candidate.title}\n`);
+      io.stderr(`  ${formatId(candidate.id)}  ${candidate.title}\n`);
     }
     return 1;
   }
@@ -42,7 +42,7 @@ export async function show(argv: string[], io: Io): Promise<number> {
     io.stdout(`${JSON.stringify({ ...metadataOf(ticket), body: ticket.body }, null, 2)}\n`);
     return 0;
   }
-  io.stdout(`${formatId(ticket.id, config.prefix)}  ${ticket.title}\n`);
+  io.stdout(`${formatId(ticket.id)}  ${ticket.title}\n`);
   io.stdout(`status    ${ticket.status}\n`);
   io.stdout(`priority  ${ticket.priority}\n`);
   if (ticket.labels.length > 0) io.stdout(`labels    ${ticket.labels.join(", ")}\n`);

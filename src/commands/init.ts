@@ -8,8 +8,6 @@ import { CONFIG_FILENAME, DEFAULT_TICKETS_DIR } from "../repo.ts";
 
 const CONFIG_HEADER = `# moth configuration.
 #
-# prefix    Optional. Shown before a ticket's number, e.g. ENG-001. Empty for
-#           bare numbers, which is the default.
 # tickets   Directory the tickets live in, relative to this file.
 # statuses  Each status belongs to one of six fixed categories:
 #           backlog, unstarted, started, completed, canceled, duplicate.
@@ -43,7 +41,7 @@ export async function init(argv: string[], io: Io): Promise<number> {
   mkdirSync(join(io.cwd, DEFAULT_TICKETS_DIR), { recursive: true });
   writeFileSync(
     configPath,
-    CONFIG_HEADER + stringifyYaml({ prefix: "", tickets: DEFAULT_TICKETS_DIR, statuses }),
+    CONFIG_HEADER + stringifyYaml({ tickets: DEFAULT_TICKETS_DIR, statuses }),
   );
   return 0;
 }

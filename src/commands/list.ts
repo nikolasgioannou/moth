@@ -75,7 +75,7 @@ export async function list(argv: string[], io: Io): Promise<number> {
   const paint = (code: string, text: string) => (io.isTty ? `\x1b[${code}m${text}\x1b[0m` : text);
 
   // Widths are computed across the whole result, so columns line up between groups too.
-  const idWidth = Math.max(...tickets.map((t) => formatId(t.id, config.prefix).length));
+  const idWidth = Math.max(...tickets.map((t) => formatId(t.id).length));
   const titleWidth = Math.max(...tickets.map((ticket) => ticket.title.length));
 
   for (const status of statusOrder(config, tickets)) {
@@ -83,7 +83,7 @@ export async function list(argv: string[], io: Io): Promise<number> {
     if (group.length === 0) continue;
     io.stdout(`${paint("1", status)}\n`);
     for (const ticket of group) {
-      const id = formatId(ticket.id, config.prefix).padEnd(idWidth);
+      const id = formatId(ticket.id).padEnd(idWidth);
       const title = ticket.title.padEnd(titleWidth);
       const parent =
         ticket.parent === undefined ? "" : paint("2", `  \u21b3 ${padNumber(ticket.parent)}`);

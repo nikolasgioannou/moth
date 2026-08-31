@@ -20,10 +20,10 @@ export async function remove(argv: string[], io: Io): Promise<number> {
 `);
     return 1;
   }
-  const { config, ticketsDir } = opened.repo;
+  const { ticketsDir } = opened.repo;
 
   const reference = parsed.positionals[0] ?? "";
-  const found = resolve(readTickets(ticketsDir), reference, config.prefix);
+  const found = resolve(readTickets(ticketsDir), reference);
   if (found.kind !== "found") {
     io.stderr(`moth: no single ticket matches '${reference}'\n`);
     return 1;
@@ -37,6 +37,6 @@ export async function remove(argv: string[], io: Io): Promise<number> {
 
   const ticket = found.ticket;
   rmSync(ticket.path);
-  io.stdout(`deleted ${formatId(ticket.id, config.prefix)}  ${ticket.title}\n`);
+  io.stdout(`deleted ${formatId(ticket.id)}  ${ticket.title}\n`);
   return 0;
 }

@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "../src/run.ts";
 import { captureIo } from "./helpers/capture-io.ts";
@@ -35,18 +35,6 @@ test("a number resolves with or without zero padding", async () => {
     expect(await run(["show", reference], io)).toBe(0);
     expect(io.out()).toContain("Fix the login redirect");
   }
-});
-
-test("a number resolves when written with the repo's prefix", async () => {
-  const dir = await initedRepo();
-  await run(["new", "Fix the login redirect"], captureIo(dir));
-  const configPath = join(dir, "moth.config.yml");
-  writeFileSync(configPath, readFileSync(configPath, "utf8").replace('prefix: ""', "prefix: ENG"));
-
-  const io = captureIo(dir);
-
-  expect(await run(["show", "ENG-001"], io)).toBe(0);
-  expect(io.out()).toContain("Fix the login redirect");
 });
 
 test("a ticket resolves by words from its title", async () => {

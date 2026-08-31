@@ -37,7 +37,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const { config, ticketsDir } = opened.repo;
 
   const reference = parsed.positionals[0] ?? "";
-  const found = resolve(readTickets(ticketsDir), reference, config.prefix);
+  const found = resolve(readTickets(ticketsDir), reference);
 
   if (found.kind === "none") {
     io.stderr(`moth: no ticket matches '${reference}'\n`);
@@ -46,7 +46,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   if (found.kind === "ambiguous") {
     io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
     for (const candidate of found.tickets) {
-      io.stderr(`  ${formatId(candidate.id, config.prefix)}  ${candidate.title}\n`);
+      io.stderr(`  ${formatId(candidate.id)}  ${candidate.title}\n`);
     }
     return 1;
   }
@@ -69,7 +69,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const all = readTickets(ticketsDir);
   let parent = ticket.parent;
   if (typeof values.parent === "string") {
-    const parentRef = resolve(all, values.parent, config.prefix);
+    const parentRef = resolve(all, values.parent);
     if (parentRef.kind !== "found") {
       io.stderr(`moth: no single ticket matches parent '${values.parent}'\n`);
       return 1;
@@ -85,7 +85,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const toNumbers = (references: string[]): number[] | null => {
     const numbers: number[] = [];
     for (const reference of references) {
-      const match = resolve(all, reference, config.prefix);
+      const match = resolve(all, reference);
       if (match.kind !== "found") {
         io.stderr(`moth: no single ticket matches '${reference}'\n`);
         return null;
@@ -141,7 +141,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   if (parsed.values.json === true) {
     io.stdout(`${JSON.stringify(metadataOf(updated), null, 2)}\n`);
   } else {
-    io.stdout(`${formatId(updated.id, config.prefix)}  ${updated.title}\n`);
+    io.stdout(`${formatId(updated.id)}  ${updated.title}\n`);
   }
   return 0;
 }

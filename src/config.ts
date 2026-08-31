@@ -25,7 +25,6 @@ export const CORE_FIELDS = [
 ] as const;
 
 export interface Config {
-  prefix: string;
   statuses: { name: string; category: string }[];
   /** Extra fields this repo permits on a ticket. Anything else is refused. */
   fields?: string[];
