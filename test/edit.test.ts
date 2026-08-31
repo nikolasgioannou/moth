@@ -1,12 +1,12 @@
 import { afterAll, expect, test } from "bun:test";
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "../src/run.ts";
 import { captureIo } from "./helpers/capture-io.ts";
 import { parseFrontmatter } from "./helpers/frontmatter.ts";
 import { initedRepo } from "./helpers/repo-fixture.ts";
 import { newTicket, ticketText } from "./helpers/tickets.ts";
-import { cleanupTempDirs } from "./helpers/tmp.ts";
+import { cleanupTempDirs, tempDir } from "./helpers/tmp.ts";
 
 afterAll(cleanupTempDirs);
 
@@ -106,4 +106,110 @@ test("a real edit touches the updated timestamp and not the created one", async 
 
   expect(fields(dir, id).created_at).toBe(created);
   expect(fields(dir, id).updated_at).toBe(edited);
+});
+
+test("--body replaces the body and leaves the metadata alone", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "The original description."]);
+
+  const code = await run(["edit", id, "--body", "A wholly new description."], captureIo(dir));
+
+  expect(code).toBe(0);
+  const parsed = parseFrontmatter(ticketText(dir, id));
+  expect(parsed.body).toBe("A wholly new description.\n");
+  expect(parsed.data.title).toBe("Fix login redirect");
+});
+
+test("--body-file - replaces the body from stdin", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."]);
+  const io = captureIo(dir, { stdin: "Piped in." });
+
+  const code = await run(["edit", id, "--body-file", "-"], io);
+
+  expect(code).toBe(0);
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe("Piped in.\n");
+});
+
+test("--body-file reads a file relative to the working directory", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."]);
+  writeFileSync(join(dir, "body.md"), "From a file.\n");
+
+  const code = await run(["edit", id, "--body-file", "body.md"], captureIo(dir));
+
+  expect(code).toBe(0);
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe("From a file.\n");
+});
+
+test("markdown that could be mistaken for frontmatter survives a replacement", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."]);
+  const body = ["A fenced block:", "", "```yaml", "title: not the title", "---", "```"].join("\n");
+
+  await run(["edit", id, "--body-file", "-"], captureIo(dir, { stdin: body }));
+
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe(`${body}\n`);
+  expect(parseFrontmatter(ticketText(dir, id)).data.title).toBe("Fix login redirect");
+});
+
+test("the body can be cleared, unlike the title", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."]);
+
+  const code = await run(["edit", id, "--body", ""], captureIo(dir));
+
+  expect(code).toBe(0);
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe("");
+});
+
+test("replacing the body touches the updated timestamp", async () => {
+  const dir = await initedRepo();
+  const created = "2026-01-01T00:00:00.000Z";
+  const edited = "2026-06-01T00:00:00.000Z";
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."], {
+    now: () => new Date(created),
+  });
+
+  await run(["edit", id, "--body", "Replaced."], captureIo(dir, { now: () => new Date(edited) }));
+
+  expect(fields(dir, id).updated_at).toBe(edited);
+  expect(fields(dir, id).created_at).toBe(created);
+});
+
+test("re-writing the identical body changes nothing on disk", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."]);
+  const before = ticketText(dir, id);
+
+  const code = await run(["edit", id, "--body", "Original."], captureIo(dir));
+
+  expect(code).toBe(0);
+  expect(ticketText(dir, id)).toBe(before);
+});
+
+test("--set body= is refused, even when body is declared as a field", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."]);
+  const path = join(dir, "moth.config.yml");
+  writeFileSync(path, `${readFileSync(path, "utf8")}\nfields:\n  - body\n`);
+  const io = captureIo(dir);
+
+  const code = await run(["edit", id, "--set", "body=sneaky"], io);
+
+  expect(code).toBe(1);
+  expect(io.err()).toContain("--body");
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe("Original.\n");
+});
+
+test("--body-file accepts an absolute path, not only one relative to the repo", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."]);
+  const outside = join(tempDir("body-source"), "body.md");
+  writeFileSync(outside, "From outside the repo.\n");
+
+  const code = await run(["edit", id, "--body-file", outside], captureIo(dir));
+
+  expect(code).toBe(0);
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe("From outside the repo.\n");
 });

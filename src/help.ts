@@ -50,20 +50,14 @@ export const HELP: Record<string, CommandHelp> = {
     notes: "Moving to the status a ticket already holds succeeds and changes nothing.",
   },
   edit: {
-    summary: "Change a ticket's title, priority, labels, parent or blockers",
+    summary: "Change a ticket's title, body, priority, labels, parent or blockers",
     usage:
-      "moth edit <ticket> [--title <text>] [--priority <p>] [--label <l>] [--remove-label <l>] [--parent <ticket>] [--blocked-by <ticket>] [--unblock <ticket>] [--set <field>=<value>] [--json]",
+      "moth edit <ticket> [--title <text>] [--body <text> | --body-file <path>] [--priority <p>] [--label <l>] [--remove-label <l>] [--parent <ticket>] [--blocked-by <ticket>] [--unblock <ticket>] [--set <field>=<value>] [--json]",
     example: `  $ moth edit 20 --priority high --label cli
   $ moth edit 20 --title "Rewrite the auth flow"
-  $ moth edit 21 --blocked-by 20`,
+  $ moth show 20 --json | jq -r .body | sed s/foo/bar/ | moth edit 20 --body-file -`,
     notes:
-      "Changing a title renames the file to match. --set only accepts fields declared in config.",
-  },
-  append: {
-    summary: "Add a note to a ticket from stdin",
-    usage: "moth append <ticket>",
-    example: `  $ printf 'Reproduced on Safari.\\n' | moth append 20`,
-    notes: "Notes accumulate under a Notes heading; the description above is left alone.",
+      "Changing a title renames the file to match. --body replaces the whole body, so read it first with moth show --json. --set only accepts fields declared in config.",
   },
   delete: {
     summary: "Remove a ticket permanently",

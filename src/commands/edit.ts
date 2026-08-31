@@ -1,4 +1,5 @@
 import { parseArgs, stringList } from "../args.ts";
+import { suppliedBody } from "../body.ts";
 import { legalFields, PRIORITIES } from "../config.ts";
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
@@ -8,6 +9,8 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), {
     json: { type: "boolean" },
     title: { type: "string" },
+    body: { type: "string" },
+    "body-file": { type: "string" },
     priority: { type: "string" },
     label: { type: "string", multiple: true },
     "remove-label": { type: "string", multiple: true },
@@ -52,6 +55,13 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     io.stderr("moth: a ticket needs a title, so it cannot be cleared\n");
     return 2;
   }
+
+  const supplied = await suppliedBody(values, io);
+  if (!supplied.ok) {
+    io.stderr(`moth: ${supplied.message}\n`);
+    return 1;
+  }
+  const body = supplied.body ?? ticket.body;
 
   const priority = typeof values.priority === "string" ? values.priority : ticket.priority;
   if (!(PRIORITIES as readonly string[]).includes(priority)) {
@@ -98,6 +108,12 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const custom: Record<string, string> = {};
   for (const assignment of stringList(values.set)) {
     const [key = "", ...rest] = assignment.split("=");
+    // The body is the document, not a frontmatter key. Without this a repo that
+    // declares `body` as a field could --set one that collides with it.
+    if (key === "body") {
+      io.stderr("moth: the body is not a frontmatter field; use --body or --body-file\n");
+      return 1;
+    }
     if (!legalFields(config).includes(key)) {
       io.stderr(`moth: '${key}' is not a field in this repo. Declare it in config to use it.\n`);
       return 1;
@@ -111,7 +127,11 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     .filter((label) => !removed.includes(label))
     .sort();
 
+  // Compared with trailing newlines stripped: the stored body always ends with
+  // one, while a supplied body never does.
+  const trimmed = (text: string) => text.replace(/\n+$/, "");
   const changed =
+    trimmed(body) !== trimmed(ticket.body) ||
     title !== ticket.title ||
     priority !== ticket.priority ||
     parent !== ticket.parent ||
@@ -123,6 +143,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
         ...ticket,
         ...custom,
         title,
+        body,
         priority,
         labels,
         parent,

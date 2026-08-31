@@ -1,7 +1,8 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Scalar, stringify as stringifyYaml } from "yaml";
 import { parseArgs } from "../args.ts";
+import { suppliedBody } from "../body.ts";
 import type { Config } from "../config.ts";
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
@@ -70,13 +71,12 @@ export async function create(argv: string[], io: Io): Promise<number> {
     updated_at: timestamp,
   };
 
-  const bodyFile = values["body-file"];
-  let body = typeof values.body === "string" ? values.body : "";
-  if (bodyFile === "-") {
-    body = (await io.stdin()).replace(/\n+$/, "");
-  } else if (typeof bodyFile === "string") {
-    body = readFileSync(join(io.cwd, bodyFile), "utf8").replace(/\n+$/, "");
+  const supplied = await suppliedBody(values, io);
+  if (!supplied.ok) {
+    io.stderr(`moth: ${supplied.message}\n`);
+    return 1;
   }
+  const body = supplied.body ?? "";
 
   // Quoted so no YAML parser can read an id like 22739e as a number.
   const quotedId = new Scalar(id);
