@@ -16,6 +16,6 @@ But it has never been asked for by a user, its default is empty so most repos ne
 
 Keep it if the "ENG-020 in a commit message" case is worth the parameter; remove it if not. Either way the decision should be written down rather than left as something nobody remembers choosing.
 
-- [ ] A decision is recorded, with its reasoning
-- [ ] If removed, `formatId` and `resolve` lose the parameter and every command stops threading it
-- [ ] If kept, the config comment explains when someone would want it
+- [x] A decision is recorded, with its reasoning
+- [x] If removed, `formatId` and `resolve` lose the parameter and every command stops threading it
+- [x] ~~If kept, the config comment explains when someone would want it~~ not applicable: it was removed
