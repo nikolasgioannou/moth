@@ -48,7 +48,24 @@ backlog
 
 Name a ticket however you remember it. `moth show 280f4d`, `moth show 280` and `moth show "ship the binary"` all find the same one, and an ambiguous reference lists the candidates rather than guessing.
 
-`moth --help` lists every command; each one's `--help` carries a worked example. `moth schema --json` reports exactly what this repository considers a legal ticket, which is how an agent learns the rules in one call.
+`moth schema --json` reports exactly what this repository considers a legal ticket, which is how an agent learns the rules in one call.
+
+## Commands
+
+Ten, and that is the whole surface:
+
+- `init` — set up a repository
+- `new` — file a ticket
+- `list` — the default view, priority then age
+- `show` — one ticket in full
+- `move` — change status, which is how you claim work
+- `edit` — change any field, the body included
+- `delete` — remove a ticket
+- `board` — a markdown board, grouped by status
+- `check` — validate every ticket against the schema
+- `schema` — this repository's rules, as JSON
+
+Each one's `--help` carries its flags and a worked example, and `--json` is available on everything that returns a ticket.
 
 ## Why it exists
 
@@ -70,7 +87,7 @@ Every rejection, with its reasoning, is in [the spec](docs/spec-v1.md#out-of-sco
 
 ## Storage
 
-`moth.config.yml` at the root, and one markdown file per ticket in `.moth/`:
+`moth.config.yml` at the root, and one markdown file per ticket in `.moth/`, named for its title so a directory listing reads like a backlog — `fix-the-login-redirect-280f4d.md`:
 
 ```markdown
 ---
@@ -94,7 +111,7 @@ Flat, with nothing central that every write touches, so two branches creating ti
 ## Design
 
 - [The v1 spec](docs/spec-v1.md) — what was built, and every rejected alternative
-- [Architecture decisions](docs/adr/) — including two reversals, with the reasoning that changed
+- [Architecture decisions](docs/adr/) — four decisions, each with the alternatives that lost
 - [Contributing](CONTRIBUTING.md)
 
 moth tracks its own development in moth: the backlog is [`.moth/`](.moth/).

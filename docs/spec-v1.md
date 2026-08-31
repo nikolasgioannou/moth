@@ -51,7 +51,7 @@ Everything else follows from those two ideas. Tickets are committed to the repo,
 25. As a developer, I want to list only blocked or only unblocked tickets, so that I can see what is actually startable right now.
 26. As a coding agent, I want to break a ticket into sub-tickets, so that a large piece of work has somewhere structured to be decomposed.
 27. As a developer, I want a parent-child relationship that would form a cycle to be rejected, so that the hierarchy is always traversable.
-28. As a coding agent, I want to append notes to a ticket, so that I can record findings mid-task without rewriting the whole file and risking clobbering it.
+28. As a coding agent, I want to replace a ticket's body, so that I can correct or restructure a description without hand-editing the file behind moth's back.
 29. As a coding agent, I want every mutation to print the resulting ticket, so that I can confirm the change without a second command.
 30. As a coding agent, I want repeating a mutation that is already applied to succeed rather than error, so that retrying is safe.
 31. As a developer, I want to cancel a ticket rather than delete it, so that the decision not to do something is preserved.
@@ -81,13 +81,13 @@ Config lives at `moth.config.yml` in the repo root, where a tool's configuration
 
 **No central index file.** Nothing that every write touches. An index, a counter, or a generated board committed by moth itself would conflict on every parallel branch, and that would be the most-hated thing about the tool.
 
-Filenames are `NNN-slug.md`. The slug is derived from the title and re-synced whenever moth changes the title, so a directory listing never misinforms. A frozen slug was tried first and reversed; see ADR-0005. Because moth cannot see a title edited by hand in an editor, `moth check` reports slug drift and repairs it, the same way it reports duplicate numbers. The number is authoritative; the slug is derived.
+Filenames are `slug-id.md`. The slug is derived from the title and re-synced whenever moth changes the title, so a directory listing never misinforms. A frozen slug was considered and rejected; see ADR-0004. Because moth cannot see a title edited by hand in an editor, `moth check` reports slug drift and repairs it, the same way it reports duplicate ids. The id is authoritative; the slug is derived.
 
 `created_at` and `updated_at` are stored in frontmatter. Deriving them from git would mean one git invocation per ticket on every list.
 
 ### Ticket identity
 
-Tickets are identified by six random hex characters and stored as `a3f8c1-slug.md`. The id is opaque; the slug carries every part a human reads. Sequential numbering was tried and reversed twice — see ADR-0001, ADR-0004 and ADR-0006 — and the deciding change was that moth targets repositories with several writers, where two branches allocate the same number with no coordination and git merges both files cleanly. Ordering, the only thing a number bought, turned out to be something nobody used: tickets are found through `moth list` and opened from there.
+Tickets are identified by six random hex characters and stored as `slug-a3f8c1.md`, the slug first because a random id sorts arbitrarily and earns no leading position. The id is opaque; the slug carries every part a human reads. Sequential numbering was rejected — see ADR-0003 — because moth targets repositories with several writers, where two branches allocate the same number with no coordination and git merges both files cleanly. Ordering, the only thing a number would buy, is not something anyone uses: tickets are found through `moth list` and opened from there.
 
 Reading the store still reports ids held by more than one ticket, since a random clash remains possible even if rare, and ids are always written quoted so no YAML parser can read one like `22739e` as a number.
 
@@ -114,7 +114,7 @@ created_at: 2026-08-30T11:04:22Z
 updated_at: 2026-08-30T14:51:09Z
 ---
 
-Body is the description. `## Notes` accumulates appended findings.
+Body is the description. moth stores it verbatim and reads nothing into it: it has no schema, so no heading or section means anything to moth.
 ```
 
 A ticket cannot exist without a title: it is the only field a caller must supply, and moth refuses a creation that omits it. These are the whole of a v1 ticket's structured fields. There is no assignee, no routing or readiness field, and no stored activity. Anything else a repo needs is either a label or a custom field declared in config.
@@ -143,21 +143,21 @@ There is no project or epic concept above the ticket. Labels already group, and 
 
 ### Command surface
 
-A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `append`, `delete`, `board`, `check` (also reachable as `doctor`), and `schema`.
+A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `delete`, `board`, `check`, and `schema`.
 
 A noun-verb shape after `gh` — `moth ticket create`, with the flat forms as aliases — was specified first and dropped. `gh`'s shape earns itself because it has many nouns to disambiguate: issues, pull requests, repositories, releases. moth has one. A noun layer over a single noun is ceremony that every caller pays for and no caller benefits from, and the argument for it was familiarity, which the flat verbs already have.
 
 Conventions, all of which exist to make the tool safe for a non-interactive caller:
 
 - stdout carries data; stderr carries everything else.
-- `--json` on every command that returns a ticket: `new`, `list`, `show`, `move`, `edit`, and `schema`. It implies no colour and no decoration. Three commands deliberately have no JSON form: `board` already emits markdown, which is its machine-readable output; `check` emits diagnostics rather than tickets; and `append` and `delete` print a one-line confirmation.
+- `--json` on every command that returns a ticket: `new`, `list`, `show`, `move`, `edit`, and `schema`. It implies no colour and no decoration. Three commands deliberately have no JSON form: `board` already emits markdown, which is its machine-readable output; `check` emits diagnostics rather than tickets; and `delete` prints a one-line confirmation.
 - Colour and progress output are suppressed automatically when stdout is not a terminal.
 - Exit codes: `0` success, `1` operation failed, `2` usage error. Documented, because agents branch on them.
 - No command prompts interactively, with exactly one exception: `moth init`, which is human-only setup.
 - Every mutation prints the resulting ticket, so confirming a change never costs a second invocation.
 - Mutations are idempotent. Moving a ticket to a status it already occupies exits `0`. Agents retry, and a retry should not look like a failure.
 
-`moth check [--fix]` validates the store: dangling blocking references, parent-child cycles, undeclared fields, statuses not present in config. Aliased as `doctor`, which is the word people reach for, though `check` is the more accurate name since it validates data rather than an installation.
+`moth check [--fix]` validates the store: dangling blocking references, parent-child cycles, undeclared fields, statuses not present in config. It was briefly also aliased as `doctor`, the word people reach for, but that name conventionally means "diagnose the installation" and this validates ticket data, so the alias was dropped rather than kept as a second name for one command.
 
 `moth board` prints a markdown board to stdout. It is derived and never authoritative; committing it is the user's choice via their own hook, which keeps it out of moth's write path and off the list of things that can conflict.
 
@@ -171,7 +171,7 @@ Because no skill ships with moth, **`--help` is load-bearing** — it is both th
 
 moth never invokes git. Tickets live in a git repo and git tracks them, but no moth command shells out, reads git state, or installs hooks. This fell out of cutting git integration and the activity log, and it is worth preserving: it removes an entire category of failure and makes every test a plain temp directory.
 
-History is git's job. `git log -p` on a ticket file is already a complete, attributed, timestamped record of every change, so moth stores no activity log and models no comments. Notes append to the body instead.
+History is git's job. `git log -p` on a ticket file is already a complete, attributed, timestamped record of every change, so moth stores no activity log and models no comments. A body is replaced whole, and git holds what it used to say.
 
 ## Testing Decisions
 
@@ -208,7 +208,7 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 - **Assignees.** No user registry, no accounts, no "me". Nothing in moth records who is working on what; coordination lives outside it.
 - **A `moth next` command.** Composable filters on `moth list` cover it.
 - **Git integration.** No branch creation, no branch-name parsing, no auto-transition on commit or merge. Hooks are per-clone and therefore unreliable, and tickets changing status without anyone asking contradicts the passive model.
-- **An activity log and comments.** Git is the history; notes append to the body.
+- **An activity log and comments.** Git is the history. moth has no append operation, because appending is what a comment is, and a body moth has opinions about is a body moth has to parse.
 - **A TUI.**
 - **An MCP server.**
 - **A shipped agent skill.** `--help` carries this burden instead.
