@@ -77,7 +77,8 @@ export function release(requested: string, dryRun: boolean): void {
   } else {
     console.log("release: package.json already declares this version, tagging as is");
   }
-  run(["git", "tag", tag]);
+  // Annotated, so it carries a message and works where tags are signed.
+  run(["git", "tag", "-a", "-m", `moth ${tag}`, tag]);
   run(["git", "push", "origin", "main"]);
   run(["git", "push", "origin", tag]);
 
