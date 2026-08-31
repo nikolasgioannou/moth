@@ -22,7 +22,6 @@ const COMMANDS: Record<string, Command> = {
   new: create,
   board,
   check,
-  doctor: check,
   edit,
   list,
   move,
@@ -30,6 +29,9 @@ const COMMANDS: Record<string, Command> = {
   schema,
   show,
 };
+
+/** Every name run dispatches on, so help coverage can be checked against it. */
+export const COMMAND_LIST = Object.keys(COMMANDS);
 
 export async function run(argv: string[], io: Io): Promise<number> {
   const command = argv[0];

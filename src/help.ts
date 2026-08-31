@@ -78,8 +78,7 @@ export const HELP: Record<string, CommandHelp> = {
     usage: "moth check [--fix]",
     example: `  $ moth check
   $ moth check --fix`,
-    notes:
-      "Also available as 'moth doctor'. --fix repairs what it can and reports what it left alone.",
+    notes: "--fix repairs what it can and reports what it left alone.",
   },
   schema: {
     summary: "Print what this repo considers a legal ticket",
@@ -91,14 +90,6 @@ export const HELP: Record<string, CommandHelp> = {
 };
 
 export const COMMAND_NAMES = Object.keys(HELP);
-
-/** Other names a command answers to. They share the command's help. */
-export const ALIASES: Record<string, string> = { doctor: "check" };
-
-/** The command a name refers to, following an alias if it is one. */
-export function resolveCommandName(name: string): string {
-  return ALIASES[name] ?? name;
-}
 
 const EXIT_CODES = `Exit codes:
   0  the command succeeded
@@ -124,11 +115,10 @@ ${EXIT_CODES}`;
 }
 
 export function commandHelp(name: string): string | null {
-  const resolved = resolveCommandName(name);
-  const entry = HELP[resolved];
+  const entry = HELP[name];
   if (entry === undefined) return null;
   const notes = entry.notes === undefined ? "" : `\n${entry.notes}\n`;
-  return `moth ${resolved} — ${entry.summary}
+  return `moth ${name} — ${entry.summary}
 
 Usage: ${entry.usage}
 ${notes}

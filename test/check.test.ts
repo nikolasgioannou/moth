@@ -109,11 +109,12 @@ test("check reports undeclared fields and unknown statuses", async () => {
   expect(result.output).toContain("shipped");
 });
 
-test("check is reachable as doctor", async () => {
+test("doctor is not a command; check is the only name", async () => {
   const dir = await initedRepo();
-  await newTicket(dir, "Fix the redirect");
+  const io = captureIo(dir);
 
-  expect(await run(["doctor"], captureIo(dir))).toBe(0);
+  expect(await run(["doctor"], io)).toBe(2);
+  expect(io.err()).toContain("doctor");
 });
 
 test("--fix says what it left alone", async () => {

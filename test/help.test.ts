@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "bun:test";
 import { COMMAND_NAMES } from "../src/help.ts";
-import { run } from "../src/run.ts";
+import { COMMAND_LIST, run } from "../src/run.ts";
 import { captureIo } from "./helpers/capture-io.ts";
 import { cleanupTempDirs, tempDir } from "./helpers/tmp.ts";
 
@@ -60,12 +60,8 @@ test("help alone is enough to initialise, create, find and move a ticket", async
   expect(await help("move", "--help")).toMatch(/moth move \S+ \S+/);
 });
 
-test("an aliased command has the help of the command it aliases", async () => {
-  const io = captureIo(tempDir());
-
-  const code = await run(["doctor", "--help"], io);
-
-  expect(code).toBe(0);
-  expect(io.out()).toContain("moth check");
-  expect(io.out().toLowerCase()).toContain("example");
+test("the dispatch table and the help registry name exactly the same commands", async () => {
+  // A command that dispatches but has no help entry exits 2 on --help, which is
+  // how `moth doctor --help` once failed. Comparing both ways catches either drift.
+  expect([...COMMAND_LIST].sort()).toEqual([...COMMAND_NAMES].sort());
 });
