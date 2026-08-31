@@ -1,11 +1,11 @@
 ---
 id: 25
 title: ADRs do not make supersession legible
-status: todo
+status: done
 priority: none
 labels: []
 created_at: 2026-08-30T23:51:46.449Z
-updated_at: 2026-08-30T23:53:16.098Z
+updated_at: 2026-08-31T00:03:12.250Z
 ---
 
 **What to build:** ADR-0002 rejects directory-per-status partly because "it turns every status change into a git rename, and rename/rename is the worst merge case". ADR-0005 later measured renames and found them cheap: one changed line, detected at 82% similarity, `--follow` tracking straight through.
@@ -14,9 +14,9 @@ The two are reconcilable — a rename per state transition is an order of magnit
 
 ADR-0002 also says status is "one of six queryable dimensions" and then names five: status, priority, labels, blocking, parentage.
 
-- [ ] ADR-0002 points forward to ADR-0005 where its rename argument was revisited
-- [ ] The rename argument in ADR-0002 is stated in terms of frequency, so it does not read as contradicted
-- [ ] The dimension count matches the dimensions actually named
+- [x] ADR-0002 points forward to ADR-0005 where its rename argument was revisited
+- [x] The rename argument in ADR-0002 is stated in terms of frequency, so it does not read as contradicted
+- [x] The dimension count matches the dimensions actually named
 
 ## Notes
 
@@ -30,6 +30,6 @@ Superseded ADRs should stay readable as history rather than being rewritten; the
 
 Additional criteria:
 
-- [ ] A superseded ADR says so in its prose, not only its frontmatter
-- [ ] ADR-0001 no longer reads as a description of current behaviour
-- [ ] ADR-0001 does not advertise prefix matching, which was later removed
+- [x] A superseded ADR says so in its prose, not only its frontmatter
+- [x] ADR-0001 no longer reads as a description of current behaviour
+- [x] ADR-0001 does not advertise prefix matching, which was later removed

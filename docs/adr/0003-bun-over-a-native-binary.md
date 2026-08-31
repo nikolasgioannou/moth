@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # TypeScript on Bun, despite native being measurably faster
 
 moth is written in TypeScript and compiled to a single binary with Bun, even though a native-compiled language benchmarked roughly four times faster on the real workload.
