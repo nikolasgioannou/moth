@@ -21,7 +21,7 @@ test("changing a title renames the file and keeps the id", async () => {
   const code = await run(["edit", id, "--title", "Rewrite the auth flow"], io);
 
   expect(code).toBe(0);
-  expect(files(dir)).toEqual([`${id}-rewrite-the-auth-flow.md`]);
+  expect(files(dir)).toEqual([`rewrite-the-auth-flow-${id}.md`]);
   const parsed = parseFrontmatter(ticketText(dir, id));
   expect(parsed.data.id).toBe(id);
   expect(parsed.data.title).toBe("Rewrite the auth flow");
@@ -69,7 +69,7 @@ test("a title cannot be cleared", async () => {
 
   expect(code).toBe(2);
   expect(io.err().toLowerCase()).toContain("title");
-  expect(files(dir)).toEqual([`${id}-fix-login-redirect.md`]);
+  expect(files(dir)).toEqual([`fix-login-redirect-${id}.md`]);
 });
 
 test("edit prints the ticket it updated", async () => {

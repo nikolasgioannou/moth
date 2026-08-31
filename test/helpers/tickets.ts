@@ -32,7 +32,7 @@ export async function givenTicket(
 export function ticketPath(dir: string, id: string): string {
   const tickets = join(dir, ".moth");
   const file = readdirSync(tickets).find(
-    (name) => name.startsWith(`${id}-`) || name === `${id}.md`,
+    (name) => name.endsWith(`-${id}.md`) || name === `${id}.md`,
   );
   if (file === undefined) throw new Error(`no file for ticket ${id} in ${tickets}`);
   return join(tickets, file);

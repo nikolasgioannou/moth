@@ -87,7 +87,7 @@ test("two tickets sharing an id are an ambiguous reference", async () => {
   const id = await newTicket(dir, "Alpha", [], { randomHex: () => "aaaaaa" });
   const front = (title: string) =>
     `---\nid: ${id}\ntitle: ${title}\nstatus: backlog\npriority: none\nlabels: []\n---\n\n`;
-  writeFileSync(join(dir, ".moth", `${id}-beta.md`), front("Beta"));
+  writeFileSync(join(dir, ".moth", `beta-${id}.md`), front("Beta"));
   const io = captureIo(dir);
 
   const code = await run(["show", id], io);

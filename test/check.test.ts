@@ -27,15 +27,15 @@ test("check passes a clean store", async () => {
 test("check reports a filename whose slug no longer matches its title, and --fix renames it", async () => {
   const dir = await initedRepo();
   const id = await newTicket(dir, "Fix the redirect");
-  renameSync(ticketPath(dir, id), join(dir, ".moth", `${id}-stale-name.md`));
+  renameSync(ticketPath(dir, id), join(dir, ".moth", `stale-name-${id}.md`));
 
   const reported = await check(dir);
   expect(reported.code).not.toBe(0);
-  expect(reported.output).toContain("stale-name.md");
+  expect(reported.output).toContain("stale-name-");
 
   const fixed = await check(dir, "--fix");
   expect(fixed.code).toBe(0);
-  expect(files(dir)).toEqual([`${id}-fix-the-redirect.md`]);
+  expect(files(dir)).toEqual([`fix-the-redirect-${id}.md`]);
 });
 
 test("check reports dangling blocking references", async () => {
@@ -59,7 +59,7 @@ test("check reports two tickets sharing an id, and --fix reissues one", async ()
   const copy = ticketText(dir, clashing)
     .replace("title: Alpha", "title: Beta")
     .replace(/created_at: .*/, "created_at: 2030-01-01T00:00:00.000Z");
-  writeFileSync(join(dir, ".moth", `${clashing}-beta.md`), copy);
+  writeFileSync(join(dir, ".moth", `beta-${clashing}.md`), copy);
 
   const reported = await check(dir);
   expect(reported.code).not.toBe(0);
@@ -70,7 +70,7 @@ test("check reports two tickets sharing an id, and --fix reissues one", async ()
   const ids = files(dir).map((name) => name.slice(0, 6));
   expect(new Set(ids).size).toBe(ids.length);
   // Alpha was created first, so it keeps the id it already had
-  expect(files(dir)).toContain(`${clashing}-alpha.md`);
+  expect(files(dir)).toContain(`alpha-${clashing}.md`);
 });
 
 test("check reports nesting deeper than one level", async () => {

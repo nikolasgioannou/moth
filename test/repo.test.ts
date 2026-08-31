@@ -25,7 +25,7 @@ test("the config names where tickets live, and init creates that directory", asy
 
   const id1 = await newTicket(dir, "Fix the redirect");
 
-  expect(existsSync(join(dir, "issues", `${id1}-fix-the-redirect.md`))).toBe(true);
+  expect(existsSync(join(dir, "issues", `fix-the-redirect-${id1}.md`))).toBe(true);
 });
 
 test("commands run from a subdirectory still find the repo root", async () => {

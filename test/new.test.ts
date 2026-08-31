@@ -41,8 +41,8 @@ test("a new ticket gets a six-character hex id, used in its filename", async () 
   await run(["new", "Fix the login redirect"], captureIo(dir));
 
   const [file] = files(dir);
-  expect(file).toMatch(/^[0-9a-f]{6}-fix-the-login-redirect\.md$/);
-  const id = (file ?? "").slice(0, 6);
+  expect(file).toMatch(/^fix-the-login-redirect-[0-9a-f]{6}\.md$/);
+  const id = (file ?? "").replace(/\.md$/, "").slice(-6);
   expect(parseFrontmatter(readFileSync(join(dir, ".moth", file ?? ""), "utf8")).data.id).toBe(id);
 });
 
@@ -66,7 +66,7 @@ test("an id already on disk is never handed out again", async () => {
 
   await run(["new", "Second one"], captureIo(dir, { randomHex: () => drawn[next++] ?? "cccccc" }));
 
-  expect(files(dir)).toEqual(["aaaaaa-already-here.md", "bbbbbb-second-one.md"]);
+  expect(files(dir)).toEqual(["already-here-aaaaaa.md", "second-one-bbbbbb.md"]);
 });
 
 test("the ticket records its metadata in frontmatter", async () => {

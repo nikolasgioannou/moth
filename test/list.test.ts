@@ -109,7 +109,7 @@ labels: []
 ---
 
 `;
-  writeFileSync(join(dir, ".moth", `${id}-beta.md`), front("Beta"));
+  writeFileSync(join(dir, ".moth", `beta-${id}.md`), front("Beta"));
   const io = captureIo(dir);
 
   const code = await run(["list"], io);

@@ -152,7 +152,7 @@ export function slugify(title: string): string {
 
 export function filenameFor(id: string, title: string): string {
   const slug = slugify(title);
-  return slug === "" ? `${id}.md` : `${id}-${slug}.md`;
+  return slug === "" ? `${id}.md` : `${slug}-${id}.md`;
 }
 
 /**
