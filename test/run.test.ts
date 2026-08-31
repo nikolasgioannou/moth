@@ -8,7 +8,9 @@ test("--version reports the version and succeeds", async () => {
   const code = await run(["--version"], io);
 
   expect(code).toBe(0);
-  expect(io.out()).toBe("0.1.0\n");
+  // The shape, not the number: a literal here would fail on every release, since
+  // the version is bumped after the tests run and before the tag is pushed.
+  expect(io.out()).toMatch(/^\d+\.\d+\.\d+\n$/);
 });
 
 test("an unrecognised command is rejected on stderr, leaving stdout clean", async () => {

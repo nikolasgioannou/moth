@@ -53,22 +53,31 @@ export function release(requested: string, dryRun: boolean): void {
 
   console.log(`release: ${manifest.version} -> ${version}`);
 
-  const checks: string[][] = [
-    ["bun", "run", "lint"],
-    ["bun", "run", "typecheck"],
-    ["bun", "test"],
-  ];
-  for (const check of checks) {
-    console.log(`release: ${check.join(" ")}`);
-    run(check);
+  // The version is bumped before the checks run, so anything that depends on it
+  // is verified against the version being released rather than the previous one.
+  const original = readFileSync(packagePath, "utf8");
+  writeFileSync(packagePath, `${JSON.stringify({ ...manifest, version }, null, 2)}\n`);
+
+  try {
+    for (const check of [
+      ["bun", "run", "lint"],
+      ["bun", "run", "typecheck"],
+      ["bun", "test"],
+    ]) {
+      console.log(`release: ${check.join(" ")}`);
+      run(check);
+    }
+  } catch (error) {
+    writeFileSync(packagePath, original);
+    throw error;
   }
 
   if (dryRun) {
+    writeFileSync(packagePath, original);
     console.log(`release: dry run, stopping before tagging ${tag}`);
     return;
   }
 
-  writeFileSync(packagePath, `${JSON.stringify({ ...manifest, version }, null, 2)}\n`);
   run(["git", "add", "package.json"]);
   // The first release of a version already declared in package.json has nothing
   // to commit; tagging the existing commit is correct in that case.
