@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "../src/run.ts";
 import { captureIo } from "./helpers/capture-io.ts";
+import { newTicket } from "./helpers/tickets.ts";
 import { cleanupTempDirs, tempDir } from "./helpers/tmp.ts";
 
 afterAll(cleanupTempDirs);
@@ -22,15 +23,15 @@ test("the config names where tickets live, and init creates that directory", asy
   writeFileSync(path, readFileSync(path, "utf8").replace(/^tickets: .*$/m, "tickets: issues"));
   mkdirSync(join(dir, "issues"));
 
-  await run(["new", "Fix the redirect"], captureIo(dir));
+  const id1 = await newTicket(dir, "Fix the redirect");
 
-  expect(existsSync(join(dir, "issues", "001-fix-the-redirect.md"))).toBe(true);
+  expect(existsSync(join(dir, "issues", `${id1}-fix-the-redirect.md`))).toBe(true);
 });
 
 test("commands run from a subdirectory still find the repo root", async () => {
   const dir = tempDir();
   await run(["init"], captureIo(dir, { answers: [] }));
-  await run(["new", "Fix the redirect"], captureIo(dir));
+  await newTicket(dir, "Fix the redirect");
   const nested = join(dir, "src", "deeply", "nested");
   mkdirSync(nested, { recursive: true });
   const io = captureIo(nested);

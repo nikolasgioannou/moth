@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { run } from "../src/run.ts";
 import { captureIo } from "./helpers/capture-io.ts";
 import { initedRepo } from "./helpers/repo-fixture.ts";
+import { newTicket } from "./helpers/tickets.ts";
 import { cleanupTempDirs } from "./helpers/tmp.ts";
 
 afterAll(cleanupTempDirs);
@@ -44,9 +45,9 @@ test("the schema names every legal field, status with its category, and priority
 test("a field declared in config is accepted on a ticket", async () => {
   const dir = await initedRepo();
   declareField(dir, "customer");
-  await run(["new", "Fix the redirect"], captureIo(dir));
+  const id = await newTicket(dir, "Fix the redirect");
 
-  const code = await run(["edit", "1", "--set", "customer=acme"], captureIo(dir));
+  const code = await run(["edit", id, "--set", "customer=acme"], captureIo(dir));
 
   expect(code).toBe(0);
   expect(readFileSync(ticketPath(dir), "utf8")).toContain("customer: acme");
@@ -54,10 +55,10 @@ test("a field declared in config is accepted on a ticket", async () => {
 
 test("a field not declared in config is refused, and the error names it", async () => {
   const dir = await initedRepo();
-  await run(["new", "Fix the redirect"], captureIo(dir));
+  const id = await newTicket(dir, "Fix the redirect");
   const io = captureIo(dir);
 
-  const code = await run(["edit", "1", "--set", "severity=high"], io);
+  const code = await run(["edit", id, "--set", "severity=high"], io);
 
   expect(code).toBe(1);
   expect(io.err()).toContain("severity");
@@ -66,7 +67,7 @@ test("a field not declared in config is refused, and the error names it", async 
 
 test("a hand-edited undeclared field is reported when read", async () => {
   const dir = await initedRepo();
-  await run(["new", "Fix the redirect"], captureIo(dir));
+  await newTicket(dir, "Fix the redirect");
   const path = ticketPath(dir);
   writeFileSync(
     path,
@@ -83,7 +84,7 @@ test("a hand-edited undeclared field is reported when read", async () => {
 
 test("a status absent from config is reported when read", async () => {
   const dir = await initedRepo();
-  await run(["new", "Fix the redirect"], captureIo(dir));
+  await newTicket(dir, "Fix the redirect");
   const path = ticketPath(dir);
   writeFileSync(path, readFileSync(path, "utf8").replace("status: backlog", "status: shipped"));
   const io = captureIo(dir);

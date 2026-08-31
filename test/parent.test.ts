@@ -1,82 +1,77 @@
 import { afterAll, expect, test } from "bun:test";
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { run } from "../src/run.ts";
 import { captureIo } from "./helpers/capture-io.ts";
 import { parseFrontmatter } from "./helpers/frontmatter.ts";
 import { initedRepo } from "./helpers/repo-fixture.ts";
+import { newTicket, ticketText } from "./helpers/tickets.ts";
 import { cleanupTempDirs } from "./helpers/tmp.ts";
 
 afterAll(cleanupTempDirs);
 
-function ticket(dir: string, number: number) {
-  const tickets = join(dir, ".moth");
-  const file = readdirSync(tickets).find((name) =>
-    name.startsWith(String(number).padStart(3, "0")),
-  );
-  return parseFrontmatter(readFileSync(join(tickets, file ?? ""), "utf8")).data;
-}
+const fields = (dir: string, id: string) => parseFrontmatter(ticketText(dir, id)).data;
 
-async function repoWith(...titles: string[]): Promise<string> {
+async function repoWith(...titles: string[]): Promise<[string, string[]]> {
   const dir = await initedRepo();
-  for (const title of titles) await run(["new", title], captureIo(dir));
-  return dir;
+  const ids: string[] = [];
+  for (const title of titles) ids.push(await newTicket(dir, title));
+  return [dir, ids];
 }
 
 test("a ticket can be given a parent at creation", async () => {
-  const dir = await repoWith("Build the parser");
+  const [dir, [parent]] = await repoWith("Build the parser");
 
-  const code = await run(["new", "Handle quoted strings", "--parent", "1"], captureIo(dir));
+  const io = captureIo(dir);
+  const code = await run(["new", "Handle quoted strings", "--parent", parent ?? ""], io);
 
   expect(code).toBe(0);
-  expect(ticket(dir, 2).parent).toBe(1);
+  const child = io.out().trim().split(/\s+/)[0] ?? "";
+  expect(fields(dir, child).parent).toBe(parent);
 });
 
 test("a ticket can be given a parent by editing", async () => {
-  const dir = await repoWith("Build the parser", "Handle quoted strings");
+  const [dir, [parent, child]] = await repoWith("Build the parser", "Handle quoted strings");
 
-  expect(await run(["edit", "2", "--parent", "1"], captureIo(dir))).toBe(0);
-  expect(ticket(dir, 2).parent).toBe(1);
+  expect(await run(["edit", child ?? "", "--parent", parent ?? ""], captureIo(dir))).toBe(0);
+  expect(fields(dir, child ?? "").parent).toBe(parent);
 });
 
 test("a ticket cannot be its own parent", async () => {
-  const dir = await repoWith("Build the parser");
+  const [dir, [only]] = await repoWith("Build the parser");
   const io = captureIo(dir);
 
-  const code = await run(["edit", "1", "--parent", "1"], io);
+  const code = await run(["edit", only ?? "", "--parent", only ?? ""], io);
 
   expect(code).toBe(1);
   expect(io.err().toLowerCase()).toContain("own parent");
-  expect(ticket(dir, 1).parent).toBeUndefined();
+  expect(fields(dir, only ?? "").parent).toBeUndefined();
 });
 
 test("nesting is held to one level", async () => {
-  const dir = await repoWith("Build the parser", "Handle quoted strings", "Escape backslashes");
-  await run(["edit", "2", "--parent", "1"], captureIo(dir));
+  const [dir, [top, middle, bottom]] = await repoWith("Parser", "Quoted strings", "Backslashes");
+  await run(["edit", middle ?? "", "--parent", top ?? ""], captureIo(dir));
   const io = captureIo(dir);
 
-  // 2 already has a parent, so it cannot become one itself
-  const code = await run(["edit", "3", "--parent", "2"], io);
+  const code = await run(["edit", bottom ?? "", "--parent", middle ?? ""], io);
 
   expect(code).toBe(1);
   expect(io.err().toLowerCase()).toContain("one level");
-  expect(ticket(dir, 3).parent).toBeUndefined();
+  expect(fields(dir, bottom ?? "").parent).toBeUndefined();
 });
 
 test("a ticket that already has children cannot be given a parent", async () => {
-  const dir = await repoWith("Build the parser", "Handle quoted strings", "Escape backslashes");
-  await run(["edit", "2", "--parent", "1"], captureIo(dir));
+  const [dir, [top, middle, other]] = await repoWith("Parser", "Quoted strings", "Backslashes");
+  await run(["edit", middle ?? "", "--parent", top ?? ""], captureIo(dir));
   const io = captureIo(dir);
 
-  const code = await run(["edit", "1", "--parent", "3"], io);
+  const code = await run(["edit", top ?? "", "--parent", other ?? ""], io);
 
   expect(code).toBe(1);
   expect(io.err().toLowerCase()).toContain("one level");
 });
 
 test("listing shows which ticket a sub-ticket belongs to", async () => {
-  const dir = await repoWith("Build the parser", "Handle quoted strings");
-  await run(["edit", "2", "--parent", "1"], captureIo(dir));
+  const [dir, [parent, child]] = await repoWith("Build the parser", "Handle quoted strings");
+  await run(["edit", child ?? "", "--parent", parent ?? ""], captureIo(dir));
   const io = captureIo(dir);
 
   await run(["list"], io);
@@ -86,5 +81,5 @@ test("listing shows which ticket a sub-ticket belongs to", async () => {
       .out()
       .split("\n")
       .find((line) => line.includes("Handle quoted strings")) ?? "";
-  expect(row).toContain("001");
+  expect(row).toContain(parent ?? "");
 });

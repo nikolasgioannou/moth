@@ -46,8 +46,8 @@ test("board writes nothing to disk", async () => {
 test("board honours the same filters as list", async () => {
   const dir = await initedRepo();
   await givenTicket(dir, { title: "Write the parser", status: "in-progress" });
-  await givenTicket(dir, { title: "Ship the binary" });
-  await run(["edit", "2", "--label", "release"], captureIo(dir));
+  const binary = await givenTicket(dir, { title: "Ship the binary" });
+  await run(["edit", binary, "--label", "release"], captureIo(dir));
 
   expect(await board(dir, "--category", "started")).toContain("Write the parser");
   expect(await board(dir, "--category", "started")).not.toContain("Ship the binary");
