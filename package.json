@@ -1,6 +1,22 @@
 {
   "name": "moth",
   "version": "0.1.0",
+  "description": "An opinionated issue tracker that lives in your repo. Tickets are markdown files with an enforced schema.",
+  "keywords": [
+    "issue-tracker",
+    "cli",
+    "tickets",
+    "markdown",
+    "agents"
+  ],
+  "homepage": "https://github.com/nikolasgioannou/moth",
+  "bugs": {
+    "url": "https://github.com/nikolasgioannou/moth/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nikolasgioannou/moth.git"
+  },
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -13,7 +29,11 @@
     "format": "biome format --write .",
     "lint": "biome check --error-on-warnings .",
     "prepare": "lefthook install",
-    "moth": "bun src/cli.ts"
+    "moth": "bun src/cli.ts",
+    "build:release": "bun run scripts/release-build.ts",
+    "build:npm": "bun run scripts/npm-packages.ts",
+    "formula": "bun run scripts/homebrew-formula.ts",
+    "release": "bun run scripts/release.ts"
   },
   "dependencies": {
     "yaml": "^2.9.0"

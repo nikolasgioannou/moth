@@ -1,0 +1,40 @@
+name: publish to npm
+
+# Deliberately manual. Publishing to npm is irreversible for a given version,
+# so it never happens as a side effect of pushing a tag.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, matching an existing release tag (without the leading v)"
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: bun install --frozen-lockfile
+      - run: bun test
+
+      - name: Build the packages
+        run: bun run build:npm ${{ inputs.version }}
+
+      # Platform packages go first: the wrapper depends on them, so publishing
+      # it first would briefly reference versions that do not exist yet.
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          for dir in dist/npm/moth-cli-*; do
+            npm publish "$dir" --access public
+          done
+          npm publish dist/npm/moth-cli --access public

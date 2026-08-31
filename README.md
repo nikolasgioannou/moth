@@ -37,16 +37,40 @@ The full list, each with its reasoning, is in [the spec](docs/spec-v1.md#out-of-
 
 ## Installing
 
-**moth is not published yet.** Homebrew, a `curl` installer and an npm package are tracked in [ticket 017](.moth/017-distribution.md). Until then, build it:
+### Homebrew
+
+```sh
+brew install nikolasgioannou/tap/moth
+```
+
+### Shell
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/nikolasgioannou/moth/main/install.sh | sh
+```
+
+Installs to `~/.local/bin` by default. Set `MOTH_INSTALL_DIR` to change that, or `MOTH_VERSION` to pin a release. The download is checked against the release's published checksums.
+
+### npm
+
+```sh
+npm install -g moth-cli
+```
+
+Or run it without installing: `npx moth-cli list`. Only your platform's binary is downloaded, not all five.
+
+### From a release
+
+Binaries for macOS, Linux and Windows are attached to every [release](https://github.com/nikolasgioannou/moth/releases), alongside a `SHA256SUMS` file. Download one, `chmod +x` it, and put it on your `PATH`.
+
+### From source
 
 ```sh
 git clone https://github.com/nikolasgioannou/moth.git
 cd moth
 bun install
-bun run build      # produces ./dist/moth
+bun run build
 ```
-
-Put `dist/moth` somewhere on your `PATH`, or run it by path.
 
 ## A worked example
 

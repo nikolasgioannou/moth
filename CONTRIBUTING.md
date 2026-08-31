@@ -81,6 +81,29 @@ Before changing something structural, look in [`docs/adr/`](docs/adr/). A decisi
 
 The vocabulary the code and docs use is defined in [`CONTEXT.md`](CONTEXT.md). Use those words — `ticket`, `status`, `status category`, `blocker`, `slug` — and not synonyms, in code, commit messages and comments alike.
 
+## Releasing
+
+One command:
+
+```sh
+bun run release patch      # or minor, major, or an explicit 1.2.3
+```
+
+It refuses to proceed unless the working tree is clean, you are on `main`, `main` is up to date with origin, and the tag does not already exist. Then it lints, typechecks and tests, bumps `package.json`, commits, tags, and pushes.
+
+Everything after the tag is CI. The release workflow re-runs the checks, verifies the tag matches `package.json`, cross-compiles a binary for each of five targets, publishes a GitHub release with the binaries and a `SHA256SUMS` file, bumps the Homebrew formula in the tap, and publishes to npm.
+
+The two publishing steps skip rather than fail when their secrets are absent, so a release is never marked broken for want of a token:
+
+| secret | what it unlocks |
+|---|---|
+| `HOMEBREW_TAP_TOKEN` | pushing the updated formula to `nikolasgioannou/homebrew-tap` |
+| `NPM_TOKEN` | publishing `moth-cli` and its five platform packages |
+
+Add `--dry-run` to run every check and stop before tagging.
+
+Locally, `bun run build:release` and `bun run build:npm` produce the same artifacts, and `bun run formula` prints the Homebrew formula for the current version.
+
 ## The backlog
 
 moth tracks its own work in moth:
