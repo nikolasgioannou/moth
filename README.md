@@ -1,149 +1,76 @@
 # moth
 
-An opinionated issue tracker that lives in your repository. Tickets are markdown files with an enforced schema — no account, no server, no sign-up.
+[![ci](https://github.com/nikolasgioannou/moth/actions/workflows/ci.yml/badge.svg)](https://github.com/nikolasgioannou/moth/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/moth-cli)](https://www.npmjs.com/package/moth-cli) [![license](https://img.shields.io/github/license/nikolasgioannou/moth)](LICENSE)
 
-Built for coding agents and the people who use them.
+An issue tracker that lives in your repository. Tickets are markdown files with a schema the CLI enforces — no account, no server, no sign-up.
 
 ```
 $ moth list
 backlog
-  003  Ship the first binary  high
-  002  Handle quoted strings  none  ↳ 001
-
-in-progress
+  002  Ship the binary        high
   001  Parse the frontmatter  none
 ```
 
-## Why it exists
-
-A folder of markdown files is free, but it is a convention rather than a tool, and nothing enforces it. Session one's agent writes `status: todo`. Session three's agent, having never seen that file, writes `state: in_progress`. By session ten the folder is unqueryable, and answering "what's blocked?" means re-deriving a grep every time.
-
-moth's value is the constraint. It refuses writes a bare filesystem would accept: an unrecognised status, a field nobody declared, a parent that would create a cycle. An agent cannot invent `status: blocked` on a whim, because the write fails and tells it what is legal. And it can ask: `moth schema --json` returns every legal field and value for the repository, so a session with no memory of previous sessions can discover the rules in one call.
-
-Because the shape of the data is known, querying it is a command rather than a grep somebody has to get right.
-
-## What it deliberately does not do
-
-The refusals are the design, not gaps waiting to be filled:
-
-- **No assignees, and no accounts.** Moving a ticket into a started status is how you claim it.
-- **No custom statuses outside six fixed categories.** You name your own statuses; every one belongs to `backlog`, `unstarted`, `started`, `completed`, `canceled`, or `duplicate`. Queries against categories work in any repository; queries against your status names work in yours.
-- **No undeclared fields.** Custom fields are allowed, but they must be declared in config first, so an agent can never introduce one.
-- **No comments and no activity log.** `git log -p` on a ticket file is already a complete, attributed, tamper-evident history. Notes append to the body.
-- **No cycles, sprints, estimates, projects, or manual ordering.**
-- **No web UI, and no TUI.** The CLI is the interface.
-
-The full list, each with its reasoning, is in [the spec](docs/spec-v1.md#out-of-scope).
-
-## Installing
-
-### Homebrew
+## Install
 
 ```sh
 brew install nikolasgioannou/tap/moth
 ```
 
-### Shell
-
 ```sh
 curl -fsSL https://raw.githubusercontent.com/nikolasgioannou/moth/main/install.sh | sh
 ```
-
-Installs to `~/.local/bin` by default. Set `MOTH_INSTALL_DIR` to change that, or `MOTH_VERSION` to pin a release. The download is checked against the release's published checksums.
-
-### npm
 
 ```sh
 npm install -g moth-cli
 ```
 
-Or run it without installing: `npx moth-cli list`. Only your platform's binary is downloaded, not all five.
+Or grab a binary from [releases](https://github.com/nikolasgioannou/moth/releases). macOS, Linux and Windows.
 
-### From a release
-
-Binaries for macOS, Linux and Windows are attached to every [release](https://github.com/nikolasgioannou/moth/releases), alongside a `SHA256SUMS` file. Download one, `chmod +x` it, and put it on your `PATH`.
-
-### From source
+## Use it
 
 ```sh
-git clone https://github.com/nikolasgioannou/moth.git
-cd moth
-bun install
-bun run build
+moth init                                   # one question per status, Enter accepts each
+moth new "Parse the frontmatter"
+moth new "Ship the binary" --body "Needs the parser first."
+moth edit 2 --blocked-by 1 --priority high --label release
 ```
 
-## A worked example
+Then ask what you can actually start, rather than what merely exists:
 
-Starting from a repository with no tickets:
-
-```sh
-$ moth init
-Statuses in 'backlog' [backlog]
-Statuses in 'unstarted' [todo]
-Statuses in 'started' [in-progress]
-Statuses in 'completed' [done]
-Statuses in 'canceled' [canceled]
-Statuses in 'duplicate' [duplicate]
 ```
-
-One question per status category, and Enter accepts each default. That writes `moth.config.yml` at the root and creates `.moth/` for the tickets. Then file some work:
-
-```sh
-$ moth new "Parse the frontmatter"
-001  Parse the frontmatter
-
-$ moth new "Handle quoted strings" --parent 1
-002  Handle quoted strings
-
-$ moth new "Ship the first binary" --body "Blocked on the parser landing."
-003  Ship the first binary
-```
-
-Relate and prioritise it:
-
-```sh
-$ moth edit 3 --blocked-by 1 --priority high --label release
-003  Ship the first binary
-
-$ moth move 1 in-progress
-001  Parse the frontmatter  in-progress
-```
-
-Then ask what is actually startable — work that has been committed to and is not waiting on anything:
-
-```sh
-$ moth list --unblocked --category backlog
+$ moth list --unblocked
 backlog
-  002  Handle quoted strings  none  ↳ 001
+  001  Parse the frontmatter  none
 ```
 
-And look at one ticket:
+Ticket 2 is missing because it is waiting on ticket 1.
 
-```sh
-$ moth show 3
-003  Ship the first binary
-status    backlog
-priority  high
-labels    release
-blocked by 001
-created   2026-08-31T00:35:11.462Z
-updated   2026-08-31T00:35:11.484Z
+Name a ticket however you remember it. `moth show 2`, `moth show 002` and `moth show "ship the binary"` all find the same one, and an ambiguous reference lists the candidates rather than guessing.
 
-Blocked on the parser landing.
-```
+`moth --help` lists every command; each one's `--help` carries a worked example. `moth schema --json` reports exactly what this repository considers a legal ticket, which is how an agent learns the rules in one call.
 
-A ticket is referred to by its number, padded or not, or by words from its title: `moth show 3`, `moth show 003`, and `moth show "quoted strings"` all work. An ambiguous reference lists the candidates rather than guessing.
+## Why it exists
 
-## How it is stored
+A folder of markdown files is free, but nothing enforces it. Session one's agent writes `status: todo`. Session three's agent, having never seen that file, writes `state: in_progress`. By session ten the folder is unqueryable, and "what's blocked?" means re-deriving a grep every time.
 
-```
-moth.config.yml          statuses, custom fields, where tickets live
-.moth/
-  001-parse-the-frontmatter.md
-  002-handle-quoted-strings.md
-```
+moth refuses writes a bare filesystem would accept: an unrecognised status, a field nobody declared, a parent that would form a cycle. An agent cannot invent `status: blocked`, because the write fails and says what is legal. Because the shape is known, querying it is a command rather than a grep somebody has to get right.
 
-One markdown file per ticket, flat, with YAML frontmatter for structured fields and the body for the description. Nothing central that every write touches, so two branches creating tickets merge without conflict. Commit them with your code and they travel through branches, clones and pull requests.
+## What it refuses to do
+
+The refusals are the design, not gaps:
+
+- **No assignees, no accounts.** Moving a ticket into a started status is how you claim it.
+- **No statuses outside six fixed categories.** Name your own; each belongs to `backlog`, `unstarted`, `started`, `completed`, `canceled` or `duplicate`. Queries by category work in any repository.
+- **No undeclared fields.** Custom fields are allowed, but must be declared in config first, so an agent can never introduce one.
+- **No comments, no activity log.** `git log -p` on a ticket is already a complete, attributed history.
+- **No cycles, sprints, estimates, projects or manual ordering. No web UI, no TUI.**
+
+Every rejection, with its reasoning, is in [the spec](docs/spec-v1.md#out-of-scope).
+
+## Storage
+
+`moth.config.yml` at the root, and one markdown file per ticket in `.moth/`:
 
 ```markdown
 ---
@@ -153,8 +80,8 @@ status: backlog
 priority: high
 labels:
   - release
-created_at: 2026-08-31T00:35:11.462Z
-updated_at: 2026-08-31T00:35:11.484Z
+created_at: 2026-08-31T02:31:59.759Z
+updated_at: 2026-08-31T02:31:59.787Z
 blocked_by:
   - 1
 ---
@@ -162,16 +89,15 @@ blocked_by:
 Blocked on the parser landing.
 ```
 
-## Commands
+Flat, with nothing central that every write touches, so two branches creating tickets merge cleanly. Commit them with your code and they travel through branches, clones and pull requests.
 
-Run `moth --help` for the list, and `moth <command> --help` for a worked example of any one of them. `moth schema --json` reports what this repository considers a legal ticket.
-
-## Design notes
+## Design
 
 - [The v1 spec](docs/spec-v1.md) — what was built, and every rejected alternative
 - [Architecture decisions](docs/adr/) — including two reversals, with the reasoning that changed
+- [Contributing](CONTRIBUTING.md)
 
-moth tracks its own development in moth: the backlog is in [`.moth/`](.moth/).
+moth tracks its own development in moth: the backlog is [`.moth/`](.moth/).
 
 ## Licence
 
