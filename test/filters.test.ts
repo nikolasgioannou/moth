@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { captureIo } from "../test/io.ts";
-import { initedRepo } from "../test/repo.ts";
-import { givenTicket } from "../test/tickets.ts";
-import { cleanupTempDirs } from "../test/tmp.ts";
-import { run } from "./run.ts";
+import { run } from "../src/run.ts";
+import { captureIo } from "./capture-io.ts";
+import { initedRepo } from "./repo-fixture.ts";
+import { givenTicket } from "./tickets.ts";
+import { cleanupTempDirs } from "./tmp.ts";
 
 afterAll(cleanupTempDirs);
 

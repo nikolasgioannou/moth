@@ -1,8 +1,8 @@
 import { afterAll, expect, test } from "bun:test";
-import { captureIo } from "../test/io.ts";
-import { cleanupTempDirs, tempDir } from "../test/tmp.ts";
-import { COMMAND_NAMES } from "./help.ts";
-import { run } from "./run.ts";
+import { COMMAND_NAMES } from "../src/help.ts";
+import { run } from "../src/run.ts";
+import { captureIo } from "./capture-io.ts";
+import { cleanupTempDirs, tempDir } from "./tmp.ts";
 
 afterAll(cleanupTempDirs);
 

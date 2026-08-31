@@ -1,5 +1,5 @@
 import { run } from "../src/run.ts";
-import { captureIo } from "./io.ts";
+import { captureIo } from "./capture-io.ts";
 import { tempDir } from "./tmp.ts";
 
 export interface RepoOptions {

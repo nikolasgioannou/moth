@@ -1,11 +1,11 @@
 import { afterAll, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseFrontmatter } from "../test/frontmatter.ts";
-import { captureIo } from "../test/io.ts";
-import { initedRepo } from "../test/repo.ts";
-import { cleanupTempDirs } from "../test/tmp.ts";
-import { run } from "./run.ts";
+import { run } from "../src/run.ts";
+import { captureIo } from "./capture-io.ts";
+import { parseFrontmatter } from "./frontmatter.ts";
+import { initedRepo } from "./repo-fixture.ts";
+import { cleanupTempDirs } from "./tmp.ts";
 
 afterAll(cleanupTempDirs);
 

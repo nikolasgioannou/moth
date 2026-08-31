@@ -1,11 +1,11 @@
 import { afterAll, expect, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { captureIo } from "../test/io.ts";
-import { initedRepo } from "../test/repo.ts";
-import { givenTicket } from "../test/tickets.ts";
-import { cleanupTempDirs, tempDir } from "../test/tmp.ts";
-import { run } from "./run.ts";
+import { run } from "../src/run.ts";
+import { captureIo } from "./capture-io.ts";
+import { initedRepo } from "./repo-fixture.ts";
+import { givenTicket } from "./tickets.ts";
+import { cleanupTempDirs, tempDir } from "./tmp.ts";
 
 afterAll(cleanupTempDirs);
 

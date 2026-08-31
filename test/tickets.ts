@@ -1,5 +1,5 @@
 import { run } from "../src/run.ts";
-import { captureIo } from "./io.ts";
+import { captureIo } from "./capture-io.ts";
 
 /** Creates a ticket, and moves it, entirely through the real commands. */
 export async function givenTicket(
