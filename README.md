@@ -148,3 +148,7 @@ Run `moth --help` for the list, and `moth <command> --help` for a worked example
 - [Architecture decisions](docs/adr/) — including two reversals, with the reasoning that changed
 
 moth tracks its own development in moth: the backlog is in [`.moth/`](.moth/).
+
+## Licence
+
+[MIT](LICENSE)
