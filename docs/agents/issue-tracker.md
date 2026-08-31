@@ -1,8 +1,6 @@
 # Issue tracker: moth
 
-This repository tracks its own work in moth. Tickets are markdown files in
-`.moth/`, one per ticket, and `moth.config.yml` at the root declares the
-statuses and any custom fields.
+This repository tracks its own work in moth. Tickets are markdown files in `.moth/`, one per ticket, and `moth.config.yml` at the root declares the statuses and any custom fields.
 
 ## Conventions
 
@@ -21,15 +19,13 @@ with the body piped in on stdin, then set anything else with `moth edit`.
 
     moth show <ticket>
 
-Add `--json` to either for machine-readable output. `moth schema --json` reports
-every legal field, status and priority without reading config by hand.
+Add `--json` to either for machine-readable output. `moth schema --json` reports every legal field, status and priority without reading config by hand.
 
 ## Finding work
 
     moth list --status todo --unblocked
 
-lists what is specified, committed to, and not waiting on anything else.
-Run `moth check` before reporting a task complete.
+lists what is specified, committed to, and not waiting on anything else. Run `moth check` before reporting a task complete.
 
 ## The spec
 
