@@ -5,7 +5,7 @@ status: todo
 priority: none
 labels: []
 created_at: 2026-08-30T23:31:01.383Z
-updated_at: 2026-08-30T23:55:49.155Z
+updated_at: 2026-08-31T00:28:13.628Z
 blocked_by:
   - 16
   - 17
@@ -38,3 +38,23 @@ should not ask for it: an alias is one line of somebody's own shell config. `dis
 
 - [ ] CONTRIBUTING explains how to run moth from source while developing
 - [ ] Nothing in CONTRIBUTING asks a contributor to configure anything outside the repository, beyond installing bun
+
+Repository layout, to be stated in CONTRIBUTING so nobody has to re-derive it:
+
+    src/                production code only
+      commands/         one file per command
+    test/
+      *.test.ts         behaviour tests, named for the behaviour they pin
+      helpers/          shared fixtures and doubles
+
+Tests are separated from source rather than colocated, and the reason is
+specific: moth is tested at the `run(argv, io)` seam, so a test drives several
+commands at once. Only 2 of 17 test files touch a single command; `blocking`
+touches five. A test therefore belongs to a behaviour, not to a module, and is
+named accordingly: `blocking`, `filters`, `parent`, not `edit`, `list`, `show`.
+
+Colocation is right when tests pair 1:1 with modules, which is how hono is laid
+out. Projects whose tests span modules separate them and give helpers their own
+directory, which is how execa and prettier are laid out. moth is the second kind.
+
+- [ ] CONTRIBUTING states where tests live and why, so the convention is not inferred
