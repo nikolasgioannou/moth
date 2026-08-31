@@ -2,7 +2,7 @@ import { parseArgs } from "../args.ts";
 
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
-import { formatId, metadataOf, readTickets, resolve, writeTicket } from "../ticket.ts";
+import { metadataOf, readTickets, resolve, writeTicket } from "../ticket.ts";
 
 export async function move(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" } });
@@ -29,7 +29,7 @@ export async function move(argv: string[], io: Io): Promise<number> {
   if (found.kind === "ambiguous") {
     io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
     for (const candidate of found.tickets) {
-      io.stderr(`  ${formatId(candidate.id)}  ${candidate.title}\n`);
+      io.stderr(`  ${candidate.id}  ${candidate.title}\n`);
     }
     return 1;
   }
@@ -52,7 +52,7 @@ export async function move(argv: string[], io: Io): Promise<number> {
   if (parsed.values.json === true) {
     io.stdout(`${JSON.stringify(metadataOf(updated), null, 2)}\n`);
   } else {
-    io.stdout(`${formatId(updated.id)}  ${updated.title}  ${updated.status}\n`);
+    io.stdout(`${updated.id}  ${updated.title}  ${updated.status}\n`);
   }
   return 0;
 }

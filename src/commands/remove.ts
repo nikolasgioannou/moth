@@ -3,7 +3,7 @@ import { parseArgs } from "../args.ts";
 
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
-import { formatId, readTickets, resolve } from "../ticket.ts";
+import { readTickets, resolve } from "../ticket.ts";
 
 export async function remove(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), {
@@ -37,6 +37,6 @@ export async function remove(argv: string[], io: Io): Promise<number> {
 
   const ticket = found.ticket;
   rmSync(ticket.path);
-  io.stdout(`deleted ${formatId(ticket.id)}  ${ticket.title}\n`);
+  io.stdout(`deleted ${ticket.id}  ${ticket.title}\n`);
   return 0;
 }

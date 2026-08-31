@@ -1,17 +1,17 @@
 import { readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { stringify as stringifyYaml } from "yaml";
+import { Scalar, stringify as stringifyYaml } from "yaml";
 
 export interface Ticket {
   /** Where the ticket is stored. Local detail, never part of output. */
   path: string;
-  id: number;
+  id: string;
   title: string;
   status: string;
   priority: string;
   labels: string[];
-  parent?: number;
-  blocked_by?: number[];
+  parent?: string;
+  blocked_by?: string[];
   created_at: string;
   updated_at: string;
   body: string;
@@ -28,34 +28,36 @@ function parse(raw: string, path: string): Ticket {
   return { ...data, labels: data.labels ?? [], path, body: body.replace(/^\n/, "") };
 }
 
-/** How an id is shown. */
-export function formatId(id: number): string {
-  return padNumber(id);
-}
-
-/** Ticket numbers are padded so a directory listing sorts correctly past ninety-nine. */
-export function padNumber(id: number): string {
-  return String(id).padStart(3, "0");
-}
-
-/** The next unused number, derived from the tickets already on disk. */
-export function nextNumber(ticketsDir: string): number {
-  const used = readdirSync(ticketsDir)
-    .map((file) => /^(\d+)[-.]/.exec(file)?.[1])
-    .filter((match): match is string => match !== undefined)
-    .map(Number);
-  return used.length === 0 ? 1 : Math.max(...used) + 1;
-}
-
 const PRIORITY_ORDER = ["urgent", "high", "medium", "low", "none"];
 
-/** Most urgent first, then oldest first. Manual ordering is deliberately absent. */
+/**
+ * Most urgent first, then oldest first. Age comes from the creation timestamp:
+ * a random id encodes no order, unlike the sequential numbers it replaced.
+ */
 function byPriorityThenAge(a: Ticket, b: Ticket): number {
   const rank = (ticket: Ticket) => {
     const index = PRIORITY_ORDER.indexOf(ticket.priority);
     return index === -1 ? PRIORITY_ORDER.length : index;
   };
-  return rank(a) - rank(b) || a.id - b.id;
+  // The id breaks ties so ordering stays stable when two tickets are created
+  // in the same millisecond, which agents do.
+  return rank(a) - rank(b) || a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id);
+}
+
+/** Six hex characters: short enough to read, wide enough that clashes stay rare. */
+const ID_LENGTH = 6;
+
+/** Draws an id no ticket already holds. Null when the space is somehow exhausted. */
+export function allocateId(
+  io: { randomHex(bytes: number): string },
+  tickets: Ticket[],
+): string | null {
+  const taken = new Set(tickets.map((ticket) => ticket.id));
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const id = io.randomHex(ID_LENGTH / 2).slice(0, ID_LENGTH);
+    if (!taken.has(id)) return id;
+  }
+  return null;
 }
 
 export function readTickets(ticketsDir: string): Ticket[] {
@@ -73,14 +75,14 @@ export function readTickets(ticketsDir: string): Ticket[] {
  * same number and git will merge both files cleanly, so this is how that
  * situation surfaces rather than passing unnoticed.
  */
-export function duplicateNumbers(tickets: Ticket[]): number[] {
-  const seen = new Set<number>();
-  const duplicates = new Set<number>();
+export function duplicateIds(tickets: Ticket[]): string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
   for (const ticket of tickets) {
     if (seen.has(ticket.id)) duplicates.add(ticket.id);
     seen.add(ticket.id);
   }
-  return [...duplicates].sort((a, b) => a - b);
+  return [...duplicates].sort();
 }
 
 export type Resolution =
@@ -89,18 +91,30 @@ export type Resolution =
   | { kind: "none" };
 
 /**
- * Finds the ticket a reference names. A reference that reads as a number is
- * only ever matched against numbers, never against titles, so `20` cannot
- * resolve to a ticket merely titled "20 things to fix".
+ * Finds the ticket a reference names, trying the most specific reading first:
+ * the whole id, then a leading fragment of one, then words from a title. A
+ * fragment that matches no id falls through to titles, because unlike the
+ * numbers this replaced, a short hex string is just as likely to be prose.
  */
 export function resolve(tickets: Ticket[], reference: string): Resolution {
-  const matches = /^\d+$/.test(reference)
-    ? tickets.filter((ticket) => ticket.id === Number(reference))
-    : tickets.filter((ticket) => ticket.title.toLowerCase().includes(reference.toLowerCase()));
+  const wanted = reference.trim().toLowerCase();
+  if (wanted === "") return { kind: "none" };
 
-  if (matches.length === 1) return { kind: "found", ticket: matches[0] as Ticket };
-  if (matches.length > 1) return { kind: "ambiguous", tickets: matches };
-  return { kind: "none" };
+  const settle = (matches: Ticket[]): Resolution => {
+    if (matches.length === 1) return { kind: "found", ticket: matches[0] as Ticket };
+    return { kind: "ambiguous", tickets: matches };
+  };
+
+  const exact = tickets.filter((ticket) => ticket.id === wanted);
+  if (exact.length > 0) return settle(exact);
+
+  if (/^[0-9a-f]+$/.test(wanted)) {
+    const byPrefix = tickets.filter((ticket) => ticket.id.startsWith(wanted));
+    if (byPrefix.length > 0) return settle(byPrefix);
+  }
+
+  const byTitle = tickets.filter((ticket) => ticket.title.toLowerCase().includes(wanted));
+  return byTitle.length === 0 ? { kind: "none" } : settle(byTitle);
 }
 
 /** A ticket's structured fields, without local storage detail or its body. */
@@ -109,9 +123,21 @@ export function metadataOf(ticket: Ticket): Omit<Ticket, "path" | "body"> {
   return metadata;
 }
 
+/**
+ * Ids are always quoted. An id like `22739e` is a plain string to one YAML
+ * writer and a number to another parser, which silently loses the trailing
+ * character; quoting removes the ambiguity for every reader, not just ours.
+ */
+function quoted(value: string): Scalar {
+  const scalar = new Scalar(value);
+  scalar.type = Scalar.QUOTE_DOUBLE;
+  return scalar;
+}
+
 export function writeTicket(ticket: Ticket): void {
   const body = ticket.body === "" || ticket.body.endsWith("\n") ? ticket.body : `${ticket.body}\n`;
-  writeFileSync(ticket.path, `---\n${stringifyYaml(metadataOf(ticket))}---\n\n${body}`);
+  const metadata = { ...metadataOf(ticket), id: quoted(ticket.id) };
+  writeFileSync(ticket.path, `---\n${stringifyYaml(metadata)}---\n\n${body}`);
 }
 
 /** A readable filename fragment, derived from the title. */
@@ -124,9 +150,9 @@ export function slugify(title: string): string {
     .replace(/-+$/, "");
 }
 
-export function filenameFor(id: number, title: string): string {
+export function filenameFor(id: string, title: string): string {
   const slug = slugify(title);
-  return slug === "" ? `${padNumber(id)}.md` : `${padNumber(id)}-${slug}.md`;
+  return slug === "" ? `${id}.md` : `${id}-${slug}.md`;
 }
 
 /**
@@ -151,13 +177,13 @@ export type ParentProblem = { reason: string } | null;
  * to one level, which also rules out cycles: a ticket that has a parent cannot
  * be one, and a ticket that is one cannot take a parent.
  */
-export function parentProblem(tickets: Ticket[], child: Ticket, parentId: number): ParentProblem {
+export function parentProblem(tickets: Ticket[], child: Ticket, parentId: string): ParentProblem {
   if (parentId === child.id) {
     return { reason: "a ticket cannot be its own parent" };
   }
   const parent = tickets.find((ticket) => ticket.id === parentId);
   if (parent === undefined) {
-    return { reason: `no ticket ${padNumber(parentId)} to be the parent` };
+    return { reason: `no ticket ${parentId} to be the parent` };
   }
   if (parent.parent !== undefined) {
     return { reason: "sub-tickets nest one level, and that ticket is already a sub-ticket" };
@@ -173,9 +199,9 @@ const TERMINAL = ["completed", "canceled", "duplicate"];
 
 export interface BlockingView {
   /** Blockers still open, so this ticket cannot start. */
-  open: number[];
+  open: string[];
   /** Blockers naming a ticket that is not in the store. */
-  dangling: number[];
+  dangling: string[];
 }
 
 /**
@@ -187,8 +213,8 @@ export function blockingView(
   ticket: Ticket,
   categoryOf: (status: string) => string | undefined,
 ): BlockingView {
-  const open: number[] = [];
-  const dangling: number[] = [];
+  const open: string[] = [];
+  const dangling: string[] = [];
   for (const id of ticket.blocked_by ?? []) {
     const blocker = tickets.find((candidate) => candidate.id === id);
     if (blocker === undefined) {
@@ -202,15 +228,15 @@ export function blockingView(
 }
 
 /** The tickets this one blocks, derived rather than stored. */
-export function blocks(tickets: Ticket[], ticket: Ticket): number[] {
+export function blocks(tickets: Ticket[], ticket: Ticket): string[] {
   return tickets
     .filter((candidate) => (candidate.blocked_by ?? []).includes(ticket.id))
     .map((candidate) => candidate.id)
-    .sort((a, b) => a - b);
+    .sort();
 }
 
 export interface TicketProblem {
-  id: number;
+  id: string;
   reason: string;
 }
 

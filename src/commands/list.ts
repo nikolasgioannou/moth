@@ -3,15 +3,7 @@ import { legalFields } from "../config.ts";
 import type { Io } from "../io.ts";
 import { categoryLookup, FILTER_OPTIONS, filterTickets, statusOrder } from "../query.ts";
 import { openRepo } from "../repo.ts";
-import {
-  blockingView,
-  duplicateNumbers,
-  formatId,
-  metadataOf,
-  padNumber,
-  readTickets,
-  validate,
-} from "../ticket.ts";
+import { blockingView, duplicateIds, metadataOf, readTickets, validate } from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" }, ...FILTER_OPTIONS });
@@ -37,26 +29,23 @@ export async function list(argv: string[], io: Io): Promise<number> {
     legalFields(config),
     config.statuses.map((entry) => entry.name),
   )) {
-    io.stderr(`moth: ticket ${padNumber(problem.id)}: ${problem.reason}\n`);
+    io.stderr(`moth: ticket ${problem.id}: ${problem.reason}\n`);
   }
 
   const categoryOf = categoryLookup(config);
-  const dangling = new Set<number>();
+  const dangling = new Set<string>();
   for (const ticket of all) {
     for (const id of blockingView(all, ticket, categoryOf).dangling) dangling.add(id);
   }
   if (dangling.size > 0) {
-    const missing = [...dangling]
-      .sort((a, b) => a - b)
-      .map(padNumber)
-      .join(", ");
+    const missing = [...dangling].sort().join(", ");
     io.stderr(`moth: blocked_by names tickets that do not exist: ${missing}\n`);
   }
 
-  const duplicates = duplicateNumbers(all);
+  const duplicates = duplicateIds(all);
   if (duplicates.length > 0) {
-    const list = duplicates.map(padNumber).join(", ");
-    io.stderr(`moth: duplicate ticket numbers: ${list}\n`);
+    const list = duplicates.join(", ");
+    io.stderr(`moth: duplicate ticket ids: ${list}\n`);
   }
 
   if (parsed.values.json === true) {
@@ -81,7 +70,7 @@ export async function list(argv: string[], io: Io): Promise<number> {
   const paint = (code: string, text: string) => (io.isTty ? `\x1b[${code}m${text}\x1b[0m` : text);
 
   // Widths are computed across the whole result, so columns line up between groups too.
-  const idWidth = Math.max(...tickets.map((t) => formatId(t.id).length));
+  const idWidth = Math.max(...tickets.map((t) => t.id.length));
   const titleWidth = Math.max(...tickets.map((ticket) => ticket.title.length));
 
   for (const status of statusOrder(config, tickets)) {
@@ -89,10 +78,9 @@ export async function list(argv: string[], io: Io): Promise<number> {
     if (group.length === 0) continue;
     io.stdout(`${paint("1", status)}\n`);
     for (const ticket of group) {
-      const id = formatId(ticket.id).padEnd(idWidth);
+      const id = ticket.id.padEnd(idWidth);
       const title = ticket.title.padEnd(titleWidth);
-      const parent =
-        ticket.parent === undefined ? "" : paint("2", `  \u21b3 ${padNumber(ticket.parent)}`);
+      const parent = ticket.parent === undefined ? "" : paint("2", `  \u21b3 ${ticket.parent}`);
       io.stdout(`  ${paint("2", id)}  ${title}  ${paint("2", ticket.priority)}${parent}\n`);
     }
     io.stdout("\n");

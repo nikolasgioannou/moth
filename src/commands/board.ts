@@ -3,7 +3,7 @@ import { parseArgs } from "../args.ts";
 import type { Io } from "../io.ts";
 import { FILTER_OPTIONS, filterTickets, statusOrder } from "../query.ts";
 import { openRepo } from "../repo.ts";
-import { formatId, readTickets } from "../ticket.ts";
+import { readTickets } from "../ticket.ts";
 
 export async function board(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), FILTER_OPTIONS);
@@ -30,7 +30,7 @@ export async function board(argv: string[], io: Io): Promise<number> {
     io.stdout(`\n## ${status}\n\n`);
     for (const ticket of group) {
       const priority = ticket.priority === "none" ? "" : ` _(${ticket.priority})_`;
-      io.stdout(`- **${formatId(ticket.id)}** ${ticket.title}${priority}\n`);
+      io.stdout(`- **${ticket.id}** ${ticket.title}${priority}\n`);
     }
   }
   return 0;

@@ -2,7 +2,7 @@ import { parseArgs } from "../args.ts";
 
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
-import { blocks, formatId, metadataOf, padNumber, readTickets, resolve } from "../ticket.ts";
+import { blocks, metadataOf, readTickets, resolve } from "../ticket.ts";
 
 export async function show(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" } });
@@ -31,7 +31,7 @@ export async function show(argv: string[], io: Io): Promise<number> {
   if (found.kind === "ambiguous") {
     io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
     for (const candidate of found.tickets) {
-      io.stderr(`  ${formatId(candidate.id)}  ${candidate.title}\n`);
+      io.stderr(`  ${candidate.id}  ${candidate.title}\n`);
     }
     return 1;
   }
@@ -42,15 +42,15 @@ export async function show(argv: string[], io: Io): Promise<number> {
     io.stdout(`${JSON.stringify({ ...metadataOf(ticket), body: ticket.body }, null, 2)}\n`);
     return 0;
   }
-  io.stdout(`${formatId(ticket.id)}  ${ticket.title}\n`);
+  io.stdout(`${ticket.id}  ${ticket.title}\n`);
   io.stdout(`status    ${ticket.status}\n`);
   io.stdout(`priority  ${ticket.priority}\n`);
   if (ticket.labels.length > 0) io.stdout(`labels    ${ticket.labels.join(", ")}\n`);
   if (ticket.blocked_by !== undefined && ticket.blocked_by.length > 0) {
-    io.stdout(`blocked by ${ticket.blocked_by.map(padNumber).join(", ")}\n`);
+    io.stdout(`blocked by ${ticket.blocked_by.join(", ")}\n`);
   }
   const blocking = blocks(tickets, ticket);
-  if (blocking.length > 0) io.stdout(`blocks    ${blocking.map(padNumber).join(", ")}\n`);
+  if (blocking.length > 0) io.stdout(`blocks    ${blocking.join(", ")}\n`);
   io.stdout(`created   ${ticket.created_at}\n`);
   io.stdout(`updated   ${ticket.updated_at}\n`);
   if (ticket.body !== "") io.stdout(`\n${ticket.body}`);

@@ -6,11 +6,10 @@ import type { Io } from "../io.ts";
 import { categoryLookup } from "../query.ts";
 import { openRepo } from "../repo.ts";
 import {
+  allocateId,
   blockingView,
-  duplicateNumbers,
+  duplicateIds,
   filenameFor,
-  nextNumber,
-  padNumber,
   readTickets,
   saveTicket,
   type Ticket,
@@ -37,7 +36,7 @@ function findings(tickets: Ticket[], config: Config): Finding[] {
     }
     for (const id of blockingView(tickets, ticket, categoryOf).dangling) {
       found.push({
-        message: `ticket ${padNumber(ticket.id)} is blocked by ${padNumber(id)}, which does not exist`,
+        message: `ticket ${ticket.id} is blocked by ${id}, which does not exist`,
         fixable: false,
       });
     }
@@ -45,23 +44,23 @@ function findings(tickets: Ticket[], config: Config): Finding[] {
       const parent = tickets.find((candidate) => candidate.id === ticket.parent);
       if (parent?.parent !== undefined) {
         found.push({
-          message: `ticket ${padNumber(ticket.id)} nests more than one level deep`,
+          message: `ticket ${ticket.id} nests more than one level deep`,
           fixable: false,
         });
       }
     }
   }
 
-  for (const number of duplicateNumbers(tickets)) {
+  for (const clashing of duplicateIds(tickets)) {
     found.push({
-      message: `number ${padNumber(number)} is held by more than one ticket`,
+      message: `id ${clashing} is held by more than one ticket`,
       fixable: true,
     });
   }
 
   const statuses = config.statuses.map((entry) => entry.name);
   for (const problem of validate(tickets, legalFields(config), statuses)) {
-    found.push({ message: `ticket ${padNumber(problem.id)}: ${problem.reason}`, fixable: false });
+    found.push({ message: `ticket ${problem.id}: ${problem.reason}`, fixable: false });
   }
 
   return found;
@@ -79,16 +78,17 @@ function repairFilename(ticket: Ticket): void {
  * the renumbered ticket can be checked by a human: which reference meant which
  * ticket is not knowable from the files.
  */
-function repairDuplicates(tickets: Ticket[], ticketsDir: string): string[] {
+function repairDuplicates(io: Io, tickets: Ticket[]): string[] {
   const moved: string[] = [];
-  for (const number of duplicateNumbers(tickets)) {
+  for (const clashing of duplicateIds(tickets)) {
     const holders = tickets
-      .filter((ticket) => ticket.id === number)
+      .filter((ticket) => ticket.id === clashing)
       .sort((a, b) => a.created_at.localeCompare(b.created_at));
     for (const later of holders.slice(1)) {
-      const to = nextNumber(ticketsDir);
+      const to = allocateId(io, tickets);
+      if (to === null) continue;
       saveTicket({ ...later, id: to });
-      moved.push(`${padNumber(number)} -> ${padNumber(to)} (${later.title})`);
+      moved.push(`${clashing} -> ${to} (${later.title})`);
     }
   }
   return moved;
@@ -114,7 +114,7 @@ export async function check(argv: string[], io: Io): Promise<number> {
     for (const ticket of before) {
       if (basename(ticket.path) !== filenameFor(ticket.id, ticket.title)) repairFilename(ticket);
     }
-    const moved = repairDuplicates(readTickets(ticketsDir), ticketsDir);
+    const moved = repairDuplicates(io, readTickets(ticketsDir));
     for (const entry of moved) {
       io.stdout(`moth: renumbered ${entry}; check anything that referred to it\n`);
     }

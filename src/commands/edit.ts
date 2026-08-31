@@ -2,14 +2,7 @@ import { parseArgs, stringList } from "../args.ts";
 import { legalFields, PRIORITIES } from "../config.ts";
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
-import {
-  formatId,
-  metadataOf,
-  parentProblem,
-  readTickets,
-  resolve,
-  saveTicket,
-} from "../ticket.ts";
+import { metadataOf, parentProblem, readTickets, resolve, saveTicket } from "../ticket.ts";
 
 export async function edit(argv: string[], io: Io): Promise<number> {
   const parsed = parseArgs(argv.slice(1), {
@@ -46,7 +39,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   if (found.kind === "ambiguous") {
     io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
     for (const candidate of found.tickets) {
-      io.stderr(`  ${formatId(candidate.id)}  ${candidate.title}\n`);
+      io.stderr(`  ${candidate.id}  ${candidate.title}\n`);
     }
     return 1;
   }
@@ -82,25 +75,25 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     parent = parentRef.ticket.id;
   }
 
-  const toNumbers = (references: string[]): number[] | null => {
-    const numbers: number[] = [];
+  const toIds = (references: string[]): string[] | null => {
+    const ids: string[] = [];
     for (const reference of references) {
       const match = resolve(all, reference);
       if (match.kind !== "found") {
         io.stderr(`moth: no single ticket matches '${reference}'\n`);
         return null;
       }
-      numbers.push(match.ticket.id);
+      ids.push(match.ticket.id);
     }
-    return numbers;
+    return ids;
   };
 
-  const addedBlockers = toNumbers(stringList(values["blocked-by"]));
-  const removedBlockers = toNumbers(stringList(values.unblock));
+  const addedBlockers = toIds(stringList(values["blocked-by"]));
+  const removedBlockers = toIds(stringList(values.unblock));
   if (addedBlockers === null || removedBlockers === null) return 1;
   const blockedBy = [...new Set([...(ticket.blocked_by ?? []), ...addedBlockers])]
     .filter((id) => !removedBlockers.includes(id))
-    .sort((a, b) => a - b);
+    .sort();
 
   const custom: Record<string, string> = {};
   for (const assignment of stringList(values.set)) {
@@ -141,7 +134,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   if (parsed.values.json === true) {
     io.stdout(`${JSON.stringify(metadataOf(updated), null, 2)}\n`);
   } else {
-    io.stdout(`${formatId(updated.id)}  ${updated.title}\n`);
+    io.stdout(`${updated.id}  ${updated.title}\n`);
   }
   return 0;
 }

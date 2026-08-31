@@ -2,7 +2,7 @@ import { parseArgs } from "../args.ts";
 
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
-import { formatId, readTickets, resolve, saveTicket } from "../ticket.ts";
+import { readTickets, resolve, saveTicket } from "../ticket.ts";
 
 const NOTES_HEADING = "## Notes";
 
@@ -40,6 +40,6 @@ export async function append(argv: string[], io: Io): Promise<number> {
   const body = `${existing}\n${heading}\n${note}\n`;
 
   saveTicket({ ...ticket, body, updated_at: io.now().toISOString() });
-  io.stdout(`${formatId(ticket.id)}  ${ticket.title}\n`);
+  io.stdout(`${ticket.id}  ${ticket.title}\n`);
   return 0;
 }

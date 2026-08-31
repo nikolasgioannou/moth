@@ -1,26 +1,16 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { stringify as stringifyYaml } from "yaml";
+import { Scalar, stringify as stringifyYaml } from "yaml";
 import { parseArgs } from "../args.ts";
 import type { Config } from "../config.ts";
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
-import { formatId, nextNumber, padNumber, readTickets, resolve } from "../ticket.ts";
+import { allocateId, filenameFor, readTickets, resolve } from "../ticket.ts";
 
 /** New tickets open in the first status belonging to the backlog category. */
 function defaultStatus(config: Config): string {
   const status = config.statuses.find((entry) => entry.category === "backlog");
   return status?.name ?? config.statuses[0]?.name ?? "backlog";
-}
-
-/** A readable filename fragment. Fixed at creation and never updated; the id is authoritative. */
-function slugify(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 50)
-    .replace(/-+$/, "");
 }
 
 export async function create(argv: string[], io: Io): Promise<number> {
@@ -51,7 +41,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
   }
 
   const existing = readTickets(ticketsDir);
-  let parentId: number | undefined;
+  let parentId: string | undefined;
   if (typeof values.parent === "string") {
     const parentRef = resolve(existing, values.parent);
     if (parentRef.kind !== "found") {
@@ -61,11 +51,12 @@ export async function create(argv: string[], io: Io): Promise<number> {
     parentId = parentRef.ticket.id;
   }
 
-  const id = nextNumber(ticketsDir);
-  const padded = padNumber(id);
-
-  const slug = slugify(title);
-  const filename = slug === "" ? `${padded}.md` : `${padded}-${slug}.md`;
+  const id = allocateId(io, existing);
+  if (id === null) {
+    io.stderr("moth: could not allocate a free ticket id\n");
+    return 1;
+  }
+  const filename = filenameFor(id, title);
   const timestamp = io.now().toISOString();
 
   const metadata = {
@@ -87,13 +78,16 @@ export async function create(argv: string[], io: Io): Promise<number> {
     body = readFileSync(join(io.cwd, bodyFile), "utf8").replace(/\n+$/, "");
   }
 
-  const document = `---\n${stringifyYaml(metadata)}---\n\n${body === "" ? "" : `${body}\n`}`;
+  // Quoted so no YAML parser can read an id like 22739e as a number.
+  const quotedId = new Scalar(id);
+  quotedId.type = Scalar.QUOTE_DOUBLE;
+  const document = `---\n${stringifyYaml({ ...metadata, id: quotedId })}---\n\n${body === "" ? "" : `${body}\n`}`;
   writeFileSync(join(ticketsDir, filename), document);
 
   if (values.json === true) {
     io.stdout(`${JSON.stringify({ ...metadata, body }, null, 2)}\n`);
   } else {
-    io.stdout(`${formatId(id)}  ${title}\n`);
+    io.stdout(`${id}  ${title}\n`);
   }
   return 0;
 }
