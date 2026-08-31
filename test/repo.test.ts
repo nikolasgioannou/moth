@@ -2,8 +2,8 @@ import { afterAll, expect, test } from "bun:test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "../src/run.ts";
-import { captureIo } from "./capture-io.ts";
-import { cleanupTempDirs, tempDir } from "./tmp.ts";
+import { captureIo } from "./helpers/capture-io.ts";
+import { cleanupTempDirs, tempDir } from "./helpers/tmp.ts";
 
 afterAll(cleanupTempDirs);
 

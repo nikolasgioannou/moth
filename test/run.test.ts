@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { run } from "../src/run.ts";
-import { captureIo } from "./capture-io.ts";
+import { captureIo } from "./helpers/capture-io.ts";
 
 test("--version reports the version and succeeds", async () => {
   const io = captureIo(process.cwd());

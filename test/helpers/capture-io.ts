@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import type { Io } from "../src/run.ts";
+import type { Io } from "../../src/run.ts";
 
 export interface CapturedIo extends Io {
   out(): string;

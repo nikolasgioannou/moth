@@ -1,4 +1,4 @@
-import { run } from "../src/run.ts";
+import { run } from "../../src/run.ts";
 import { captureIo } from "./capture-io.ts";
 
 /** Creates a ticket, and moves it, entirely through the real commands. */
