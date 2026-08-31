@@ -1,11 +1,11 @@
 ---
 id: 18
 title: README and CONTRIBUTING
-status: todo
+status: done
 priority: none
 labels: []
 created_at: 2026-08-30T23:31:01.383Z
-updated_at: 2026-08-31T00:28:13.628Z
+updated_at: 2026-08-31T02:27:47.634Z
 blocked_by:
   - 16
   - 17
@@ -14,7 +14,7 @@ blocked_by:
 **What to build:** Someone arriving at the repository can work out what moth is, install it, and make a correct first contribution without having to ask anyone.
 
 - [x] The README states what moth is, and what it deliberately does not do
-- [ ] The README documents installation for every supported route (blocked on ticket 17: nothing is published, so the README says so and shows building from source)
+- [x] The README documents installation for every supported route (blocked on ticket 17: nothing is published, so the README says so and shows building from source)
 - [x] The README carries a worked example taking a reader from an empty repo to a filtered list of tickets
 - [x] CONTRIBUTING documents the commit convention, including that the subject line stands alone
 - [x] CONTRIBUTING documents how to install dependencies, run the tests, and run the formatter and linter
