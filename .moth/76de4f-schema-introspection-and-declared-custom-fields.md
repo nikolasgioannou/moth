@@ -1,5 +1,5 @@
 ---
-id: 8
+id: "76de4f"
 title: Schema introspection and declared custom fields
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:01.053Z
 updated_at: 2026-08-30T23:31:01.862Z
 blocked_by:
-  - 7
+  - "356aea"
 ---
 
 **What to build:** An agent with no memory of previous sessions asks moth what is legal in this repo and gets a complete answer, and any attempt to introduce a field nobody declared is refused. This is moth's core guarantee.

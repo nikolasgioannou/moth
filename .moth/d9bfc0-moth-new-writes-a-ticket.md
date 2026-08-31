@@ -1,5 +1,5 @@
 ---
-id: 4
+id: "d9bfc0"
 title: moth new writes a ticket
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:00.677Z
 updated_at: 2026-08-30T23:31:01.660Z
 blocked_by:
-  - 3
+  - "77753d"
 ---
 
 **What to build:** An agent or a developer files a ticket with nothing but a title, and it lands on disk as a well-formed file that later commands can read.

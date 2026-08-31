@@ -1,5 +1,5 @@
 ---
-id: 22
+id: "da8286"
 title: Config at the repo root, ticket directory configurable
 status: done
 priority: none
@@ -7,8 +7,8 @@ labels: []
 created_at: 2026-08-30T23:31:01.474Z
 updated_at: 2026-08-30T23:31:02.696Z
 blocked_by:
-  - 3
-  - 5
+  - "77753d"
+  - "eac096"
 ---
 
 **What to build:** The config lives at `moth.config.yml` in the repo root, where a person expects to find a tool's configuration, and it names the directory tickets live in, so a repo can use `tickets/`, `.tickets/`, or anything else instead of `.moth/`.

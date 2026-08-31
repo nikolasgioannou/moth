@@ -1,5 +1,5 @@
 ---
-id: 19
+id: "504470"
 title: Argument parsing
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:01.406Z
 updated_at: 2026-08-30T23:31:02.520Z
 blocked_by:
-  - 4
+  - "d9bfc0"
 ---
 
 **What to build:** A command's flags mean the same thing wherever they appear, so `moth new --json "Fix login"` and `moth new "Fix login" --json` behave identically, and a mistyped flag is reported rather than silently ignored.

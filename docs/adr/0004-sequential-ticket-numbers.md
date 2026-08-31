@@ -1,8 +1,10 @@
 ---
-status: accepted
+status: superseded by ADR-0006
 ---
 
 # Sequential ticket numbers, superseding ADR-0001
+
+> **Superseded by [ADR-0006](0006-random-hex-ticket-ids.md): ids are six random hex characters.** Everything below is the decision as it stood, kept in the tense it was written in. Two of its premises later changed: moth is now aimed at multi-writer repositories, and ordering turned out not to be something anyone used.
 
 Tickets are numbered sequentially and stored as `NNN-slug.md`, zero-padded to three digits. ADR-0001 chose a random suffix instead; this reverses that.
 

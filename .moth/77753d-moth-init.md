@@ -1,5 +1,5 @@
 ---
-id: 3
+id: "77753d"
 title: moth init
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:00.566Z
 updated_at: 2026-08-30T23:31:01.614Z
 blocked_by:
-  - 1
+  - "c41227"
 ---
 
 **What to build:** A developer turns any repo into a moth repo with one command, answering a couple of questions about how they want work labelled.

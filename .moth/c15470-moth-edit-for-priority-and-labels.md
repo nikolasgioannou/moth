@@ -1,5 +1,5 @@
 ---
-id: 9
+id: "c15470"
 title: moth edit for priority and labels
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:01.075Z
 updated_at: 2026-08-30T23:31:01.908Z
 blocked_by:
-  - 7
+  - "356aea"
 ---
 
 **What to build:** A developer or agent changes a ticket's priority and labels after creation, with the same validation that applies at creation.

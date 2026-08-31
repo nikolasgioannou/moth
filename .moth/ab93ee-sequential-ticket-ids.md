@@ -1,5 +1,5 @@
 ---
-id: 20
+id: "ab93ee"
 title: Sequential ticket ids
 status: done
 priority: none
@@ -7,8 +7,8 @@ labels: []
 created_at: 2026-08-30T23:31:01.428Z
 updated_at: 2026-08-30T23:31:02.587Z
 blocked_by:
-  - 4
-  - 5
+  - "d9bfc0"
+  - "eac096"
 ---
 
 **What to build:** A ticket is identified by a number, and its file is named `NNN-slug.md`, so a directory listing reads in order and a person can say "ticket 20" out loud. This replaces the prefixed random id (`MOTH-7f3a`) decided in ADR-0001.

@@ -87,9 +87,9 @@ Filenames are `NNN-slug.md`. The slug is derived from the title and re-synced wh
 
 ### Ticket identity
 
-Tickets are numbered sequentially and stored as `NNN-slug.md`, zero-padded to three digits so a directory listing sorts correctly past ninety-nine. The number is the id, and padding is presentation applied to filenames and output.
+Tickets are identified by six random hex characters and stored as `a3f8c1-slug.md`. The id is opaque; the slug carries every part a human reads. Sequential numbering was tried and reversed twice — see ADR-0001, ADR-0004 and ADR-0006 — and the deciding change was that moth targets repositories with several writers, where two branches allocate the same number with no coordination and git merges both files cleanly. Ordering, the only thing a number bought, turned out to be something nobody used: tickets are found through `moth list` and opened from there.
 
-A random suffix was chosen first and reversed; see ADR-0004. The residual hazard is that two branches can allocate the same number and git will merge both files cleanly, since their slugs differ. That is tolerable only because reading the store reports numbers held by more than one ticket, making the collision loud at the next command.
+Reading the store still reports ids held by more than one ticket, since a random clash remains possible even if rare, and ids are always written quoted so no YAML parser can read one like `22739e` as a number.
 
 ### Schema and enforcement
 
@@ -103,13 +103,13 @@ The shape of a ticket, which encodes several of the above decisions more precise
 
 ```yaml
 ---
-id: 20                     # the number is the id; padding is presentation
+id: "a3f8c1"               # quoted, so no parser reads it as a number
 title: Reject writes containing undeclared fields
 status: in-progress        # a repo-defined status; its category is resolved via config
 priority: high             # none | low | medium | high | urgent
 labels: [cli, validation]  # free-form
-parent: 12                 # optional, at most one level of nesting
-blocked_by: [18]           # forward direction only; the reverse is derived on read
+parent: "1a2b3c"           # optional, at most one level of nesting
+blocked_by: ["9c4de1"]     # forward direction only; the reverse is derived on read
 created_at: 2026-08-30T11:04:22Z
 updated_at: 2026-08-30T14:51:09Z
 ---

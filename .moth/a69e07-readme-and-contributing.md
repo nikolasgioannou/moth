@@ -1,5 +1,5 @@
 ---
-id: 18
+id: "a69e07"
 title: README and CONTRIBUTING
 status: done
 priority: none
@@ -7,8 +7,8 @@ labels: []
 created_at: 2026-08-30T23:31:01.383Z
 updated_at: 2026-08-31T02:27:47.634Z
 blocked_by:
-  - 16
-  - 17
+  - "8a8a60"
+  - "030557"
 ---
 
 **What to build:** Someone arriving at the repository can work out what moth is, install it, and make a correct first contribution without having to ask anyone.

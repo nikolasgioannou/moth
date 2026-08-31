@@ -1,5 +1,5 @@
 ---
-id: 11
+id: "36089b"
 title: Blocking relations
 status: done
 priority: none
@@ -7,8 +7,8 @@ labels: []
 created_at: 2026-08-30T23:31:01.122Z
 updated_at: 2026-08-30T23:31:02.046Z
 blocked_by:
-  - 9
-  - 10
+  - "c15470"
+  - "897eff"
 ---
 
 **What to build:** A ticket records what must finish before it can start, and a developer can ask what is actually startable right now.

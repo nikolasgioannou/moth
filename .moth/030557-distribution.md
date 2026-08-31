@@ -1,5 +1,5 @@
 ---
-id: 17
+id: "030557"
 title: Distribution
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:01.360Z
 updated_at: 2026-08-31T02:27:47.604Z
 blocked_by:
-  - 16
+  - "8a8a60"
 ---
 
 **What to build:** Someone who has heard of moth can install it in one command, on a Mac, in a CI container, or into a JavaScript project.

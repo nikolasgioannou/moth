@@ -1,5 +1,5 @@
 ---
-id: 7
+id: "356aea"
 title: Workflow statuses and moth move
 status: done
 priority: none
@@ -7,8 +7,8 @@ labels: []
 created_at: 2026-08-30T23:31:01.030Z
 updated_at: 2026-08-30T23:31:01.818Z
 blocked_by:
-  - 3
-  - 6
+  - "77753d"
+  - "a9bac5"
 ---
 
 **What to build:** A ticket moves through the statuses this repo defined at init, with moth refusing statuses it does not recognise and telling the caller what it would accept instead.

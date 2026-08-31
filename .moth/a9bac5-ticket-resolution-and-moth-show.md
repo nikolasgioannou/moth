@@ -1,5 +1,5 @@
 ---
-id: 6
+id: "a9bac5"
 title: Ticket resolution and moth show
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:01.007Z
 updated_at: 2026-08-30T23:31:01.749Z
 blocked_by:
-  - 4
+  - "d9bfc0"
 ---
 
 **What to build:** A developer refers to a ticket the way they actually hold it in their head — its number, however they happen to write it, or a few words from its title — and moth either shows it or says plainly that the reference was ambiguous.

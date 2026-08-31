@@ -7,8 +7,8 @@ An issue tracker that lives in your repository. Tickets are markdown files with 
 ```
 $ moth list
 backlog
-  002  Ship the binary        high
-  001  Parse the frontmatter  none
+  280f4d  Ship the binary        high
+  8e0642  Parse the frontmatter  none
 ```
 
 ## Install
@@ -31,9 +31,9 @@ Or grab a binary from [releases](https://github.com/nikolasgioannou/moth/release
 
 ```sh
 moth init                                   # one question per status, Enter accepts each
-moth new "Parse the frontmatter"
+moth new "Parse the frontmatter"                            # prints the id it assigned
 moth new "Ship the binary" --body "Needs the parser first."
-moth edit 2 --blocked-by 1 --priority high --label release
+moth edit 280f4d --blocked-by 8e0642 --priority high --label release
 ```
 
 Then ask what you can actually start, rather than what merely exists:
@@ -41,12 +41,12 @@ Then ask what you can actually start, rather than what merely exists:
 ```
 $ moth list --unblocked
 backlog
-  001  Parse the frontmatter  none
+  8e0642  Parse the frontmatter  none
 ```
 
-Ticket 2 is missing because it is waiting on ticket 1.
+`280f4d` is missing because it is waiting on `8e0642`.
 
-Name a ticket however you remember it. `moth show 2`, `moth show 002` and `moth show "ship the binary"` all find the same one, and an ambiguous reference lists the candidates rather than guessing.
+Name a ticket however you remember it. `moth show 280f4d`, `moth show 280` and `moth show "ship the binary"` all find the same one, and an ambiguous reference lists the candidates rather than guessing.
 
 `moth --help` lists every command; each one's `--help` carries a worked example. `moth schema --json` reports exactly what this repository considers a legal ticket, which is how an agent learns the rules in one call.
 
@@ -74,7 +74,7 @@ Every rejection, with its reasoning, is in [the spec](docs/spec-v1.md#out-of-sco
 
 ```markdown
 ---
-id: 3
+id: "280f4d"
 title: Ship the first binary
 status: backlog
 priority: high
@@ -83,7 +83,7 @@ labels:
 created_at: 2026-08-31T02:31:59.759Z
 updated_at: 2026-08-31T02:31:59.787Z
 blocked_by:
-  - 1
+  - "8e0642"
 ---
 
 Blocked on the parser landing.

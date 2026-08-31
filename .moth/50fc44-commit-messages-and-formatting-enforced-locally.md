@@ -1,5 +1,5 @@
 ---
-id: 2
+id: "50fc44"
 title: Commit messages and formatting, enforced locally
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:00.424Z
 updated_at: 2026-08-30T23:31:01.569Z
 blocked_by:
-  - 1
+  - "c41227"
 ---
 
 **What to build:** A contributor writing a bad commit message or unformatted code is stopped on their own machine, before the commit exists, rather than finding out in review. Biome provides formatting and linting in one tool; lefthook runs both it and commitlint as git hooks.

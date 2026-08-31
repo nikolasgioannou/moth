@@ -1,5 +1,5 @@
 ---
-id: 24
+id: "8f8390"
 title: Spec's command surface no longer matches the CLI
 status: done
 priority: none

@@ -1,5 +1,5 @@
 ---
-id: 10
+id: "897eff"
 title: List filters
 status: done
 priority: none
@@ -7,8 +7,8 @@ labels: []
 created_at: 2026-08-30T23:31:01.098Z
 updated_at: 2026-08-30T23:31:01.977Z
 blocked_by:
-  - 5
-  - 9
+  - "eac096"
+  - "c15470"
 ---
 
 **What to build:** A developer narrows the backlog to the slice they care about, and an agent answers questions like "what urgent work is outstanding" in one command rather than by grepping.

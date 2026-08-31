@@ -1,5 +1,5 @@
 ---
-id: 25
+id: "4daa8e"
 title: ADRs do not make supersession legible
 status: done
 priority: none

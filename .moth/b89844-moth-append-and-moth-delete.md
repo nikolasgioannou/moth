@@ -1,5 +1,5 @@
 ---
-id: 13
+id: "b89844"
 title: moth append and moth delete
 status: done
 priority: none
@@ -7,7 +7,7 @@ labels: []
 created_at: 2026-08-30T23:31:01.169Z
 updated_at: 2026-08-30T23:31:02.140Z
 blocked_by:
-  - 7
+  - "356aea"
 ---
 
 **What to build:** An agent records findings on a ticket mid-task without rewriting the file, and a genuine mistake can be removed rather than living in the backlog forever.

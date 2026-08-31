@@ -1,5 +1,5 @@
 ---
-id: 14
+id: "8788ed"
 title: moth check
 status: done
 priority: none
@@ -7,9 +7,9 @@ labels: []
 created_at: 2026-08-30T23:31:01.192Z
 updated_at: 2026-08-30T23:31:02.233Z
 blocked_by:
-  - 8
-  - 11
-  - 12
+  - "76de4f"
+  - "36089b"
+  - "a69404"
 ---
 
 **What to build:** Before reporting a task complete, an agent can verify it has not left the store corrupted — and a developer can find out what drifted after a merge.
