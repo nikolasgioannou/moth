@@ -144,12 +144,14 @@ There is no project or epic concept above the ticket. Labels already group, and 
 
 ### Command surface
 
-Modelled on `gh`: noun-verb (`moth ticket create`), with top-level aliases for the dominant noun (`moth new`, `moth list`, `moth show`, `moth move`, `moth edit`, `moth append`). Matching the shape of the most widely-known issue-tracker CLI means agents guess the interface correctly on the first attempt, which is worth more than any originality here.
+A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `append`, `delete`, `board`, `check` (also reachable as `doctor`), and `schema`.
+
+A noun-verb shape after `gh` — `moth ticket create`, with the flat forms as aliases — was specified first and dropped. `gh`'s shape earns itself because it has many nouns to disambiguate: issues, pull requests, repositories, releases. moth has one. A noun layer over a single noun is ceremony that every caller pays for and no caller benefits from, and the argument for it was familiarity, which the flat verbs already have.
 
 Conventions, all of which exist to make the tool safe for a non-interactive caller:
 
 - stdout carries data; stderr carries everything else.
-- `--json` on every read command, implying no colour and no decoration.
+- `--json` on every command that returns a ticket: `new`, `list`, `show`, `move`, `edit`, and `schema`. It implies no colour and no decoration. Three commands deliberately have no JSON form: `board` already emits markdown, which is its machine-readable output; `check` emits diagnostics rather than tickets; and `append` and `delete` print a one-line confirmation.
 - Colour and progress output are suppressed automatically when stdout is not a terminal.
 - Exit codes: `0` success, `1` operation failed, `2` usage error. Documented, because agents branch on them.
 - No command prompts interactively, with exactly one exception: `moth init`, which is human-only setup.

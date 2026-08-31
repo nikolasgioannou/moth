@@ -59,3 +59,13 @@ test("help alone is enough to initialise, create, find and move a ticket", async
   expect(await help("new", "--help")).toMatch(/moth new "/);
   expect(await help("move", "--help")).toMatch(/moth move \S+ \S+/);
 });
+
+test("an aliased command has the help of the command it aliases", async () => {
+  const io = captureIo(tempDir());
+
+  const code = await run(["doctor", "--help"], io);
+
+  expect(code).toBe(0);
+  expect(io.out()).toContain("moth check");
+  expect(io.out().toLowerCase()).toContain("example");
+});

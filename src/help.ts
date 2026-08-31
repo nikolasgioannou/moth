@@ -98,6 +98,14 @@ export const HELP: Record<string, CommandHelp> = {
 
 export const COMMAND_NAMES = Object.keys(HELP);
 
+/** Other names a command answers to. They share the command's help. */
+export const ALIASES: Record<string, string> = { doctor: "check" };
+
+/** The command a name refers to, following an alias if it is one. */
+export function resolveCommandName(name: string): string {
+  return ALIASES[name] ?? name;
+}
+
 const EXIT_CODES = `Exit codes:
   0  the command succeeded
   1  the command ran but could not do what was asked
@@ -122,10 +130,11 @@ ${EXIT_CODES}`;
 }
 
 export function commandHelp(name: string): string | null {
-  const entry = HELP[name];
+  const resolved = resolveCommandName(name);
+  const entry = HELP[resolved];
   if (entry === undefined) return null;
   const notes = entry.notes === undefined ? "" : `\n${entry.notes}\n`;
-  return `moth ${name} — ${entry.summary}
+  return `moth ${resolved} — ${entry.summary}
 
 Usage: ${entry.usage}
 ${notes}
