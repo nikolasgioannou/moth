@@ -4,15 +4,14 @@ One file per decision, numbered in order: `NNNN-slug.md`.
 
 A decision is worth recording when all three hold: it is hard to reverse, it is surprising without context, and it was a real trade-off with alternatives that were considered. If any is missing, skip it.
 
-## Superseding
+Each record states the decision in the present tense, the alternatives that lost and why, and the consequences accepted. The reasoning is the point: a future reader should be able to tell whether a decision still holds by checking whether its premises still hold.
 
-A decision that gets reversed is **not** rewritten or deleted. The reasoning is the point, including the reasoning that turned out to be wrong: a future reader should be able to see what was believed and what changed.
+## When a decision changes
 
-Instead, the superseded record gains two things:
+While moth is pre-1.0, a record that no longer describes moth is **rewritten in place** rather than superseded. There are no supersession chains and no records describing behaviour that does not exist: a reader can take any file here as current.
 
-- `status: superseded by ADR-NNNN` in its frontmatter, and
-- **a note in its prose, directly under the title**, saying so.
+Reasoning that lost is kept, as an alternative under "Considered options" rather than as a separate document. That is where it is useful — an argument that lost once may win later, and it will be found by someone reading the decision it bears on rather than by someone reading a retired file.
 
-Frontmatter alone is not enough. An ADR's body is written in the present tense — "IDs *are* a random suffix" — so anyone who skims past three lines of YAML reads it as a description of how the project works today. ADR-0001 sat in exactly that state and was mistaken for current behaviour.
+The history is in git. `git log -p docs/adr/` is a complete record of what was believed and when, which is what a superseded file was standing in for.
 
-The new record names the one it supersedes in its title, so the link is followable in both directions.
+After 1.0, when others may be linking to these, reversals get their own record instead.
