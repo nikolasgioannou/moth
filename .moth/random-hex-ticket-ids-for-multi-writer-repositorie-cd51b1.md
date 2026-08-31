@@ -5,14 +5,14 @@ status: done
 priority: none
 labels: []
 created_at: 2026-08-31T02:47:59.112Z
-updated_at: 2026-08-31T03:04:27.750Z
+updated_at: 2026-08-31T15:40:01.836Z
 ---
 
-**What to build:** A ticket is identified by six random hex characters — `a3f8c1-fix-the-login-redirect.md` — replacing the sequential numbering of ticket 020 and ADR-0004.
+**What to build:** A ticket is identified by six random hex characters — `a3f8c1-fix-the-login-redirect.md` — replacing the sequential numbering of ticket 020 and the sequential-ids ADR.
 
 **Blocked by:** 20 (sequential ticket ids)
 
-**Note:** This is the third position on ids, so the reasoning matters. ADR-0004 chose sequential on three premises, two of which have since changed:
+**Note:** This is the third position on ids, so the reasoning matters. The sequential-ids ADR chose sequential on three premises, two of which have since changed:
 
 - *A single writer on one checkout.* moth is now aimed at multi-agent teams, and possibly several people in one repository. Concurrent creation on separate branches becomes ordinary rather than hypothetical, and that is exactly the case sequential numbering cannot survive.
 - *Ordering is valuable.* It is not, in practice. Tickets are found through `moth list` and opened from there; the directory listing is read for identification, not sequence. Ordering was the only thing the number bought.
@@ -28,5 +28,5 @@ Six characters rather than four: with local collision checking only concurrent c
 - [x] Ordering falls back to creation time, which the id no longer encodes
 - [x] `blocked_by` and `parent` hold ids, and existing tickets are migrated with their graph intact
 - [x] Two tickets sharing an id are still reported, and `check --fix` reissues one
-- [x] ADR-0004 is superseded by a new ADR recording which premises changed
+- [x] The sequential-ids ADR is superseded by a new one recording which premises changed
 - [x] The spec, CONTEXT.md and the README reflect the new scheme

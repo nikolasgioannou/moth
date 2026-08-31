@@ -1,11 +1,11 @@
 ---
 id: "653952"
 title: A body-editing API shaped for how agents edit files
-status: todo
+status: duplicate
 priority: none
 labels: []
 created_at: 2026-08-31T01:28:25.369Z
-updated_at: 2026-08-31T01:28:25.401Z
+updated_at: 2026-08-31T15:06:17.476Z
 ---
 
 **What to build:** A way to change a ticket's body through moth. Today `moth edit` reaches every field except the one that holds the actual content: title, priority, labels, parent, blockers and declared custom fields all have flags, and the body has none. `moth append` only adds to the end. Changing a description means hand-editing the markdown, which was done twice while building moth and each time bypassed moth entirely.
