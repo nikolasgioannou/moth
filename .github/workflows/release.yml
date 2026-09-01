@@ -39,13 +39,38 @@ jobs:
       - name: Build every target
         run: bun run build:release
 
+      # Notes come from the CHANGELOG section for this tag. If there is no such
+      # section, fall back to generated notes rather than publishing an empty
+      # release: a missing changelog entry should not break a release.
+      - name: Take the release notes from the changelog
+        id: notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 == "## [" v "]" || index($0, "## [" v "] ") == 1 { inside = 1; next }
+            inside && /^## \[/ { exit }
+            inside { print }
+          ' CHANGELOG.md > notes.md
+          if [ -s notes.md ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "no CHANGELOG section for $version; falling back to generated notes"
+          fi
+
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
+          NOTES_FOUND: ${{ steps.notes.outputs.found }}
         run: |
+          if [ "$NOTES_FOUND" = "true" ]; then
+            set -- --notes-file notes.md
+          else
+            set -- --generate-notes
+          fi
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
-            --generate-notes \
+            "$@" \
             dist/release/moth-* \
             dist/release/SHA256SUMS
 
