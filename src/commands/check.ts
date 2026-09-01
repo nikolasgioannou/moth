@@ -30,7 +30,7 @@ function findings(tickets: Ticket[], config: Config): Finding[] {
     const wanted = filenameFor(ticket.id, ticket.title);
     if (basename(ticket.path) !== wanted) {
       found.push({
-        message: `${basename(ticket.path)} should be named ${wanted}, its title has changed`,
+        message: `${basename(ticket.path)} should be named ${wanted}`,
         fixable: true,
       });
     }
