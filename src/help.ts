@@ -23,7 +23,7 @@ export const HELP: Record<string, CommandHelp> = {
     usage:
       'moth new "<title>" [--body <text> | --body-file <path>] [--priority <p>] [--label <l>] [--parent <ticket>] [--json]',
     example: `  $ moth new "Fix the login redirect"
-  001  Fix the login redirect
+  a3f8c1  Fix the login redirect
 
   $ moth new "Ship the binary" --priority high --label release
   $ printf 'Loops on a stale cookie.\\n' | moth new "Stale session" --body-file -`,
@@ -41,30 +41,30 @@ export const HELP: Record<string, CommandHelp> = {
   show: {
     summary: "Show one ticket",
     usage: "moth show <ticket> [--json]",
-    example: `  $ moth show 20
+    example: `  $ moth show a3f8c1
   $ moth show "login redirect"`,
     notes: "A ticket is named by its number, padded or not, or by words from its title.",
   },
   move: {
     summary: "Put a ticket in another status",
     usage: "moth move <ticket> <status> [--json]",
-    example: `  $ moth move 20 in-progress`,
+    example: `  $ moth move a3f8c1 in-progress`,
     notes: "Moving to the status a ticket already holds succeeds and changes nothing.",
   },
   edit: {
     summary: "Change a ticket's title, body, priority, labels, parent or blockers",
     usage:
       "moth edit <ticket> [--title <text>] [--body <text> | --body-file <path>] [--priority <p>] [--label <l>] [--remove-label <l>] [--parent <ticket>] [--blocked-by <ticket>] [--unblock <ticket>] [--set <field>=<value>] [--json]",
-    example: `  $ moth edit 20 --priority high --label cli
-  $ moth edit 20 --title "Rewrite the auth flow"
-  $ moth show 20 --json | jq -r .body | sed s/foo/bar/ | moth edit 20 --body-file -`,
+    example: `  $ moth edit a3f8c1 --priority high --label cli
+  $ moth edit a3f8c1 --title "Rewrite the auth flow"
+  $ moth show a3f8c1 --json | jq -r .body | sed s/foo/bar/ | moth edit a3f8c1 --body-file -`,
     notes:
       "Changing a title renames the file to match. --body replaces the whole body, so read it first with moth show --json. --set only accepts fields declared in config.",
   },
   delete: {
     summary: "Remove a ticket permanently",
     usage: "moth delete <ticket> --yes",
-    example: `  $ moth delete 20 --yes`,
+    example: `  $ moth delete a3f8c1 --yes`,
     notes:
       "For mistakes only. To record that work will not be done, move it to a cancelled status instead and keep its history. Never prompts, so --yes is required.",
   },

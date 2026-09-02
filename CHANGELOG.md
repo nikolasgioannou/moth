@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - `moth new --priority <p>` and `moth new --label <l>`, so filing a prioritised or labelled ticket is one command rather than a `new` followed by an `edit`. `--label` is repeatable, and an illegal priority is refused before anything is written.
 
+### Fixed
+
+- The worked examples in `--help` used sequential ticket ids (`20`, `001`), which have not been moth's shape since 0.2.0.
+
 ## [0.3.0] - 2026-08-31
 
 Existing tickets are read correctly by this version with no migration. What changes is the command surface and the naming convention on disk.
