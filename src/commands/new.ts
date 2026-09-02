@@ -1,9 +1,9 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Scalar, stringify as stringifyYaml } from "yaml";
-import { parseArgs } from "../args.ts";
+import { parseArgs, stringList } from "../args.ts";
 import { suppliedBody } from "../body.ts";
-import type { Config } from "../config.ts";
+import { type Config, PRIORITIES } from "../config.ts";
 import type { Io } from "../io.ts";
 import { openRepo } from "../repo.ts";
 import { allocateId, filenameFor, readTickets, resolve } from "../ticket.ts";
@@ -19,6 +19,8 @@ export async function create(argv: string[], io: Io): Promise<number> {
     json: { type: "boolean" },
     body: { type: "string" },
     "body-file": { type: "string" },
+    priority: { type: "string" },
+    label: { type: "string", multiple: true },
     parent: { type: "string" },
   });
   if (!parsed.ok) {
@@ -52,6 +54,13 @@ export async function create(argv: string[], io: Io): Promise<number> {
     parentId = parentRef.ticket.id;
   }
 
+  const priority = typeof values.priority === "string" ? values.priority : "none";
+  if (!(PRIORITIES as readonly string[]).includes(priority)) {
+    io.stderr(`moth: '${priority}' is not a priority. Legal values: ${PRIORITIES.join(", ")}\n`);
+    return 1;
+  }
+  const labels = [...new Set(stringList(values.label))].sort();
+
   const id = allocateId(io, existing);
   if (id === null) {
     io.stderr("moth: could not allocate a free ticket id\n");
@@ -64,8 +73,8 @@ export async function create(argv: string[], io: Io): Promise<number> {
     id,
     title,
     status: defaultStatus(config),
-    priority: "none",
-    labels: [] as string[],
+    priority,
+    labels,
     ...(parentId === undefined ? {} : { parent: parentId }),
     created_at: timestamp,
     updated_at: timestamp,

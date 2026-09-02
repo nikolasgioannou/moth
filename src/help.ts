@@ -20,13 +20,15 @@ export const HELP: Record<string, CommandHelp> = {
   },
   new: {
     summary: "File a ticket",
-    usage: 'moth new "<title>" [--body <text> | --body-file <path>] [--parent <ticket>] [--json]',
+    usage:
+      'moth new "<title>" [--body <text> | --body-file <path>] [--priority <p>] [--label <l>] [--parent <ticket>] [--json]',
     example: `  $ moth new "Fix the login redirect"
   001  Fix the login redirect
 
+  $ moth new "Ship the binary" --priority high --label release
   $ printf 'Loops on a stale cookie.\\n' | moth new "Stale session" --body-file -`,
     notes:
-      "A title is required. Use --body-file - to pipe markdown in without shell quoting mangling it.",
+      "A title is required. --label may be given more than once. Use --body-file - to pipe markdown in without shell quoting mangling it.",
   },
   list: {
     summary: "List tickets, grouped by status",

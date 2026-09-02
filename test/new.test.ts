@@ -170,3 +170,61 @@ test("a title of only whitespace is rejected the same way", async () => {
   expect(code).toBe(2);
   expect(files(dir)).toHaveLength(0);
 });
+
+test("new files a ticket with a priority and a label in one command", async () => {
+  const dir = await initedRepo();
+
+  const id = await newTicket(dir, "Fix the login redirect", [
+    "--priority",
+    "high",
+    "--label",
+    "cli",
+  ]);
+
+  const fields = parseFrontmatter(ticketText(dir, id)).data;
+  expect(fields.priority).toBe("high");
+  expect(fields.labels).toEqual(["cli"]);
+});
+
+test("--label is repeatable and the labels are sorted, as on edit", async () => {
+  const dir = await initedRepo();
+
+  const id = await newTicket(dir, "Fix the login redirect", [
+    "--label",
+    "release",
+    "--label",
+    "cli",
+  ]);
+
+  expect(parseFrontmatter(ticketText(dir, id)).data.labels).toEqual(["cli", "release"]);
+});
+
+test("the same label given twice is stored once", async () => {
+  const dir = await initedRepo();
+
+  const id = await newTicket(dir, "Fix the login redirect", ["--label", "cli", "--label", "cli"]);
+
+  expect(parseFrontmatter(ticketText(dir, id)).data.labels).toEqual(["cli"]);
+});
+
+test("an illegal priority is refused, listing the legal values, and writes nothing", async () => {
+  const dir = await initedRepo();
+  const io = captureIo(dir);
+
+  const code = await run(["new", "Fix the login redirect", "--priority", "critical"], io);
+
+  expect(code).toBe(1);
+  expect(io.err()).toContain("critical");
+  expect(io.err()).toContain("urgent");
+  expect(readdirSync(join(dir, ".moth"))).toEqual([]);
+});
+
+test("a ticket filed without either flag still defaults to none and no labels", async () => {
+  const dir = await initedRepo();
+
+  const id = await newTicket(dir, "Fix the login redirect");
+
+  const fields = parseFrontmatter(ticketText(dir, id)).data;
+  expect(fields.priority).toBe("none");
+  expect(fields.labels).toEqual([]);
+});
