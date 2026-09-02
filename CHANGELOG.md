@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-02
+
 ### Added
 
 - `moth new --priority <p>` and `moth new --label <l>`, so filing a prioritised or labelled ticket is one command rather than a `new` followed by an `edit`. `--label` is repeatable, and an illegal priority is refused before anything is written.
@@ -61,7 +63,8 @@ First release. An issue tracker that lives in your repository: tickets are markd
 - `--json` on every command that returns a ticket
 - Single-binary distribution via Homebrew, npm, an install script and release archives
 
-[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/nikolasgioannou/moth/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/nikolasgioannou/moth/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/nikolasgioannou/moth/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/nikolasgioannou/moth/releases/tag/v0.1.0
