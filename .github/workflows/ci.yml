@@ -17,3 +17,7 @@ jobs:
       - run: bun run lint
       - run: bun run typecheck
       - run: bun test
+      # moth's own backlog, validated by the moth in this commit. The pre-commit
+      # hook only sees local commits; this also covers --no-verify, merges, and
+      # edits made through the web UI.
+      - run: bun run moth check
