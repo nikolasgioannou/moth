@@ -26,6 +26,8 @@ Existing tickets are read correctly by this version with no migration. What chan
 
 ### Fixed
 
+- A ticket missing `created_at` — one written or edited by hand — crashed every command that lists tickets, with a `TypeError` from the sort. Ordering now falls back to the id. The crash surfaced only when the malformed ticket was read first, so it depended on the filesystem and went unseen on macOS.
+- `moth check` now reports a ticket missing a required field. Previously it validated undeclared fields and unknown statuses but not missing ones, so such a ticket was neither survivable nor reported.
 - `--body-file` with an absolute path read the wrong location: the path was joined onto the working directory, so `/tmp/body.md` resolved to `<repo>/tmp/body.md`. Present in `moth new` since 0.1.0.
 - `--body-file` with a missing path printed a stack trace; it now reports `moth: cannot read '<path>'` and exits 1.
 - `--set body=` was accepted when a repository declared `body` as a custom field, writing a frontmatter key that collided with the document body. It is now refused, pointing at `--body`.
