@@ -1,6 +1,6 @@
 {
   "name": "moth",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "An opinionated issue tracker that lives in your repo. Tickets are markdown files with an enforced schema.",
   "keywords": [
     "issue-tracker",
