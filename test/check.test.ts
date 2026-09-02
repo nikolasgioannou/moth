@@ -128,3 +128,41 @@ test("--fix says what it left alone", async () => {
   expect(result.code).not.toBe(0);
   expect(result.output.toLowerCase()).toContain("shipped");
 });
+
+// Two malformed tickets, so at least one comparison has the malformed ticket on
+// the left however the directory happens to be read. With one, the crash only
+// surfaced on filesystems that returned it first, which hid it on macOS.
+function withoutCreatedAt(dir: string, id: string, title: string): void {
+  writeFileSync(
+    join(dir, ".moth", `${title.toLowerCase()}-${id}.md`),
+    `---\nid: "${id}"\ntitle: ${title}\nstatus: backlog\npriority: none\nlabels: []\n---\n\n`,
+  );
+}
+
+test("a ticket missing created_at is still listed, not a crash", async () => {
+  const dir = await initedRepo();
+  await newTicket(dir, "Complete");
+  withoutCreatedAt(dir, "aaaaaa", "Alpha");
+  withoutCreatedAt(dir, "bbbbbb", "Beta");
+  const io = captureIo(dir);
+
+  const code = await run(["list"], io);
+
+  expect(code).toBe(0);
+  expect(io.out()).toContain("Alpha");
+  expect(io.out()).toContain("Beta");
+  expect(io.out()).toContain("Complete");
+});
+
+test("check reports a ticket missing a required field", async () => {
+  const dir = await initedRepo();
+  await newTicket(dir, "Complete");
+  withoutCreatedAt(dir, "aaaaaa", "Alpha");
+  const io = captureIo(dir);
+
+  const code = await run(["check"], io);
+
+  expect(code).not.toBe(0);
+  expect(io.err()).toContain("created_at");
+  expect(io.err()).toContain("aaaaaa");
+});

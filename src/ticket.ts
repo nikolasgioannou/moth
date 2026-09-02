@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { Scalar, stringify as stringifyYaml } from "yaml";
+import { REQUIRED_FIELDS } from "./config.ts";
 
 export interface Ticket {
   /** Where the ticket is stored. Local detail, never part of output. */
@@ -39,9 +40,11 @@ function byPriorityThenAge(a: Ticket, b: Ticket): number {
     const index = PRIORITY_ORDER.indexOf(ticket.priority);
     return index === -1 ? PRIORITY_ORDER.length : index;
   };
-  // The id breaks ties so ordering stays stable when two tickets are created
-  // in the same millisecond, which agents do.
-  return rank(a) - rank(b) || a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id);
+  // A ticket edited by hand can be missing created_at entirely. Ordering falls
+  // back to the id rather than throwing, so one malformed file cannot take down
+  // every command that lists tickets; check reports it as a missing field.
+  const age = (ticket: Ticket) => ticket.created_at ?? "";
+  return rank(a) - rank(b) || age(a).localeCompare(age(b)) || a.id.localeCompare(b.id);
 }
 
 /** Six hex characters: short enough to read, wide enough that clashes stay rare. */
@@ -251,6 +254,11 @@ export function validate(
 ): TicketProblem[] {
   const problems: TicketProblem[] = [];
   for (const ticket of tickets) {
+    for (const field of REQUIRED_FIELDS) {
+      if (ticket[field] === undefined) {
+        problems.push({ id: ticket.id ?? basename(ticket.path), reason: `missing '${field}'` });
+      }
+    }
     for (const field of Object.keys(metadataOf(ticket))) {
       if (!legalFields.includes(field)) {
         problems.push({ id: ticket.id, reason: `undeclared field '${field}'` });

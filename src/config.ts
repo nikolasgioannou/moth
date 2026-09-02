@@ -24,6 +24,19 @@ export const CORE_FIELDS = [
   "updated_at",
 ] as const;
 
+/**
+ * Fields a ticket cannot do without. `labels` is absent from this list because
+ * it defaults to empty on read, and `parent` and `blocked_by` are optional.
+ */
+export const REQUIRED_FIELDS = [
+  "id",
+  "title",
+  "status",
+  "priority",
+  "created_at",
+  "updated_at",
+] as const;
+
 export interface Config {
   statuses: { name: string; category: string }[];
   /** Extra fields this repo permits on a ticket. Anything else is refused. */
