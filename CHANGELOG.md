@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-03
+
 ### Added
 
 - musl builds for Linux, published as release assets and as the npm packages `moth-cli-linux-x64-musl` and `moth-cli-linux-arm64-musl`. moth could not run on Alpine at all before this: a glibc binary names an ELF interpreter that does not exist there, and the loader's error names a missing file rather than the cause.
@@ -72,7 +74,8 @@ First release. An issue tracker that lives in your repository: tickets are markd
 - `--json` on every command that returns a ticket
 - Single-binary distribution via Homebrew, npm, an install script and release archives
 
-[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/nikolasgioannou/moth/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/nikolasgioannou/moth/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/nikolasgioannou/moth/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/nikolasgioannou/moth/compare/v0.1.0...v0.2.0
