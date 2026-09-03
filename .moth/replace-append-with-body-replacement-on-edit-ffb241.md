@@ -6,7 +6,7 @@ priority: high
 labels:
   - cli
 created_at: 2026-08-31T15:05:53.248Z
-updated_at: 2026-08-31T15:09:50.087Z
+updated_at: 2026-09-03T01:06:55.357Z
 ---
 
 moth reaches every field except the one holding the content. `moth edit` has flags for title, priority, labels, parent, blockers and declared custom fields; the body has none. `moth append` can only add to the end, and it does so under a `## Notes` heading it invents — moth having an opinion about how your markdown is organised, which it should not have.
@@ -25,10 +25,10 @@ The body is opaque to moth. It has no schema, so moth enforces nothing about it 
 
 **Done when**
 
-- [ ] `moth edit <t> --body-file -` replaces the body from stdin
-- [ ] `moth edit <t> --body <text>` replaces it from an argument
-- [ ] `moth edit <t> --body-file <path>` replaces it from a file
-- [ ] Replacing the body updates `updated_at`
-- [ ] `moth append` no longer exists, and its help entry is gone
-- [ ] `--set body=` is refused even when `body` is declared in config
-- [ ] The spec no longer describes a notes heading
+- [x] `moth edit <t> --body-file -` replaces the body from stdin
+- [x] `moth edit <t> --body <text>` replaces it from an argument
+- [x] `moth edit <t> --body-file <path>` replaces it from a file
+- [x] Replacing the body updates `updated_at`
+- [x] `moth append` no longer exists, and its help entry is gone
+- [x] `--set body=` is refused even when `body` is declared in config
+- [x] The spec no longer describes a notes heading

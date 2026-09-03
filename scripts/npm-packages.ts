@@ -23,8 +23,11 @@ const packageName = (os: string, cpu: string, libc?: string) =>
 
 /**
  * The launcher npm installs as `moth`. It finds the binary for this platform and
- * runs it; only the matching platform package is downloaded, so nobody pays for
- * seven binaries.
+ * runs it, so nobody pays for seven binaries. `os`, `cpu` and `libc` narrow what
+ * a client fetches: npm 10.2+, pnpm and Yarn 4 honour all three and take exactly
+ * one, while an older npm ignores `libc` and takes both Linux builds. That is
+ * why the launcher resolves by libc at runtime rather than trusting the install
+ * to have fetched only the right one.
  *
  * It costs ~30ms per invocation, almost all of it Node starting up, and a
  * `#!/bin/sh` shim using `exec` was measured at under 3ms. It stays Node anyway:

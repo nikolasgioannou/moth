@@ -43,7 +43,8 @@ export const HELP: Record<string, CommandHelp> = {
     usage: "moth show <ticket> [--json]",
     example: `  $ moth show a3f8c1
   $ moth show "login redirect"`,
-    notes: "A ticket is named by its number, padded or not, or by words from its title.",
+    notes:
+      "A ticket is named by its id, in full or by an unambiguous leading fragment, or by words from its title.",
   },
   move: {
     summary: "Put a ticket in another status",

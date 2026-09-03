@@ -6,7 +6,7 @@ priority: high
 labels:
   - distribution
 created_at: 2026-09-02T19:52:49.369Z
-updated_at: 2026-09-03T00:21:58.215Z
+updated_at: 2026-09-03T01:06:55.530Z
 ---
 
 The published Linux binaries are glibc-linked, and nothing stops npm installing them on a musl system.
@@ -42,9 +42,9 @@ Alpine is the default base image across Docker and CI, which is exactly where ag
 - [x] musl binaries are built and attached to the release
 - [x] musl npm packages are built, declaring `libc: ["musl"]`
 - [x] The glibc packages declare `libc: ["glibc"]`
-- [x] `install.sh` picks the right binary on a musl system, verified in Alpine and Debian containers
+- [x] `install.sh` picks the right binary on a musl system, with and without `ldd` present. Verified by hand in Alpine and Debian containers, not in CI.
 - [x] The launcher resolves by libc at runtime, so a client that ignores the field still gets a readable error instead of the loader's
-- [x] Verified in Alpine containers: init, new, list and check all run
+- [x] Verified by hand against the published 0.4.0, through both npm and the install script: init, new, list and check all run. Nothing in CI covers this, which is its own ticket.
 
 
 ## Notes

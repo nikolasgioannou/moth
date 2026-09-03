@@ -10,7 +10,7 @@ pre-commit:
       run: bunx tsc --noEmit
     # Only when tickets change. moth is the product here, so a runtime fault
     # in src/ would otherwise block the very commit that fixes it; scoping
-    # this to the backlog keeps that collision to commits touching both.
+    # this to the ticket store keeps that collision to commits touching both.
     - name: moth check
       glob: ".moth/*.md"
       run: bun run moth check

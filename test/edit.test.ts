@@ -213,3 +213,13 @@ test("--body-file accepts an absolute path, not only one relative to the repo", 
   expect(code).toBe(0);
   expect(parseFrontmatter(ticketText(dir, id)).body).toBe("From outside the repo.\n");
 });
+
+test("append is gone; the body is replaced through edit instead", async () => {
+  const dir = await initedRepo();
+  const io = captureIo(dir, { stdin: "A note." });
+
+  const code = await run(["append", "whatever"], io);
+
+  expect(code).toBe(2);
+  expect(io.err()).toContain("append");
+});

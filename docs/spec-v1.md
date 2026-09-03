@@ -45,7 +45,7 @@ Everything else follows from those two ideas. Tickets are committed to the repo,
 19. As a coding agent, I want data on stdout and diagnostics on stderr, so that I can pipe moth's output without contaminating it.
 20. As a coding agent, I want colour and decoration suppressed when output is not a terminal, so that I get clean text without passing a flag.
 21. As a developer, I want to search ticket titles and bodies, so that I can find a ticket whose ID I don't remember.
-22. As a developer, I want to reference a ticket by its number however I write it, padded or not, so that I don't have to be careful about leading zeros.
+22. As a developer, I want to reference a ticket by an unambiguous leading fragment of its id, so that I do not have to type six hex characters to name one.
 23. As a developer, I want an error when a reference matches more than one ticket, so that I never act on the wrong one by accident.
 24. As a coding agent, I want to record that one ticket blocks another, so that the dependency is data rather than prose in a description.
 25. As a developer, I want to list only blocked or only unblocked tickets, so that I can see what is actually startable right now.

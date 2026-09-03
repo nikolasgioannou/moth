@@ -43,7 +43,7 @@ test/
   helpers/          shared fixtures and doubles
 ```
 
-Tests are separated from source rather than sitting beside it, for a specific reason. moth is tested through one seam — `run(argv, io)`, the entry point that takes an argument vector and an injected environment — so a test drives several commands at once. Only three of seventeen test files touch a single command; `blocking.test.ts` touches five.
+Tests are separated from source rather than sitting beside it, for a specific reason. moth is tested through one seam — `run(argv, io)`, the entry point that takes an argument vector and an injected environment — so a test drives several commands at once. Only a few test files touch a single command; `blocking.test.ts` touches five.
 
 A test therefore belongs to a **behaviour**, not to a module, and is named for one: `blocking`, `filters`, `parent`, rather than `edit`, `list`, `show`. Colocating tests next to source is right when they pair one-to-one with modules; it does not fit tests that span modules by design.
 

@@ -43,8 +43,20 @@ esac
 # ldd of its own, so musl announces itself on stderr when ldd is run bare.
 libc=""
 if [ "$os" = linux ]; then
-  if ldd --version 2>&1 | grep -qi musl || ldd 2>&1 | grep -qi musl; then
-    libc="-musl"
+  if command -v ldd >/dev/null 2>&1; then
+    if ldd --version 2>&1 | grep -qi musl || ldd 2>&1 | grep -qi musl; then
+      libc="-musl"
+    fi
+  else
+    # No ldd to ask, so look for the loader itself. A present musl loader is a
+    # safer signal than an absent glibc one, which would also be absent on a
+    # system that simply puts it somewhere unusual.
+    for loader in /lib/ld-musl-*.so.1; do
+      if [ -e "$loader" ]; then
+        libc="-musl"
+        break
+      fi
+    done
   fi
 fi
 asset="moth-$os-$arch$libc"

@@ -6,7 +6,7 @@ priority: none
 labels:
   - docs
 created_at: 2026-08-31T15:05:53.285Z
-updated_at: 2026-08-31T15:40:27.156Z
+updated_at: 2026-09-03T01:06:55.415Z
 ---
 
 Three ADRs describe one decision: the first chose random ids, the second superseded it with sequential numbers, and the third superseded that with random hex. A reader who wants to know how ids work today must read three documents in reverse order and discard two, and the superseded pair still read as current — the first advertises prefix matching that no longer exists.
@@ -19,7 +19,14 @@ Keep the supersession convention in `docs/adr/README.md` intact for genuine futu
 
 **Done when**
 
-- [ ] One ADR states how ids work today
+- [x] One ADR states how ids work today
 - [ ] Both reversals and their changed premises are recorded in it
-- [ ] No ADR that reads as current describes removed behaviour
-- [ ] Links from other docs still resolve
+- [x] No ADR that reads as current describes removed behaviour
+- [x] Links from other docs still resolve
+
+
+## Notes
+
+Closed, but one criterion is deliberately left open rather than ticked. ADR-0003 records why sequential ids lost, as a considered option, but not that the decision was taken, reversed, and reversed again. That history lived in the superseded records, and those were deleted when the set was restarted.
+
+Under the convention now in `docs/adr/README.md` this would not happen again: an accepted record is never rewritten or deleted, a reversal gets a new record, and the table in that README is what tells a reader which decisions are current. The chain that prompted this ticket is solved by the index, not by collapsing records.

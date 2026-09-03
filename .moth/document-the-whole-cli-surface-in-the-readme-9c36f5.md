@@ -6,7 +6,7 @@ priority: none
 labels:
   - docs
 created_at: 2026-08-31T15:05:53.318Z
-updated_at: 2026-08-31T15:21:34.005Z
+updated_at: 2026-09-03T01:06:55.473Z
 ---
 
 The README shows install, a few example commands, and the design rationale, but never lists the CLI surface. A reader cannot learn what commands exist without running `moth --help`, nor find flags without running `moth <command> --help` twelve times.
@@ -21,7 +21,7 @@ Gaps this will expose, to resolve rather than paper over: `moth new` accepts nei
 
 **Done when**
 
-- [x] Every command is listed with its flags
-- [x] `--json` support is marked per command
+- [~] Every command is listed. Flags are not: the table was cut back to a plain list on request, because a flags column made a small surface look large. `--help` is the reference.
+- [~] `--json` is stated once, globally, rather than per command, for the same reason.
 - [x] `check` is the only name for it; the `doctor` alias was dropped
 - [x] The `moth new` flag gap is recorded as its own ticket

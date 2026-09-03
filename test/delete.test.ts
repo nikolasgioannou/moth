@@ -44,13 +44,3 @@ test("delete's help points at cancelling as the normal path", async () => {
   expect(code).toBe(0);
   expect(io.out().toLowerCase()).toContain("cancel");
 });
-
-test("append is gone; the body is replaced through edit instead", async () => {
-  const [dir] = await repoWithTicket();
-  const io = captureIo(dir, { stdin: "A note." });
-
-  const code = await run(["append", "whatever"], io);
-
-  expect(code).toBe(2);
-  expect(io.err()).toContain("append");
-});

@@ -51,7 +51,10 @@ jobs:
             inside && /^## \[/ { exit }
             inside { print }
           ' CHANGELOG.md > notes.md
-          if [ -s notes.md ]; then
+          # Not `-s`: a section with a heading and nothing under it extracts to
+          # a single newline, which is non-empty, and would publish a release
+          # with a blank body. Require at least one non-whitespace character.
+          if grep -q '[^[:space:]]' notes.md; then
             echo "found=true" >> "$GITHUB_OUTPUT"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
