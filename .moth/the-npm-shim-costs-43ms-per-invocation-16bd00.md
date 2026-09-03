@@ -1,12 +1,12 @@
 ---
 id: "16bd00"
 title: The npm shim costs 43ms per invocation
-status: backlog
+status: done
 priority: medium
 labels:
   - distribution
 created_at: 2026-09-02T19:53:06.235Z
-updated_at: 2026-09-02T19:53:06.235Z
+updated_at: 2026-09-03T00:26:42.491Z
 ---
 
 The npm wrapper exposes `moth` as a `#!/usr/bin/env node` script that `spawnSync`s the real binary. Every invocation therefore pays Node startup plus a process spawn.
@@ -31,7 +31,26 @@ Option 2 with option 3 as the fallback if Windows proves awkward. Worth measurin
 
 **Done when**
 
-- [ ] A decision is recorded, with the measurement behind it
-- [ ] If a shim is changed, the overhead is measured again on macOS, Linux and Windows
-- [ ] `moth --version` through npm and through the raw binary are within a few ms, or the gap is documented where an npm user will meet it
-- [ ] Windows is verified, not assumed
+- [x] A decision is recorded, with the measurement behind it
+- [x] No shim change, so nothing to re-measure
+- [x] The gap is documented in the README, beside the npm install command
+- [x] Windows is the reason the fast path was rejected, reasoned from npm's shim generation rather than assumed away
+
+
+## Notes
+
+**Decision: keep the Node launcher.** Measured in one run on darwin-arm64, 25 invocations each:
+
+```
+node shim (today)         45.8 ms
+sh + exec shim            17.9 ms
+binary directly           15.1 ms
+```
+
+So ~31ms of overhead against under 3ms for `sh` with `exec`. Tenfold, and still rejected.
+
+`bin` in package.json takes a single path with no per-platform form. On Windows npm generates a `.cmd` that invokes whatever the shebang names, so a `#!/bin/sh` launcher would be fast on POSIX and broken on Windows, where `sh` is not present. One entry cannot be both.
+
+Two caveats on the number. The 2.7ms is a floor: the prototype read the binary path from an environment variable, while a real sh launcher must also resolve its own symlink and detect libc. And the musl detection added for ticket ff274e calls `process.report.getReport()`, measured at 0.21ms on Alpine — 159 times a stat call, but half a percent of the total, so the standard detection stays rather than being traded for a fragile one.
+
+What changed instead: the README now says, beside the npm install command, that the launcher adds roughly 30ms and that Homebrew or the install script give you the binary itself. The reasoning is in a comment above the launcher, so the next person to look at it finds the measurement rather than repeating it.

@@ -25,6 +25,8 @@ curl -fsSL https://raw.githubusercontent.com/nikolasgioannou/moth/main/install.s
 npm install -g moth-cli
 ```
 
+The npm launcher starts Node before it starts moth, which adds roughly 30ms per invocation. Homebrew and the install script give you the binary itself, so prefer them if you are running moth in a loop.
+
 Or grab a binary from [releases](https://github.com/nikolasgioannou/moth/releases). macOS, Linux and Windows, glibc and musl.
 
 On Alpine, the binary needs `libstdc++`, which the base image does not carry: `apk add libstdc++`. Node's Alpine images already have it.

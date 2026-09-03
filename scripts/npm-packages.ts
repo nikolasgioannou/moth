@@ -21,10 +21,21 @@ const PLATFORMS = [
 const packageName = (os: string, cpu: string, libc?: string) =>
   `${WRAPPER}-${os === "win32" ? "windows" : os}-${cpu}${libc === "musl" ? "-musl" : ""}`;
 
+/**
+ * The launcher npm installs as `moth`. It finds the binary for this platform and
+ * runs it; only the matching platform package is downloaded, so nobody pays for
+ * seven binaries.
+ *
+ * It costs ~30ms per invocation, almost all of it Node starting up, and a
+ * `#!/bin/sh` shim using `exec` was measured at under 3ms. It stays Node anyway:
+ * `bin` in package.json takes a single path with no per-platform form, and on
+ * Windows npm generates a `.cmd` that invokes whatever the shebang names, so an
+ * sh shim would be fast on POSIX and broken on Windows. Anyone who wants the
+ * binary's real startup should install through Homebrew or the install script,
+ * which the README now says.
+ */
 const SHIM = `#!/usr/bin/env node
 "use strict";
-// Finds the binary npm installed for this platform and runs it. Only the
-// matching platform package is downloaded, so nobody pays for five binaries.
 const { spawnSync } = require("node:child_process");
 
 const platform = process.platform === "win32" ? "windows" : process.platform;
