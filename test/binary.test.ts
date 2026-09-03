@@ -6,8 +6,8 @@ beforeAll(() => {
 });
 
 // beforeAll compiles the binary and Bun charges that time to the first test.
-// A compile alongside the rest of the suite has been measured at over 6s
-// against the 5s default, so this one test needs room the others do not.
+// On a machine that has not compiled before, that call downloads the Bun runtime:
+// 6.4s in CI against 75ms locally, where it is cached. Hence the room.
 test("the compiled binary reports the version", () => {
   const proc = Bun.spawnSync([BINARY, "--version"]);
 
