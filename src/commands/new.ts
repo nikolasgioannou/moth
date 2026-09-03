@@ -1,12 +1,12 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Scalar, stringify as stringifyYaml } from "yaml";
-import { parseArgs, stringList } from "../args.ts";
+import { stringList } from "../args.ts";
 import { suppliedBody } from "../body.ts";
+import { openCommand, resolveOrReport } from "../command.ts";
 import { type Config, PRIORITIES } from "../config.ts";
 import type { Io } from "../io.ts";
-import { openRepo } from "../repo.ts";
-import { allocateId, filenameFor, readTickets, resolve } from "../ticket.ts";
+import { allocateId, filenameFor, readTickets } from "../ticket.ts";
 
 /** New tickets open in the first status belonging to the backlog category. */
 function defaultStatus(config: Config): string {
@@ -15,7 +15,7 @@ function defaultStatus(config: Config): string {
 }
 
 export async function create(argv: string[], io: Io): Promise<number> {
-  const parsed = parseArgs(argv.slice(1), {
+  const opened = openCommand(argv, io, {
     json: { type: "boolean" },
     body: { type: "string" },
     "body-file": { type: "string" },
@@ -23,19 +23,8 @@ export async function create(argv: string[], io: Io): Promise<number> {
     label: { type: "string", multiple: true },
     parent: { type: "string" },
   });
-  if (!parsed.ok) {
-    io.stderr(`moth: ${parsed.message}\n`);
-    return 2;
-  }
-  const { values, positionals } = parsed;
-
-  const opened = openRepo(io.cwd);
-  if (!opened.ok) {
-    io.stderr(`moth: ${opened.message}
-`);
-    return 1;
-  }
-  const { config, ticketsDir } = opened.repo;
+  if (!opened.ok) return opened.code;
+  const { config, ticketsDir, values, positionals } = opened;
 
   const title = (positionals[0] ?? "").trim();
   if (title === "") {
@@ -46,12 +35,9 @@ export async function create(argv: string[], io: Io): Promise<number> {
   const existing = readTickets(ticketsDir);
   let parentId: string | undefined;
   if (typeof values.parent === "string") {
-    const parentRef = resolve(existing, values.parent);
-    if (parentRef.kind !== "found") {
-      io.stderr(`moth: no single ticket matches parent '${values.parent}'\n`);
-      return 1;
-    }
-    parentId = parentRef.ticket.id;
+    const parent = resolveOrReport(existing, values.parent, io, "parent");
+    if (parent === null) return 1;
+    parentId = parent.id;
   }
 
   const priority = typeof values.priority === "string" ? values.priority : "none";

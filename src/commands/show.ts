@@ -1,44 +1,17 @@
-import { parseArgs } from "../args.ts";
-
+import { openCommand, resolveOrReport } from "../command.ts";
 import type { Io } from "../io.ts";
-import { openRepo } from "../repo.ts";
-import { blocks, metadataOf, readTickets, resolve } from "../ticket.ts";
+import { blocks, metadataOf, readTickets } from "../ticket.ts";
 
 export async function show(argv: string[], io: Io): Promise<number> {
-  const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" } });
-  if (!parsed.ok) {
-    io.stderr(`moth: ${parsed.message}\n`);
-    return 2;
-  }
+  const opened = openCommand(argv, io, { json: { type: "boolean" } });
+  if (!opened.ok) return opened.code;
+  const { ticketsDir, positionals, values } = opened;
 
-  const opened = openRepo(io.cwd);
-  if (!opened.ok) {
-    io.stderr(`moth: ${opened.message}
-`);
-    return 1;
-  }
-  const { ticketsDir } = opened.repo;
-
-  const reference = parsed.positionals[0] ?? "";
   const tickets = readTickets(ticketsDir);
-  const found = resolve(tickets, reference);
+  const ticket = resolveOrReport(tickets, positionals[0] ?? "", io);
+  if (ticket === null) return 1;
 
-  if (found.kind === "none") {
-    io.stderr(`moth: no ticket matches '${reference}'\n`);
-    return 1;
-  }
-
-  if (found.kind === "ambiguous") {
-    io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
-    for (const candidate of found.tickets) {
-      io.stderr(`  ${candidate.id}  ${candidate.title}\n`);
-    }
-    return 1;
-  }
-
-  const { ticket } = found;
-
-  if (parsed.values.json === true) {
+  if (values.json === true) {
     io.stdout(`${JSON.stringify({ ...metadataOf(ticket), body: ticket.body }, null, 2)}\n`);
     return 0;
   }

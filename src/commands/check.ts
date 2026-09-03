@@ -1,10 +1,9 @@
 import { renameSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { parseArgs } from "../args.ts";
+import { openCommand } from "../command.ts";
 import { type Config, legalFields } from "../config.ts";
 import type { Io } from "../io.ts";
 import { categoryLookup } from "../query.ts";
-import { openRepo } from "../repo.ts";
 import {
   allocateId,
   blockingView,
@@ -95,21 +94,11 @@ function repairDuplicates(io: Io, tickets: Ticket[]): string[] {
 }
 
 export async function check(argv: string[], io: Io): Promise<number> {
-  const parsed = parseArgs(argv.slice(1), { fix: { type: "boolean" } });
-  if (!parsed.ok) {
-    io.stderr(`moth: ${parsed.message}\n`);
-    return 2;
-  }
+  const opened = openCommand(argv, io, { fix: { type: "boolean" } });
+  if (!opened.ok) return opened.code;
+  const { config, ticketsDir, values } = opened;
 
-  const opened = openRepo(io.cwd);
-  if (!opened.ok) {
-    io.stderr(`moth: ${opened.message}
-`);
-    return 1;
-  }
-  const { config, ticketsDir } = opened.repo;
-
-  if (parsed.values.fix === true) {
+  if (values.fix === true) {
     const before = readTickets(ticketsDir);
     for (const ticket of before) {
       if (basename(ticket.path) !== filenameFor(ticket.id, ticket.title)) repairFilename(ticket);
@@ -126,7 +115,7 @@ export async function check(argv: string[], io: Io): Promise<number> {
     return 0;
   }
 
-  const verb = parsed.values.fix === true ? "left alone" : "found";
+  const verb = values.fix === true ? "left alone" : "found";
   io.stderr(`moth: ${remaining.length} problem${remaining.length === 1 ? "" : "s"} ${verb}:\n`);
   for (const finding of remaining) io.stderr(`  ${finding.message}\n`);
   return 1;

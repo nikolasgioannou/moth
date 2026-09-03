@@ -1,12 +1,12 @@
-import { parseArgs, stringList } from "../args.ts";
+import { stringList } from "../args.ts";
 import { suppliedBody } from "../body.ts";
+import { openCommand, resolveOrReport } from "../command.ts";
 import { legalFields, PRIORITIES } from "../config.ts";
 import type { Io } from "../io.ts";
-import { openRepo } from "../repo.ts";
-import { metadataOf, parentProblem, readTickets, resolve, saveTicket } from "../ticket.ts";
+import { metadataOf, parentProblem, readTickets, saveTicket } from "../ticket.ts";
 
 export async function edit(argv: string[], io: Io): Promise<number> {
-  const parsed = parseArgs(argv.slice(1), {
+  const opened = openCommand(argv, io, {
     json: { type: "boolean" },
     title: { type: "string" },
     body: { type: "string" },
@@ -19,36 +19,12 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     unblock: { type: "string", multiple: true },
     set: { type: "string", multiple: true },
   });
-  if (!parsed.ok) {
-    io.stderr(`moth: ${parsed.message}\n`);
-    return 2;
-  }
+  if (!opened.ok) return opened.code;
+  const { config, ticketsDir, positionals, values } = opened;
 
-  const opened = openRepo(io.cwd);
-  if (!opened.ok) {
-    io.stderr(`moth: ${opened.message}
-`);
-    return 1;
-  }
-  const { config, ticketsDir } = opened.repo;
-
-  const reference = parsed.positionals[0] ?? "";
-  const found = resolve(readTickets(ticketsDir), reference);
-
-  if (found.kind === "none") {
-    io.stderr(`moth: no ticket matches '${reference}'\n`);
-    return 1;
-  }
-  if (found.kind === "ambiguous") {
-    io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
-    for (const candidate of found.tickets) {
-      io.stderr(`  ${candidate.id}  ${candidate.title}\n`);
-    }
-    return 1;
-  }
-
-  const ticket = found.ticket;
-  const values = parsed.values;
+  const reference = positionals[0] ?? "";
+  const ticket = resolveOrReport(readTickets(ticketsDir), reference, io);
+  if (ticket === null) return 1;
 
   const title = typeof values.title === "string" ? values.title.trim() : ticket.title;
   if (title === "") {
@@ -72,28 +48,22 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const all = readTickets(ticketsDir);
   let parent = ticket.parent;
   if (typeof values.parent === "string") {
-    const parentRef = resolve(all, values.parent);
-    if (parentRef.kind !== "found") {
-      io.stderr(`moth: no single ticket matches parent '${values.parent}'\n`);
-      return 1;
-    }
-    const problem = parentProblem(all, ticket, parentRef.ticket.id);
+    const candidate = resolveOrReport(all, values.parent, io, "parent");
+    if (candidate === null) return 1;
+    const problem = parentProblem(all, ticket, candidate.id);
     if (problem !== null) {
       io.stderr(`moth: ${problem.reason}\n`);
       return 1;
     }
-    parent = parentRef.ticket.id;
+    parent = candidate.id;
   }
 
   const toIds = (references: string[]): string[] | null => {
     const ids: string[] = [];
     for (const reference of references) {
-      const match = resolve(all, reference);
-      if (match.kind !== "found") {
-        io.stderr(`moth: no single ticket matches '${reference}'\n`);
-        return null;
-      }
-      ids.push(match.ticket.id);
+      const match = resolveOrReport(all, reference, io, "blocker");
+      if (match === null) return null;
+      ids.push(match.id);
     }
     return ids;
   };
@@ -152,7 +122,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
       })
     : ticket;
 
-  if (parsed.values.json === true) {
+  if (values.json === true) {
     io.stdout(`${JSON.stringify(metadataOf(updated), null, 2)}\n`);
   } else {
     io.stdout(`${updated.id}  ${updated.title}\n`);

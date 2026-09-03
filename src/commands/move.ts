@@ -1,38 +1,15 @@
-import { parseArgs } from "../args.ts";
-
+import { openCommand, resolveOrReport } from "../command.ts";
 import type { Io } from "../io.ts";
-import { openRepo } from "../repo.ts";
-import { metadataOf, readTickets, resolve, writeTicket } from "../ticket.ts";
+import { metadataOf, readTickets, writeTicket } from "../ticket.ts";
 
 export async function move(argv: string[], io: Io): Promise<number> {
-  const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" } });
-  if (!parsed.ok) {
-    io.stderr(`moth: ${parsed.message}\n`);
-    return 2;
-  }
+  const opened = openCommand(argv, io, { json: { type: "boolean" } });
+  if (!opened.ok) return opened.code;
+  const { config, ticketsDir, positionals, values } = opened;
 
-  const opened = openRepo(io.cwd);
-  if (!opened.ok) {
-    io.stderr(`moth: ${opened.message}
-`);
-    return 1;
-  }
-  const { config, ticketsDir } = opened.repo;
-
-  const [reference = "", status = ""] = parsed.positionals;
-  const found = resolve(readTickets(ticketsDir), reference);
-
-  if (found.kind === "none") {
-    io.stderr(`moth: no ticket matches '${reference}'\n`);
-    return 1;
-  }
-  if (found.kind === "ambiguous") {
-    io.stderr(`moth: '${reference}' is ambiguous, it matches:\n`);
-    for (const candidate of found.tickets) {
-      io.stderr(`  ${candidate.id}  ${candidate.title}\n`);
-    }
-    return 1;
-  }
+  const [reference = "", status = ""] = positionals;
+  const ticket = resolveOrReport(readTickets(ticketsDir), reference, io);
+  if (ticket === null) return 1;
 
   const legal = config.statuses.map((entry) => entry.name);
   if (!legal.includes(status)) {
@@ -42,14 +19,13 @@ export async function move(argv: string[], io: Io): Promise<number> {
     return 1;
   }
 
-  const ticket = found.ticket;
   // A move to the status a ticket already holds is a no-op, not an error:
   // agents retry, and a retry should not look like a failure or touch the file.
   const updated =
     ticket.status === status ? ticket : { ...ticket, status, updated_at: io.now().toISOString() };
   if (updated !== ticket) writeTicket(updated);
 
-  if (parsed.values.json === true) {
+  if (values.json === true) {
     io.stdout(`${JSON.stringify(metadataOf(updated), null, 2)}\n`);
   } else {
     io.stdout(`${updated.id}  ${updated.title}  ${updated.status}\n`);

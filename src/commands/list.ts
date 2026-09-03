@@ -1,28 +1,17 @@
-import { parseArgs } from "../args.ts";
+import { openCommand } from "../command.ts";
 import { legalFields } from "../config.ts";
 import type { Io } from "../io.ts";
 import { categoryLookup, FILTER_OPTIONS, filterTickets, statusOrder } from "../query.ts";
-import { openRepo } from "../repo.ts";
 import { blockingView, duplicateIds, metadataOf, readTickets, validate } from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
-  const parsed = parseArgs(argv.slice(1), { json: { type: "boolean" }, ...FILTER_OPTIONS });
-  if (!parsed.ok) {
-    io.stderr(`moth: ${parsed.message}\n`);
-    return 2;
-  }
-
-  const opened = openRepo(io.cwd);
-  if (!opened.ok) {
-    io.stderr(`moth: ${opened.message}
-`);
-    return 1;
-  }
-  const { config, ticketsDir } = opened.repo;
+  const opened = openCommand(argv, io, { json: { type: "boolean" }, ...FILTER_OPTIONS });
+  if (!opened.ok) return opened.code;
+  const { config, ticketsDir, values } = opened;
 
   const all = readTickets(ticketsDir);
 
-  const tickets = filterTickets(all, parsed.values, config);
+  const tickets = filterTickets(all, values, config);
 
   for (const problem of validate(
     all,
@@ -48,7 +37,7 @@ export async function list(argv: string[], io: Io): Promise<number> {
     io.stderr(`moth: duplicate ticket ids: ${list}\n`);
   }
 
-  if (parsed.values.json === true) {
+  if (values.json === true) {
     // Bodies are omitted; a survey of the store should not carry every description.
     const summaries = tickets.map(metadataOf);
     io.stdout(`${JSON.stringify(summaries, null, 2)}\n`);
