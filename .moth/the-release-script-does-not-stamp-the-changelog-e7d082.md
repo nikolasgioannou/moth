@@ -1,13 +1,13 @@
 ---
 id: "e7d082"
 title: The release script does not stamp the changelog
-status: in-progress
+status: done
 priority: medium
 labels:
   - cli
   - release
 created_at: 2026-09-02T18:33:21.648Z
-updated_at: 2026-09-03T00:22:05.236Z
+updated_at: 2026-09-03T00:24:02.228Z
 ---
 
 Release notes are read from the `## [X.Y.Z]` section of `CHANGELOG.md`, but work accumulates under `## [Unreleased]`. Nothing renames it, so `bun run release patch` tags a version the changelog has no section for, the workflow falls back to generated notes, and the release succeeds looking fine. This happened on 0.3.1 and was only avoided by stamping the section by hand first.
@@ -35,8 +35,15 @@ Should the workflow still fall back to generated notes when a section is missing
 
 **Done when**
 
-- [ ] `bun run release <version>` stamps the changelog with no manual step
-- [ ] A fresh empty `Unreleased` section is left behind
-- [ ] Compare links are correct and not duplicated on a retried release
-- [ ] A failed check restores the changelog as well as package.json
-- [ ] The decision on the workflow fallback is made and recorded
+- [x] `bun run release <version>` stamps the changelog with no manual step
+- [x] A fresh empty `Unreleased` section is left behind
+- [x] Compare links are correct, and restamping an already-stamped version is a no-op
+- [x] A failed check, and a dry run, restore the changelog as well as package.json
+- [x] The decision on the workflow fallback is made and recorded
+
+
+## Notes
+
+`stampChangelog` is a pure function taking the changelog, the version, the previous version and the date, so the awkward cases are tested without touching a repository: an already-stamped version, an empty Unreleased section, and a changelog with no Unreleased heading at all. Seven tests, and `nextVersion` gained coverage alongside it, having been exported and untested since it was written.
+
+**The fallback decision: keep it, but stop being silent.** Failing the release would turn a cosmetic problem into a broken publish, and the binaries and npm packages are fine either way. Since the script now stamps automatically, a missing section does mean something is wrong, so the workflow writes to the job summary and emits `::warning::`, which surfaces on the run page rather than only in a log nobody opens.

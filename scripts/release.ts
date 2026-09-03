@@ -29,6 +29,40 @@ export function nextVersion(current: string, requested: string): string {
   fail(`'${requested}' is not a version or one of major, minor, patch`);
 }
 
+const COMPARE = "https://github.com/nikolasgioannou/moth/compare";
+
+/**
+ * Moves everything under `## [Unreleased]` into a section for the version being
+ * released, leaves a fresh empty Unreleased behind, and adds the compare link.
+ *
+ * Release notes are read from the `## [x.y.z]` section by the publish workflow,
+ * so without this a tag finds no section and the release quietly falls back to
+ * generated notes. Pure, so the awkward cases are testable without a repository:
+ * a version already stamped (a retried release) is returned unchanged, and a
+ * changelog with no Unreleased heading is left alone rather than mangled.
+ */
+export function stampChangelog(
+  changelog: string,
+  version: string,
+  previous: string,
+  date: string,
+): string {
+  if (changelog.includes(`## [${version}]`)) return changelog;
+  if (!changelog.includes("## [Unreleased]")) return changelog;
+
+  const stamped = changelog.replace(
+    "## [Unreleased]\n",
+    `## [Unreleased]\n\n## [${version}] - ${date}\n`,
+  );
+
+  const unreleasedLink = /^\[Unreleased\]: .*$/m;
+  if (!unreleasedLink.test(stamped)) return stamped;
+  return stamped.replace(
+    unreleasedLink,
+    `[Unreleased]: ${COMPARE}/v${version}...HEAD\n[${version}]: ${COMPARE}/v${previous}...v${version}`,
+  );
+}
+
 /**
  * Cuts a release: checks the repository is in a fit state, bumps the version,
  * tags it, and pushes. Everything after the tag is CI's job.
@@ -58,6 +92,25 @@ export function release(requested: string, dryRun: boolean): void {
   const original = readFileSync(packagePath, "utf8");
   writeFileSync(packagePath, `${JSON.stringify({ ...manifest, version }, null, 2)}\n`);
 
+  // The changelog is stamped here too, because the publish workflow reads the
+  // notes from the section named for the tag. The previous version comes from
+  // the last tag rather than package.json, which has just been bumped.
+  const changelogPath = join(REPO_ROOT, "CHANGELOG.md");
+  const changelogBefore = readFileSync(changelogPath, "utf8");
+  const lastTag = run(["git", "describe", "--tags", "--abbrev=0"], true);
+  const previous = lastTag.replace(/^v/, "") || manifest.version;
+  const date = new Date().toISOString().slice(0, 10);
+  const stamped = stampChangelog(changelogBefore, version, previous, date);
+  if (stamped === changelogBefore) {
+    console.log(`release: the changelog already covers ${version}, or has no Unreleased section`);
+  }
+  writeFileSync(changelogPath, stamped);
+
+  const restore = () => {
+    writeFileSync(packagePath, original);
+    writeFileSync(changelogPath, changelogBefore);
+  };
+
   try {
     for (const check of [
       ["bun", "run", "lint"],
@@ -68,17 +121,17 @@ export function release(requested: string, dryRun: boolean): void {
       run(check);
     }
   } catch (error) {
-    writeFileSync(packagePath, original);
+    restore();
     throw error;
   }
 
   if (dryRun) {
-    writeFileSync(packagePath, original);
+    restore();
     console.log(`release: dry run, stopping before tagging ${tag}`);
     return;
   }
 
-  run(["git", "add", "package.json"]);
+  run(["git", "add", "package.json", "CHANGELOG.md"]);
   // The first release of a version already declared in package.json has nothing
   // to commit; tagging the existing commit is correct in that case.
   if (run(["git", "status", "--porcelain"]) !== "") {

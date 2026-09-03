@@ -55,7 +55,12 @@ jobs:
             echo "found=true" >> "$GITHUB_OUTPUT"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
-            echo "no CHANGELOG section for $version; falling back to generated notes"
+            # The release script stamps this section, so a missing one means
+            # something went wrong. Still fall back rather than fail a release
+            # that is otherwise good, but say so where a person will see it.
+            echo "no CHANGELOG section for $version; falling back to generated notes" \
+              >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::no CHANGELOG section for $version; release notes were generated"
           fi
 
       - name: Publish the release
