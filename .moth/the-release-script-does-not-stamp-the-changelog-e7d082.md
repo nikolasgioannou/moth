@@ -1,13 +1,13 @@
 ---
 id: "e7d082"
 title: The release script does not stamp the changelog
-status: backlog
+status: in-progress
 priority: medium
 labels:
   - cli
   - release
 created_at: 2026-09-02T18:33:21.648Z
-updated_at: 2026-09-02T18:33:21.648Z
+updated_at: 2026-09-03T00:22:05.236Z
 ---
 
 Release notes are read from the `## [X.Y.Z]` section of `CHANGELOG.md`, but work accumulates under `## [Unreleased]`. Nothing renames it, so `bun run release patch` tags a version the changelog has no section for, the workflow falls back to generated notes, and the release succeeds looking fine. This happened on 0.3.1 and was only avoided by stamping the section by hand first.

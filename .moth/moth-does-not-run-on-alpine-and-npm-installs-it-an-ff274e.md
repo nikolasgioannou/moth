@@ -1,12 +1,12 @@
 ---
 id: "ff274e"
 title: moth does not run on Alpine, and npm installs it anyway
-status: backlog
+status: done
 priority: high
 labels:
   - distribution
 created_at: 2026-09-02T19:52:49.369Z
-updated_at: 2026-09-02T19:52:49.369Z
+updated_at: 2026-09-03T00:21:58.215Z
 ---
 
 The published Linux binaries are glibc-linked, and nothing stops npm installing them on a musl system.
@@ -39,9 +39,16 @@ Alpine is the default base image across Docker and CI, which is exactly where ag
 
 **Done when**
 
-- [ ] musl binaries are built and attached to the release
-- [ ] musl npm packages are published, declaring `libc: ["musl"]`
-- [ ] The glibc packages declare `libc: ["glibc"]`
-- [ ] `install.sh` picks the right binary on a musl system
-- [ ] The shim reports a libc mismatch in terms a reader can act on, for clients that ignore `libc`
-- [ ] Verified by running moth in an Alpine container
+- [x] musl binaries are built and attached to the release
+- [x] musl npm packages are built, declaring `libc: ["musl"]`
+- [x] The glibc packages declare `libc: ["glibc"]`
+- [x] `install.sh` picks the right binary on a musl system, verified in Alpine and Debian containers
+- [x] The launcher resolves by libc at runtime, so a client that ignores the field still gets a readable error instead of the loader's
+- [x] Verified in Alpine containers: init, new, list and check all run
+
+
+## Notes
+
+Bun's musl binary is not self-contained. It links against `libstdc++.so.6` and `libgcc_s.so.1`, neither of which Alpine ships, and without them the loader emits roughly eighty relocation errors and exits 127. Shipping a musl build alone would not have fixed this.
+
+`node:*-alpine` images already carry `libstdc++`, so npm users are unaffected. The bare `alpine` image does not, so the curl path needs `apk add libstdc++`. That is now in the README, `install.sh` warns when the installed binary will not start, and the launcher turns exit 127 into a sentence naming the package to install.

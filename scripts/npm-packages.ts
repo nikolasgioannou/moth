@@ -11,13 +11,15 @@ const WRAPPER = "moth-cli";
 const PLATFORMS = [
   { asset: "moth-darwin-arm64", os: "darwin", cpu: "arm64", binary: "moth" },
   { asset: "moth-darwin-x64", os: "darwin", cpu: "x64", binary: "moth" },
-  { asset: "moth-linux-arm64", os: "linux", cpu: "arm64", binary: "moth" },
-  { asset: "moth-linux-x64", os: "linux", cpu: "x64", binary: "moth" },
+  { asset: "moth-linux-arm64", os: "linux", cpu: "arm64", binary: "moth", libc: "glibc" },
+  { asset: "moth-linux-x64", os: "linux", cpu: "x64", binary: "moth", libc: "glibc" },
+  { asset: "moth-linux-arm64-musl", os: "linux", cpu: "arm64", binary: "moth", libc: "musl" },
+  { asset: "moth-linux-x64-musl", os: "linux", cpu: "x64", binary: "moth", libc: "musl" },
   { asset: "moth-windows-x64.exe", os: "win32", cpu: "x64", binary: "moth.exe" },
 ] as const;
 
-const packageName = (os: string, cpu: string) =>
-  `${WRAPPER}-${os === "win32" ? "windows" : os}-${cpu}`;
+const packageName = (os: string, cpu: string, libc?: string) =>
+  `${WRAPPER}-${os === "win32" ? "windows" : os}-${cpu}${libc === "musl" ? "-musl" : ""}`;
 
 const SHIM = `#!/usr/bin/env node
 "use strict";
@@ -26,7 +28,16 @@ const SHIM = `#!/usr/bin/env node
 const { spawnSync } = require("node:child_process");
 
 const platform = process.platform === "win32" ? "windows" : process.platform;
-const name = "${WRAPPER}-" + platform + "-" + process.arch;
+// A glibc binary cannot load on a musl system at all, so the two Linux builds
+// are separate packages. Node reports a glibc version only when it is running
+// against glibc, which is how detect-libc tells them apart.
+let libc = "";
+if (process.platform === "linux") {
+  try {
+    libc = process.report.getReport().header.glibcVersionRuntime ? "" : "-musl";
+  } catch {}
+}
+const name = "${WRAPPER}-" + platform + "-" + process.arch + libc;
 const binary = process.platform === "win32" ? "moth.exe" : "moth";
 
 let executable;
@@ -45,6 +56,11 @@ if (result.error) {
   console.error("moth: " + result.error.message);
   process.exit(1);
 }
+// 127 from the dynamic loader, not from moth. Alpine ships neither libstdc++
+// nor libgcc, which the binary needs, and the loader's own message is opaque.
+if (result.status === 127 && libc === "-musl") {
+  console.error("moth: the binary could not load its shared libraries. Try: apk add libstdc++");
+}
 process.exit(result.status === null ? 1 : result.status);
 `;
 
@@ -55,8 +71,10 @@ export function buildNpmPackages(version: string = pkg.version): string[] {
   const optional: Record<string, string> = {};
   const built: string[] = [];
 
-  for (const { asset, os, cpu, binary } of PLATFORMS) {
-    const name = packageName(os, cpu);
+  for (const platform of PLATFORMS) {
+    const { asset, os, cpu, binary } = platform;
+    const libc = "libc" in platform ? platform.libc : undefined;
+    const name = packageName(os, cpu, libc);
     const dir = join(NPM_DIR, name);
     mkdirSync(dir, { recursive: true });
     copyFileSync(join(RELEASE_DIR, asset), join(dir, binary));
@@ -67,11 +85,15 @@ export function buildNpmPackages(version: string = pkg.version): string[] {
         {
           name,
           version,
-          description: `The moth binary for ${os} ${cpu}.`,
+          description: `The moth binary for ${os} ${cpu}${libc === undefined ? "" : ` (${libc})`}.`,
           license: pkg.license,
           repository: { type: "git", url: "git+https://github.com/nikolasgioannou/moth.git" },
           os: [os],
           cpu: [cpu],
+          // Honoured by npm 10.2+, pnpm and Yarn 4. Older clients ignore it and
+          // can still install the wrong build, which is why the shim resolves
+          // the package by libc at runtime rather than trusting the install.
+          ...(libc === undefined ? {} : { libc: [libc] }),
           files: [binary],
         },
         null,

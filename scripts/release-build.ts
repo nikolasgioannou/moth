@@ -9,6 +9,11 @@ export const TARGETS = [
   { target: "bun-darwin-x64", asset: "moth-darwin-x64" },
   { target: "bun-linux-arm64", asset: "moth-linux-arm64" },
   { target: "bun-linux-x64", asset: "moth-linux-x64" },
+  // Alpine and other musl distributions cannot load a glibc binary at all: the
+  // ELF interpreter it names does not exist there. These need libstdc++ present
+  // (`apk add libstdc++`), which Alpine does not ship by default.
+  { target: "bun-linux-arm64-musl", asset: "moth-linux-arm64-musl" },
+  { target: "bun-linux-x64-musl", asset: "moth-linux-x64-musl" },
   { target: "bun-windows-x64", asset: "moth-windows-x64.exe" },
 ] as const;
 

@@ -37,7 +37,17 @@ case "$arch" in
   x86_64 | amd64) arch=x64 ;;
   *) fail "unsupported architecture: $arch" ;;
 esac
-asset="moth-$os-$arch"
+
+# A glibc binary cannot load on musl at all: the ELF interpreter it names is not
+# there, and the loader's error names a file rather than the cause. Alpine has no
+# ldd of its own, so musl announces itself on stderr when ldd is run bare.
+libc=""
+if [ "$os" = linux ]; then
+  if ldd --version 2>&1 | grep -qi musl || ldd 2>&1 | grep -qi musl; then
+    libc="-musl"
+  fi
+fi
+asset="moth-$os-$arch$libc"
 
 version="${MOTH_VERSION:-}"
 if [ -z "$version" ]; then
@@ -75,6 +85,12 @@ chmod +x "$tmp/$asset"
 mv "$tmp/$asset" "$INSTALL_DIR/moth"
 
 printf 'moth: installed %s to %s/moth\n' "$version" "$INSTALL_DIR"
+
+# The musl build links against libstdc++ and libgcc, which Alpine does not ship.
+# Without them the loader fails with a wall of relocation errors naming symbols.
+if [ -n "$libc" ] && ! "$INSTALL_DIR/moth" --version >/dev/null 2>&1; then
+  printf 'moth: the binary will not start. On Alpine, run: apk add libstdc++\n' >&2
+fi
 case ":$PATH:" in
   *":$INSTALL_DIR:"*) ;;
   *) printf 'moth: %s is not on your PATH; add it to use "moth" directly\n' "$INSTALL_DIR" ;;

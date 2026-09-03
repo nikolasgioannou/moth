@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- musl builds for Linux, published as release assets and as the npm packages `moth-cli-linux-x64-musl` and `moth-cli-linux-arm64-musl`. moth could not run on Alpine at all before this: a glibc binary names an ELF interpreter that does not exist there, and the loader's error names a missing file rather than the cause.
+
+### Fixed
+
+- npm no longer installs a glibc build on a musl system. The platform packages declare `libc`, and because that field is only honoured by npm 10.2+, pnpm and Yarn 4, the launcher also resolves the package by libc at runtime rather than trusting the install.
+- `install.sh` detects musl and downloads the matching binary, and says what to install if the binary cannot start.
+
 ## [0.3.1] - 2026-09-02
 
 ### Added
