@@ -1,3 +1,19 @@
+/**
+ * Whether this is moth running from source rather than a compiled binary.
+ *
+ * It matters because `process.execPath` is then the Bun executable, not moth.
+ * Bun's default install is `~/.bun/bin/bun`, which matches no package manager
+ * and so reads as a bare install — meaning an unguarded upgrade would download
+ * moth over the top of the user's Bun.
+ *
+ * A compiled binary serves its entry from an embedded filesystem, which is the
+ * signal used here. If Bun ever renames that prefix this returns true and the
+ * upgrade is refused, which is the safe direction to be wrong in.
+ */
+export function runningFromSource(main: string): boolean {
+  return !(main.includes("$bunfs") || main.includes("~BUN"));
+}
+
 /** How moth got onto this machine, which decides who is allowed to replace it. */
 export type Install = "homebrew" | "npm" | "standalone";
 

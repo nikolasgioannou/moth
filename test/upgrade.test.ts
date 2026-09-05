@@ -1,7 +1,13 @@
 import { afterAll, expect, test } from "bun:test";
 
 import { run } from "../src/run.ts";
-import { assetFor, installKind, isNewer, upgradeCommand } from "../src/upgrade.ts";
+import {
+  assetFor,
+  installKind,
+  isNewer,
+  runningFromSource,
+  upgradeCommand,
+} from "../src/upgrade.ts";
 import { captureIo } from "./helpers/capture-io.ts";
 import { cleanupTempDirs, tempDir } from "./helpers/tmp.ts";
 
@@ -60,8 +66,8 @@ test("a platform with no published binary is refused rather than guessed", () =>
 
 afterAll(cleanupTempDirs);
 
-const io = (executable: string, latest: string | null) =>
-  captureIo(tempDir(), { executable, latestVersion: async () => latest });
+const io = (installedAt: string, latest: string | null) =>
+  captureIo(tempDir(), { installedAt, latestVersion: async () => latest });
 
 test("an install owned by Homebrew is never overwritten; the brew command is printed", async () => {
   const captured = io("/opt/homebrew/Cellar/moth/0.4.0/bin/moth", "99.0.0");
@@ -113,7 +119,7 @@ test("--check never downloads, even for a bare install", async () => {
 
 test("a bare install moth cannot write to fails before downloading", async () => {
   const captured = captureIo(tempDir(), {
-    executable: "/definitely/not/a/real/path/moth",
+    installedAt: "/definitely/not/a/real/path/moth",
     latestVersion: async () => "99.0.0",
   });
 
@@ -121,5 +127,29 @@ test("a bare install moth cannot write to fails before downloading", async () =>
 
   expect(code).toBe(1);
   expect(captured.err()).toContain("cannot write to");
+  expect(captured.out()).not.toContain("downloading");
+});
+
+test("running from source is recognised, so upgrade cannot overwrite Bun itself", () => {
+  // From source, process.execPath is the Bun binary. Bun's default install is
+  // ~/.bun/bin/bun, which matches no package manager and would read as a bare
+  // moth install.
+  expect(runningFromSource("/Users/me/workspace/moth/src/cli.ts")).toBe(true);
+  expect(runningFromSource("/Users/me/workspace/moth/[eval]")).toBe(true);
+
+  expect(runningFromSource("/$bunfs/root/cli.ts")).toBe(false);
+  expect(runningFromSource("B:\\~BUN\\root\\cli.ts")).toBe(false);
+});
+
+test("upgrade refuses outright when moth is running from source", async () => {
+  const captured = captureIo(tempDir(), {
+    installedAt: null,
+    latestVersion: async () => "99.0.0",
+  });
+
+  const code = await run(["upgrade"], captured);
+
+  expect(code).toBe(1);
+  expect(captured.err()).toContain("running from source");
   expect(captured.out()).not.toContain("downloading");
 });

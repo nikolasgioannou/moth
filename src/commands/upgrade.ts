@@ -25,6 +25,15 @@ export async function upgrade(argv: string[], io: Io): Promise<number> {
     return 2;
   }
 
+  // From a source checkout there is no installed binary to replace: execPath is
+  // Bun, and overwriting it would destroy the user's Bun rather than upgrade moth.
+  const executable = io.installedAt;
+  if (executable === null) {
+    io.stderr("moth: this is moth running from source, not an installed binary\n");
+    io.stderr("      upgrade the moth on your PATH, or build with 'bun run build'\n");
+    return 1;
+  }
+
   const current = pkg.version;
   const latest = await io.latestVersion();
   if (latest === null) {
@@ -37,7 +46,7 @@ export async function upgrade(argv: string[], io: Io): Promise<number> {
     return 0;
   }
 
-  const kind = installKind(io.executable);
+  const kind = installKind(executable);
   io.stdout(`moth ${latest} is available, you have ${current}\n`);
 
   // Whoever installed moth owns it. Upgrading a Homebrew install by overwriting
@@ -50,7 +59,7 @@ export async function upgrade(argv: string[], io: Io): Promise<number> {
   }
 
   if (parsed.values.check === true) {
-    io.stdout(`run 'moth upgrade' to replace ${io.executable}\n`);
+    io.stdout(`run 'moth upgrade' to replace ${executable}\n`);
     return 0;
   }
 
@@ -67,7 +76,7 @@ export async function upgrade(argv: string[], io: Io): Promise<number> {
     return 1;
   }
 
-  return await replaceBinary(io, latest, asset);
+  return await replaceBinary(io, executable, latest, asset);
 }
 
 /**
@@ -78,8 +87,12 @@ export async function upgrade(argv: string[], io: Io): Promise<number> {
  * moth on the PATH. On Unix, replacing the file a running process was started
  * from is allowed; the running process keeps the old inode until it exits.
  */
-async function replaceBinary(io: Io, version: string, asset: string): Promise<number> {
-  const target = io.executable;
+async function replaceBinary(
+  io: Io,
+  target: string,
+  version: string,
+  asset: string,
+): Promise<number> {
   const staged = join(dirname(target), `.moth-upgrade-${version}`);
 
   try {

@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { run } from "./run.ts";
+import { runningFromSource } from "./upgrade.ts";
 
 const code = await run(process.argv.slice(2), {
   cwd: process.cwd(),
@@ -14,7 +15,7 @@ const code = await run(process.argv.slice(2), {
   now: () => new Date(),
   randomHex: (bytes) => randomBytes(bytes).toString("hex"),
   isTty: process.stdout.isTTY === true,
-  executable: process.execPath,
+  installedAt: runningFromSource(Bun.main) ? null : process.execPath,
   // Only ever called by `moth upgrade`. moth makes no network request otherwise,
   // and does not check for updates in the background: a tool that starts in 12ms
   // should not spend 200ms phoning home before doing what it was asked.
