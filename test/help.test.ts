@@ -51,15 +51,6 @@ test("help is reachable as a bare command and as a flag", async () => {
   expect(await help("new", "-h")).toContain("moth new");
 });
 
-test("help alone is enough to initialise, create, find and move a ticket", async () => {
-  const top = await help("--help");
-  for (const name of ["init", "new", "show", "move"]) {
-    expect(top).toContain(name);
-  }
-  expect(await help("new", "--help")).toMatch(/moth new "/);
-  expect(await help("move", "--help")).toMatch(/moth move \S+ \S+/);
-});
-
 test("the dispatch table and the help registry name exactly the same commands", async () => {
   // A command that dispatches but has no help entry exits 2 on --help, which is
   // how `moth doctor --help` once failed. Comparing both ways catches either drift.

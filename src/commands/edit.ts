@@ -23,7 +23,8 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const { config, ticketsDir, positionals, values } = opened;
 
   const reference = positionals[0] ?? "";
-  const ticket = resolveOrReport(readTickets(ticketsDir), reference, io);
+  const all = readTickets(ticketsDir);
+  const ticket = resolveOrReport(all, reference, io);
   if (ticket === null) return 1;
 
   const title = typeof values.title === "string" ? values.title.trim() : ticket.title;
@@ -42,7 +43,6 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   const priority = priorityOrReport(values, io, ticket.priority);
   if (priority === null) return 2;
 
-  const all = readTickets(ticketsDir);
   let parent = ticket.parent;
   if (typeof values.parent === "string") {
     const candidate = resolveOrReport(all, values.parent, io, "parent");

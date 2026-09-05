@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "../src/run.ts";
 import { captureIo } from "./helpers/capture-io.ts";
+import { parseFrontmatter } from "./helpers/frontmatter.ts";
 import { initedRepo } from "./helpers/repo-fixture.ts";
 import { newTicket, ticketPath, ticketText } from "./helpers/tickets.ts";
 import { cleanupTempDirs } from "./helpers/tmp.ts";
@@ -67,7 +68,10 @@ test("check reports two tickets sharing an id, and --fix reissues one", async ()
 
   const fixed = await check(dir, "--fix");
   expect(fixed.code).toBe(0);
-  const ids = files(dir).map((name) => name.slice(0, 6));
+  const ids = files(dir).map(
+    (name) => parseFrontmatter(readFileSync(join(dir, ".moth", name), "utf8")).data.id,
+  );
+  expect(ids).toHaveLength(2);
   expect(new Set(ids).size).toBe(ids.length);
   // Alpha was created first, so it keeps the id it already had
   expect(files(dir)).toContain(`alpha-${clashing}.md`);

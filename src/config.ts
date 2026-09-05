@@ -49,7 +49,3 @@ export interface Config {
 export function legalFields(config: Config): string[] {
   return [...CORE_FIELDS, ...(config.fields ?? [])];
 }
-
-export function readConfigFile(contents: string): Config {
-  return Bun.YAML.parse(contents) as Config;
-}

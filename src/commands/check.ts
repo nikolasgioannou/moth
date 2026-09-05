@@ -15,51 +15,33 @@ import {
   validate,
 } from "../ticket.ts";
 
-interface Finding {
-  message: string;
-  /** Whether --fix can repair this without guessing at intent. */
-  fixable: boolean;
-}
-
-function findings(tickets: Ticket[], config: Config): Finding[] {
-  const found: Finding[] = [];
+function findings(tickets: Ticket[], config: Config): string[] {
+  const found: string[] = [];
   const categoryOf = categoryLookup(config);
 
   for (const ticket of tickets) {
     const wanted = filenameFor(ticket.id, ticket.title);
     if (basename(ticket.path) !== wanted) {
-      found.push({
-        message: `${basename(ticket.path)} should be named ${wanted}`,
-        fixable: true,
-      });
+      found.push(`${basename(ticket.path)} should be named ${wanted}`);
     }
     for (const id of blockingView(tickets, ticket, categoryOf).dangling) {
-      found.push({
-        message: `ticket ${ticket.id} is blocked by ${id}, which does not exist`,
-        fixable: false,
-      });
+      found.push(`ticket ${ticket.id} is blocked by ${id}, which does not exist`);
     }
     if (ticket.parent !== undefined) {
       const parent = tickets.find((candidate) => candidate.id === ticket.parent);
       if (parent?.parent !== undefined) {
-        found.push({
-          message: `ticket ${ticket.id} nests more than one level deep`,
-          fixable: false,
-        });
+        found.push(`ticket ${ticket.id} nests more than one level deep`);
       }
     }
   }
 
   for (const clashing of duplicateIds(tickets)) {
-    found.push({
-      message: `id ${clashing} is held by more than one ticket`,
-      fixable: true,
-    });
+    found.push(`id ${clashing} is held by more than one ticket`);
   }
 
   const statuses = config.statuses.map((entry) => entry.name);
   for (const problem of validate(tickets, legalFields(config), statuses)) {
-    found.push({ message: `ticket ${problem.id}: ${problem.reason}`, fixable: false });
+    found.push(`ticket ${problem.id}: ${problem.reason}`);
   }
 
   return found;
@@ -117,6 +99,6 @@ export async function check(argv: string[], io: Io): Promise<number> {
 
   const verb = values.fix === true ? "left alone" : "found";
   io.stderr(`moth: ${remaining.length} problem${remaining.length === 1 ? "" : "s"} ${verb}:\n`);
-  for (const finding of remaining) io.stderr(`  ${finding.message}\n`);
+  for (const finding of remaining) io.stderr(`  ${finding}\n`);
   return 1;
 }

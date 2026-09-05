@@ -123,18 +123,20 @@ labels: []
 
 test("tickets are ordered by priority, then by age", async () => {
   const dir = await initedRepo();
-  const at = (day: string) => ({ now: () => new Date(`2026-01-${day}T00:00:00.000Z`) });
-  const id1 = await newTicket(dir, "First filed", [], at("01"));
-  const id2 = await newTicket(dir, "Second filed", [], at("02"));
-  const id3 = await newTicket(dir, "Third filed", [], at("03"));
+  const at = (day: string, id: string) => ({
+    now: () => new Date(`2026-01-${day}T00:00:00.000Z`),
+    randomHex: () => id,
+  });
+  // Both filename and id order oppose age order for the equal-priority tickets.
+  const id1 = await newTicket(dir, "Zulu first filed", [], at("01", "cccccc"));
+  const id2 = await newTicket(dir, "Alpha second filed", [], at("02", "aaaaaa"));
+  const id3 = await newTicket(dir, "Third filed", [], at("03", "bbbbbb"));
   await run(["edit", id3, "--priority", "urgent"], captureIo(dir));
-  await run(["edit", id2, "--priority", "low"], captureIo(dir));
   const io = captureIo(dir);
 
   await run(["list", "--json"], io);
 
-  // urgent, then low, then none; ties would fall back to age
-  expect((JSON.parse(io.out()) as { id: string }[]).map((t) => t.id)).toEqual([id3, id2, id1]);
+  expect((JSON.parse(io.out()) as { id: string }[]).map((t) => t.id)).toEqual([id3, id1, id2]);
 });
 
 test("a filter matching nothing says so, rather than claiming the store is empty", async () => {

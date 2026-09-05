@@ -1,11 +1,9 @@
-import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { stringify as stringifyYaml } from "yaml";
 import { suppliedBody } from "../body.ts";
 import { mergeLabels, openCommand, priorityOrReport, resolveOrReport } from "../command.ts";
 import type { Config } from "../config.ts";
 import type { Io } from "../io.ts";
-import { allocateId, filenameFor, readTickets, withQuotedIds } from "../ticket.ts";
+import { allocateId, filenameFor, readTickets, writeTicket } from "../ticket.ts";
 
 /** New tickets open in the first status belonging to the backlog category. */
 function defaultStatus(config: Config): string {
@@ -69,8 +67,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
   }
   const body = supplied.body ?? "";
 
-  const document = `---\n${stringifyYaml(withQuotedIds(metadata))}---\n\n${body === "" ? "" : `${body}\n`}`;
-  writeFileSync(join(ticketsDir, filename), document);
+  writeTicket({ ...metadata, body, path: join(ticketsDir, filename) });
 
   if (values.json === true) {
     io.stdout(`${JSON.stringify({ ...metadata, body }, null, 2)}\n`);

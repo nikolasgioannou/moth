@@ -15,7 +15,7 @@ test("init creates a config and a ticket store", async () => {
 
   expect(code).toBe(0);
   expect(existsSync(join(dir, "moth.config.yml"))).toBe(true);
-  expect(existsSync(join(dir, "moth.config.yml"))).toBe(true);
+  expect(existsSync(join(dir, ".moth"))).toBe(true);
 });
 
 test("init records a default status for each of the six categories", async () => {

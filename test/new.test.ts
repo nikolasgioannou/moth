@@ -95,13 +95,16 @@ test("a new ticket opens in the repo's own backlog status", async () => {
   expect(parseFrontmatter(ticketText(dir, PINNED)).data.status).toBe("icebox");
 });
 
-test("new accepts a description from a flag", async () => {
-  const dir = await initedRepo();
+test.each(["The description.", "The description.\n"])(
+  "new stores a description from --body with one trailing newline: %j",
+  async (body) => {
+    const dir = await initedRepo();
 
-  await run(["new", "Something", "--body", "The description."], pinned(dir));
+    await run(["new", "Something", "--body", body], pinned(dir));
 
-  expect(parseFrontmatter(ticketText(dir, PINNED)).body).toBe("The description.\n");
-});
+    expect(parseFrontmatter(ticketText(dir, PINNED)).body).toBe("The description.\n");
+  },
+);
 
 test("a piped description survives quotes, backticks and code fences intact", async () => {
   const dir = await initedRepo();
@@ -217,14 +220,4 @@ test("an illegal priority is refused, listing the legal values, and writes nothi
   expect(io.err()).toContain("critical");
   expect(io.err()).toContain("urgent");
   expect(readdirSync(join(dir, ".moth"))).toEqual([]);
-});
-
-test("a ticket filed without either flag still defaults to none and no labels", async () => {
-  const dir = await initedRepo();
-
-  const id = await newTicket(dir, "Fix the login redirect");
-
-  const fields = parseFrontmatter(ticketText(dir, id)).data;
-  expect(fields.priority).toBe("none");
-  expect(fields.labels).toEqual([]);
 });

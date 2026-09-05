@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { type Config, readConfigFile } from "./config.ts";
+import type { Config } from "./config.ts";
 
 export const CONFIG_FILENAME = "moth.config.yml";
 export const DEFAULT_TICKETS_DIR = ".moth";
@@ -35,7 +35,7 @@ export function openRepo(cwd: string): OpenResult {
     return { ok: false, message: "not a moth repo, run 'moth init' first" };
   }
 
-  const config = readConfigFile(readFileSync(join(root, CONFIG_FILENAME), "utf8"));
+  const config = Bun.YAML.parse(readFileSync(join(root, CONFIG_FILENAME), "utf8")) as Config;
   const ticketsDir = join(root, config.tickets ?? DEFAULT_TICKETS_DIR);
   if (!existsSync(ticketsDir)) {
     return {
