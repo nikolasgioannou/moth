@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-05
+
 ### Added
 
 - `moth upgrade` updates moth to the latest release, and `--check` reports without installing. An install owned by Homebrew or npm is never overwritten — moth prints that installer's command instead, because replacing the binary underneath a package manager leaves it convinced it still has the old version. moth contacts the network only when this command is run, and never in the background.
@@ -89,7 +91,8 @@ First release. An issue tracker that lives in your repository: tickets are markd
 - `--json` on every command that returns a ticket
 - Single-binary distribution via Homebrew, npm, an install script and release archives
 
-[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/nikolasgioannou/moth/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/nikolasgioannou/moth/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/nikolasgioannou/moth/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/nikolasgioannou/moth/compare/v0.2.0...v0.3.0
