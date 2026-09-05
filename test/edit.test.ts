@@ -43,7 +43,7 @@ test("an illegal priority is refused, with the legal values listed", async () =>
 
   const code = await run(["edit", id, "--priority", "critical"], io);
 
-  expect(code).toBe(1);
+  expect(code).toBe(2);
   expect(io.err()).toContain("critical");
   expect(io.err()).toContain("urgent");
   expect(fields(dir, id).priority).toBe("none");
@@ -197,7 +197,7 @@ test("--set body= is refused, even when body is declared as a field", async () =
 
   const code = await run(["edit", id, "--set", "body=sneaky"], io);
 
-  expect(code).toBe(1);
+  expect(code).toBe(2);
   expect(io.err()).toContain("--body");
   expect(parseFrontmatter(ticketText(dir, id)).body).toBe("Original.\n");
 });
@@ -222,4 +222,17 @@ test("append is gone; the body is replaced through edit instead", async () => {
 
   expect(code).toBe(2);
   expect(io.err()).toContain("append");
+});
+
+test("a value illegal only in this repo exits 1, not 2", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect");
+
+  // A status this config does not define, and a field it has not declared, are
+  // both requests moth understood and could not carry out — not typos.
+  const status = captureIo(dir);
+  expect(await run(["move", id, "shipped"], status)).toBe(1);
+
+  const field = captureIo(dir);
+  expect(await run(["edit", id, "--set", "customer=acme"], field)).toBe(1);
 });

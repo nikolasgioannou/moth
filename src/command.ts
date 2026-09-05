@@ -1,5 +1,5 @@
-import { type OptionSpec, parseArgs } from "./args.ts";
-import type { Config } from "./config.ts";
+import { type OptionSpec, parseArgs, stringList } from "./args.ts";
+import { type Config, PRIORITIES } from "./config.ts";
 import type { Io } from "./io.ts";
 import { openRepo } from "./repo.ts";
 import { resolve, type Ticket } from "./ticket.ts";
@@ -71,4 +71,30 @@ export function resolveOrReport(
     return null;
   }
   return found.ticket;
+}
+
+/**
+ * The priority a caller asked for, or null when they named one that does not
+ * exist — reported here, so both commands refuse the same value with the same
+ * sentence. Absent means `fallback`, which is "none" on a new ticket and the
+ * ticket's own priority on an edit.
+ */
+export function priorityOrReport(values: Values, io: Io, fallback: string): string | null {
+  const priority = typeof values.priority === "string" ? values.priority : fallback;
+  if (!(PRIORITIES as readonly string[]).includes(priority)) {
+    io.stderr(`moth: '${priority}' is not a priority. Legal values: ${PRIORITIES.join(", ")}\n`);
+    return null;
+  }
+  return priority;
+}
+
+/**
+ * The labels a ticket ends up with: what it had, plus --label, minus
+ * --remove-label. Deduplicated and sorted, so a ticket's labels do not depend on
+ * which command wrote them or in what order they were given.
+ */
+export function mergeLabels(values: Values, existing: readonly string[] = []): string[] {
+  const added = stringList(values.label);
+  const removed = stringList(values["remove-label"]);
+  return [...new Set([...existing, ...added])].filter((label) => !removed.includes(label)).sort();
 }

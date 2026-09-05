@@ -1,12 +1,11 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { Scalar, stringify as stringifyYaml } from "yaml";
-import { stringList } from "../args.ts";
+import { stringify as stringifyYaml } from "yaml";
 import { suppliedBody } from "../body.ts";
-import { openCommand, resolveOrReport } from "../command.ts";
-import { type Config, PRIORITIES } from "../config.ts";
+import { mergeLabels, openCommand, priorityOrReport, resolveOrReport } from "../command.ts";
+import type { Config } from "../config.ts";
 import type { Io } from "../io.ts";
-import { allocateId, filenameFor, readTickets } from "../ticket.ts";
+import { allocateId, filenameFor, readTickets, withQuotedIds } from "../ticket.ts";
 
 /** New tickets open in the first status belonging to the backlog category. */
 function defaultStatus(config: Config): string {
@@ -40,12 +39,9 @@ export async function create(argv: string[], io: Io): Promise<number> {
     parentId = parent.id;
   }
 
-  const priority = typeof values.priority === "string" ? values.priority : "none";
-  if (!(PRIORITIES as readonly string[]).includes(priority)) {
-    io.stderr(`moth: '${priority}' is not a priority. Legal values: ${PRIORITIES.join(", ")}\n`);
-    return 1;
-  }
-  const labels = [...new Set(stringList(values.label))].sort();
+  const priority = priorityOrReport(values, io, "none");
+  if (priority === null) return 2;
+  const labels = mergeLabels(values);
 
   const id = allocateId(io, existing);
   if (id === null) {
@@ -73,10 +69,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
   }
   const body = supplied.body ?? "";
 
-  // Quoted so no YAML parser can read an id like 22739e as a number.
-  const quotedId = new Scalar(id);
-  quotedId.type = Scalar.QUOTE_DOUBLE;
-  const document = `---\n${stringifyYaml({ ...metadata, id: quotedId })}---\n\n${body === "" ? "" : `${body}\n`}`;
+  const document = `---\n${stringifyYaml(withQuotedIds(metadata))}---\n\n${body === "" ? "" : `${body}\n`}`;
   writeFileSync(join(ticketsDir, filename), document);
 
   if (values.json === true) {

@@ -166,3 +166,17 @@ test("check reports a ticket missing a required field", async () => {
   expect(io.err()).toContain("created_at");
   expect(io.err()).toContain("aaaaaa");
 });
+
+test("check reports a parent that does not exist, as it does a blocker", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Child");
+  const path = ticketPath(dir, id);
+  writeFileSync(path, readFileSync(path, "utf8").replace("---\n\n", 'parent: "nowhere"\n---\n\n'));
+  const io = captureIo(dir);
+
+  const code = await run(["check"], io);
+
+  expect(code).not.toBe(0);
+  expect(io.err()).toContain("nowhere");
+  expect(io.err()).toContain("does not exist");
+});

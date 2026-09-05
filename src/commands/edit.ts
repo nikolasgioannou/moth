@@ -1,7 +1,7 @@
 import { stringList } from "../args.ts";
 import { suppliedBody } from "../body.ts";
-import { openCommand, resolveOrReport } from "../command.ts";
-import { legalFields, PRIORITIES } from "../config.ts";
+import { mergeLabels, openCommand, priorityOrReport, resolveOrReport } from "../command.ts";
+import { legalFields } from "../config.ts";
 import type { Io } from "../io.ts";
 import { metadataOf, parentProblem, readTickets, saveTicket } from "../ticket.ts";
 
@@ -39,11 +39,8 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   }
   const body = supplied.body ?? ticket.body;
 
-  const priority = typeof values.priority === "string" ? values.priority : ticket.priority;
-  if (!(PRIORITIES as readonly string[]).includes(priority)) {
-    io.stderr(`moth: '${priority}' is not a priority. Legal values: ${PRIORITIES.join(", ")}\n`);
-    return 1;
-  }
+  const priority = priorityOrReport(values, io, ticket.priority);
+  if (priority === null) return 2;
 
   const all = readTickets(ticketsDir);
   let parent = ticket.parent;
@@ -82,7 +79,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     // declares `body` as a field could --set one that collides with it.
     if (key === "body") {
       io.stderr("moth: the body is not a frontmatter field; use --body or --body-file\n");
-      return 1;
+      return 2;
     }
     if (!legalFields(config).includes(key)) {
       io.stderr(`moth: '${key}' is not a field in this repo. Declare it in config to use it.\n`);
@@ -91,11 +88,7 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     custom[key] = rest.join("=");
   }
 
-  const added = stringList(values.label);
-  const removed = stringList(values["remove-label"]);
-  const labels = [...new Set([...ticket.labels, ...added])]
-    .filter((label) => !removed.includes(label))
-    .sort();
+  const labels = mergeLabels(values, ticket.labels);
 
   // Compared with trailing newlines stripped: the stored body always ends with
   // one, while a supplied body never does.

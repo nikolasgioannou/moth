@@ -213,7 +213,7 @@ test("an illegal priority is refused, listing the legal values, and writes nothi
 
   const code = await run(["new", "Fix the login redirect", "--priority", "critical"], io);
 
-  expect(code).toBe(1);
+  expect(code).toBe(2);
   expect(io.err()).toContain("critical");
   expect(io.err()).toContain("urgent");
   expect(readdirSync(join(dir, ".moth"))).toEqual([]);

@@ -137,9 +137,32 @@ function quoted(value: string): Scalar {
   return scalar;
 }
 
+/** Every frontmatter field that holds an id, and so must survive a round trip. */
+const ID_FIELDS = ["id", "parent"] as const;
+
+/**
+ * A ticket's metadata with every id quoted: `id`, `parent`, and each entry of
+ * `blocked_by`. Quoting only `id` is not enough — a reference to an id is an id,
+ * and `parent: 66428e` reads back as the number 66428, silently detaching the
+ * ticket. Both writers go through here so neither can be fixed without the other.
+ */
+export function withQuotedIds(metadata: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(metadata).map(([key, value]) => {
+      if ((ID_FIELDS as readonly string[]).includes(key) && typeof value === "string") {
+        return [key, quoted(value)];
+      }
+      if (key === "blocked_by" && Array.isArray(value)) {
+        return [key, value.map((id) => (typeof id === "string" ? quoted(id) : id))];
+      }
+      return [key, value];
+    }),
+  );
+}
+
 export function writeTicket(ticket: Ticket): void {
   const body = ticket.body === "" || ticket.body.endsWith("\n") ? ticket.body : `${ticket.body}\n`;
-  const metadata = { ...metadataOf(ticket), id: quoted(ticket.id) };
+  const metadata = withQuotedIds(metadataOf(ticket));
   writeFileSync(ticket.path, `---\n${stringifyYaml(metadata)}---\n\n${body}`);
 }
 
@@ -266,6 +289,11 @@ export function validate(
     }
     if (!knownStatuses.includes(ticket.status)) {
       problems.push({ id: ticket.id, reason: `status '${ticket.status}' is not in config` });
+    }
+    // A dangling blocker was already reported and a dangling parent was not, so
+    // a broken parent link read as a healthy store.
+    if (ticket.parent !== undefined && !tickets.some((other) => other.id === ticket.parent)) {
+      problems.push({ id: ticket.id, reason: `parent ${ticket.parent} does not exist` });
     }
   }
   return problems;

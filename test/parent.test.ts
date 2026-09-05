@@ -83,3 +83,43 @@ test("listing shows which ticket a sub-ticket belongs to", async () => {
       .find((line) => line.includes("Handle quoted strings")) ?? "";
   expect(row).toContain(parent ?? "");
 });
+
+// 66428e is emitted bare by the YAML writer and read back as the number 66428
+// by the parser, which detached the child and let the one-level rule be
+// bypassed. Digits then a trailing `e` is the shape the two disagree on: 0.6% of
+// random ids, which is why this only ever failed intermittently.
+test("a parent whose id looks like a number survives the round trip", async () => {
+  const dir = await initedRepo();
+  const top = await newTicket(dir, "Parser", [], { randomHex: () => "66428e" });
+  const child = await newTicket(dir, "Quoted strings");
+
+  expect(await run(["edit", child, "--parent", top], captureIo(dir))).toBe(0);
+
+  expect(fields(dir, child).parent).toBe("66428e");
+  expect(ticketText(dir, child)).toContain('parent: "66428e"');
+});
+
+test("a ticket with a number-like id still counts as having children", async () => {
+  const dir = await initedRepo();
+  const top = await newTicket(dir, "Parser", [], { randomHex: () => "66428e" });
+  const child = await newTicket(dir, "Quoted strings");
+  const other = await newTicket(dir, "Backslashes");
+  await run(["edit", child, "--parent", top], captureIo(dir));
+  const io = captureIo(dir);
+
+  const code = await run(["edit", top, "--parent", other], io);
+
+  expect(code).toBe(1);
+  expect(io.err().toLowerCase()).toContain("one level");
+});
+
+test("a blocker whose id looks like a number survives the round trip", async () => {
+  const dir = await initedRepo();
+  const blocker = await newTicket(dir, "Parser", [], { randomHex: () => "50735e" });
+  const blocked = await newTicket(dir, "Quoted strings");
+
+  expect(await run(["edit", blocked, "--blocked-by", blocker], captureIo(dir))).toBe(0);
+
+  expect(fields(dir, blocked).blocked_by).toEqual(["50735e"]);
+  expect(await run(["check"], captureIo(dir))).toBe(0);
+});

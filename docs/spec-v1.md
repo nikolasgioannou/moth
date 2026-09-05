@@ -152,12 +152,12 @@ Conventions, all of which exist to make the tool safe for a non-interactive call
 - stdout carries data; stderr carries everything else.
 - `--json` on every command that returns a ticket: `new`, `list`, `show`, `move`, `edit`, and `schema`. It implies no colour and no decoration. Three commands deliberately have no JSON form: `board` already emits markdown, which is its machine-readable output; `check` emits diagnostics rather than tickets; and `delete` prints a one-line confirmation.
 - Colour and progress output are suppressed automatically when stdout is not a terminal.
-- Exit codes: `0` success, `1` operation failed, `2` usage error. Documented, because agents branch on them.
+- Exit codes: `0` success, `1` operation failed, `2` usage error. Documented, because agents branch on them. The line between `1` and `2` is whether the value could ever have been legal: a priority outside the fixed set, or `--set body=`, is wrong in every repository and exits `2`, while a status this config does not define, or a field it has not declared, could be legal elsewhere and exits `1`.
 - No command prompts interactively, with exactly one exception: `moth init`, which is human-only setup.
 - Every mutation prints the resulting ticket, so confirming a change never costs a second invocation.
 - Mutations are idempotent. Moving a ticket to a status it already occupies exits `0`. Agents retry, and a retry should not look like a failure.
 
-`moth check [--fix]` validates the store: dangling blocking references, parent-child cycles, undeclared fields, statuses not present in config. It was briefly also aliased as `doctor`, the word people reach for, but that name conventionally means "diagnose the installation" and this validates ticket data, so the alias was dropped rather than kept as a second name for one command.
+`moth check [--fix]` validates the store: dangling parent and blocking references, parent-child cycles, undeclared fields, missing required fields, statuses not present in config. It was briefly also aliased as `doctor`, the word people reach for, but that name conventionally means "diagnose the installation" and this validates ticket data, so the alias was dropped rather than kept as a second name for one command.
 
 `moth board` prints a markdown board to stdout. It is derived and never authoritative; committing it is the user's choice via their own hook, which keeps it out of moth's write path and off the list of things that can conflict.
 
