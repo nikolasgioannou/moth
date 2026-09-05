@@ -6,6 +6,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- `moth upgrade` updates moth to the latest release, and `--check` reports without installing. An install owned by Homebrew or npm is never overwritten — moth prints that installer's command instead, because replacing the binary underneath a package manager leaves it convinced it still has the old version. moth contacts the network only when this command is run, and never in the background.
+- `moth check` reports a parent that does not exist. Dangling blockers were already reported; a broken parent link read as a healthy store.
+
+### Fixed
+
+- **Parent and blocker ids were written unquoted and read back as numbers.** `parent: 66428e` parsed as `66428`, silently detaching a sub-ticket from its parent and letting the one-level nesting rule be bypassed. Ids in the `id` field were already quoted against this; the fields holding references to ids were not. Roughly 0.6% of random ids take the affected shape — digits with a trailing `e` — which is why it surfaced as an intermittent test failure rather than an obvious bug. Run `moth check` to find any store already affected.
+- An ambiguous reference now lists the candidates everywhere, including `moth delete` and the `--parent` and `--blocked-by` flags. Previously only the primary argument did, so the one destructive command gave the least helpful message.
+- `moth --help` described ticket ids as numbers that could be padded, which they have not been since 0.2.0.
+
+### Changed
+
+- Exit codes follow the spec's boundary consistently. A value that could never be legal — a priority outside the fixed set, or `--set body=` — now exits `2` rather than `1`, matching the documented meaning of a usage error. A value illegal only in this repository, such as an undefined status or an undeclared field, still exits `1`.
+
 ## [0.4.0] - 2026-09-03
 
 ### Added

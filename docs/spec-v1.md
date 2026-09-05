@@ -143,7 +143,7 @@ There is no project or epic concept above the ticket. Labels already group, and 
 
 ### Command surface
 
-A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `delete`, `board`, `check`, and `schema`.
+A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `delete`, `board`, `check`, `schema`, and `upgrade`.
 
 A noun-verb shape after `gh` — `moth ticket create`, with the flat forms as aliases — was specified first and dropped. `gh`'s shape earns itself because it has many nouns to disambiguate: issues, pull requests, repositories, releases. moth has one. A noun layer over a single noun is ceremony that every caller pays for and no caller benefits from, and the argument for it was familiarity, which the flat verbs already have.
 
@@ -154,6 +154,7 @@ Conventions, all of which exist to make the tool safe for a non-interactive call
 - Colour and progress output are suppressed automatically when stdout is not a terminal.
 - Exit codes: `0` success, `1` operation failed, `2` usage error. Documented, because agents branch on them. The line between `1` and `2` is whether the value could ever have been legal: a priority outside the fixed set, or `--set body=`, is wrong in every repository and exits `2`, while a status this config does not define, or a field it has not declared, could be legal elsewhere and exits `1`.
 - No command prompts interactively, with exactly one exception: `moth init`, which is human-only setup.
+- No command contacts the network, with exactly one exception: `moth upgrade`, and only when it is run. There is no background version check, because the startup budget in ADR-0002 is measured in milliseconds and a request is measured in hundreds. An upgrade also never overwrites an install that Homebrew or npm owns: it prints that installer's command, because replacing the binary underneath a package manager leaves it convinced it still has the old version, and the next `brew upgrade` silently reverts it.
 - Every mutation prints the resulting ticket, so confirming a change never costs a second invocation.
 - Mutations are idempotent. Moving a ticket to a status it already occupies exits `0`. Agents retry, and a retry should not look like a failure.
 

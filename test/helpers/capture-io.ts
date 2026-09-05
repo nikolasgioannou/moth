@@ -18,6 +18,10 @@ export interface CaptureOptions {
   randomHex?: (bytes: number) => string;
   /** Whether to pretend stdout is a terminal. Defaults to false, as when piped. */
   isTty?: boolean;
+  /** Where the running binary appears to live. Defaults to a bare install. */
+  executable?: string;
+  /** The newest published version. Defaults to unreachable, as when offline. */
+  latestVersion?: () => Promise<string | null>;
 }
 
 export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo {
@@ -28,6 +32,8 @@ export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo
 
   return {
     cwd,
+    executable: options.executable ?? "/home/someone/.local/bin/moth",
+    latestVersion: options.latestVersion ?? (async () => null),
     stdout: (text) => {
       out += text;
     },

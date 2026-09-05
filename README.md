@@ -56,7 +56,7 @@ Name a ticket however you remember it. `moth show 280f4d`, `moth show 280` and `
 
 ## Commands
 
-Ten, and that is the whole surface:
+Eleven, and that is the whole surface:
 
 - `init` — set up a repository
 - `new` — file a ticket
@@ -68,6 +68,7 @@ Ten, and that is the whole surface:
 - `board` — a markdown board, grouped by status
 - `check` — validate every ticket against the schema
 - `schema` — this repository's rules, as JSON
+- `upgrade` — update moth to the latest release
 
 Each one's `--help` carries its flags and a worked example, and `--json` is available on everything that returns a ticket.
 
@@ -85,6 +86,7 @@ The refusals are the design, not gaps:
 - **No statuses outside six fixed categories.** Name your own; each belongs to `backlog`, `unstarted`, `started`, `completed`, `canceled` or `duplicate`. Queries by category work in any repository.
 - **No undeclared fields.** Custom fields are allowed, but must be declared in config first, so an agent can never introduce one.
 - **No comments, no activity log.** `git log -p` on a ticket is already a complete, attributed history.
+- **No background update checks.** `moth upgrade` contacts the network when you run it, and never otherwise. A tool that starts in 12ms should not spend longer than that asking about itself.
 - **No cycles, sprints, estimates, projects or manual ordering. No web UI, no TUI.**
 
 Every rejection, with its reasoning, is in [the spec](docs/spec-v1.md#out-of-scope).

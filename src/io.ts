@@ -9,4 +9,8 @@ export interface Io {
   randomHex(bytes: number): string;
   /** Whether stdout is a terminal, so output can drop colour when piped. */
   isTty: boolean;
+  /** The binary being run, which is how moth tells brew from npm from a bare install. */
+  executable: string;
+  /** The newest published version, or null when it cannot be reached. */
+  latestVersion(): Promise<string | null>;
 }

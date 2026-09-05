@@ -83,6 +83,18 @@ export const HELP: Record<string, CommandHelp> = {
   $ moth check --fix`,
     notes: "--fix repairs what it can and reports what it left alone.",
   },
+  upgrade: {
+    summary: "Update moth to the latest release",
+    usage: "moth upgrade [--check]",
+    example: `  $ moth upgrade
+  moth 0.5.0 is available, you have 0.4.0
+  downloading moth-darwin-arm64
+  upgraded to 0.5.0
+
+  $ moth upgrade --check`,
+    notes:
+      "Only ever contacts the network when you run it. An install owned by Homebrew or npm is not overwritten; moth prints the command for that installer instead.",
+  },
   schema: {
     summary: "Print what this repo considers a legal ticket",
     usage: "moth schema [--json]",
