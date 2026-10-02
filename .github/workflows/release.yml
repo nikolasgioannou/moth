@@ -39,6 +39,21 @@ jobs:
       - name: Build every target
         run: bun run build:release
 
+      # The musl build can break without any change to moth: Bun decides what it
+      # links against, and CI takes whatever Bun is latest. Run it on Alpine before
+      # anything is published. libstdc++ is installed because the binary needs it.
+      - name: Smoke-test the musl binary on Alpine
+        run: |
+          docker run --rm -v "$PWD/dist/release:/release:ro" alpine:3 sh -euc '
+            apk add --no-cache libstdc++ >/dev/null
+            moth=/release/moth-linux-x64-musl
+            cd "$(mktemp -d)"
+            "$moth" init </dev/null >/dev/null
+            id=$("$moth" new "Smoke test" | cut -d " " -f 1)
+            "$moth" list | grep -q "$id"
+            "$moth" check
+          '
+
       # Notes come from the CHANGELOG section for this tag. If there is no such
       # section, fall back to generated notes rather than publishing an empty
       # release: a missing changelog entry should not break a release.
