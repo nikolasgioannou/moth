@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-03
+
 ### Added
 
 - **The Moth Method**, a skill that teaches a coding agent how to work with moth: writing tickets, grouping work under parents, finding the next ticket, and closing it in the same commit as the work. `moth skill install --agent claude|codex|cursor` writes it into the repository beside your tickets, or under home with `--global`; it is the copy built into your moth, so it always matches. It also installs with `npx skills add nikolasgioannou/moth --skill moth-method`.
@@ -113,7 +115,8 @@ First release. An issue tracker that lives in your repository: tickets are markd
 - `--json` on every command that returns a ticket
 - Single-binary distribution via Homebrew, npm, an install script and release archives
 
-[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/nikolasgioannou/moth/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/nikolasgioannou/moth/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/nikolasgioannou/moth/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/nikolasgioannou/moth/compare/v0.3.0...v0.3.1

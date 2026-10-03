@@ -2,7 +2,7 @@
 name: moth-method
 description: How to plan and build software with moth, the issue tracker that keeps tickets as markdown files in the repo. Use whenever a repo has a moth.config.yml or a .moth/ directory, or when asked to file, find, plan, start, or close tickets, pick the next piece of work, or break a project into milestones or features.
 metadata:
-  moth-version: "0.5.0"
+  moth-version: "0.6.0"
 ---
 
 # The Moth Method
