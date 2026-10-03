@@ -143,7 +143,7 @@ There is no project or epic concept above the ticket. Labels already group, a pa
 
 ### Command surface
 
-A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `delete`, `board`, `stats`, `check`, `schema`, and `upgrade`.
+A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `delete`, `board`, `stats`, `check`, `schema`, `skill`, and `upgrade`.
 
 A noun-verb shape after `gh` — `moth ticket create`, with the flat forms as aliases — was specified first and dropped. `gh`'s shape earns itself because it has many nouns to disambiguate: issues, pull requests, repositories, releases. moth has one. A noun layer over a single noun is ceremony that every caller pays for and no caller benefits from, and the argument for it was familiarity, which the flat verbs already have.
 
@@ -153,7 +153,7 @@ Conventions, all of which exist to make the tool safe for a non-interactive call
 - `--json` on every command that returns a ticket: `new`, `list`, `show`, `move`, `edit`, and `schema`, and on `stats`, whose counts are as useful to a script as to a person. It implies no colour and no decoration. Three commands deliberately have no JSON form: `board` already emits markdown, which is its machine-readable output; `check` emits diagnostics rather than tickets; and `delete` prints a one-line confirmation.
 - Colour and progress output are suppressed automatically when stdout is not a terminal.
 - Exit codes: `0` success, `1` operation failed, `2` usage error. Documented, because agents branch on them. The line between `1` and `2` is whether the value could ever have been legal: a priority outside the fixed set, or `--set body=`, is wrong in every repository and exits `2`, while a status this config does not define, or a field it has not declared, could be legal elsewhere and exits `1`.
-- No command prompts interactively, with exactly one exception: `moth init`, which is human-only setup.
+- No command prompts interactively, with two exceptions: `moth init`, which is human-only setup, and `moth skill install` run at a terminal with no flags saying where to install ([ADR-0006](adr/0006-moth-ships-an-agent-skill.md)). Without a terminal, it refuses rather than asks.
 - No command contacts the network, with exactly one exception: `moth upgrade`, and only when it is run. There is no background version check, because the startup budget in ADR-0002 is measured in milliseconds and a request is measured in hundreds. An upgrade also never overwrites an install that Homebrew or npm owns: it prints that installer's command, because replacing the binary underneath a package manager leaves it convinced it still has the old version, and the next `brew upgrade` silently reverts it.
 - Every mutation prints the resulting ticket, so confirming a change never costs a second invocation.
 - Mutations are idempotent. Moving a ticket to a status it already occupies exits `0`. Agents retry, and a retry should not look like a failure.
@@ -212,7 +212,6 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 - **An activity log and comments.** Git is the history. `moth edit --append-body` adds text to the end of a body verbatim, but it is not a comment: it records no author or time and adds no heading, because a body moth has opinions about is a body moth has to parse. It exists because read-modify-write through `jq` was too easy to get wrong for the commonest edit, adding a section at the end.
 - **A TUI.**
 - **An MCP server.**
-- **A shipped agent skill.** `--help` carries this burden instead.
 - **Projects, epics, initiatives, cycles, sprints, estimates, and story points.**
 - **Manual ticket ordering.** A rank value across many files rewrites on every reorder, which is the merge-hostile shared state moth exists to avoid. Priority plus age is the ordering.
 - **Storing tickets outside the repo.** Considered as a way to make sequential ids collision-free; rejected because tickets travelling with the code is the point, and supporting both modes would be the anti-opinionated move.

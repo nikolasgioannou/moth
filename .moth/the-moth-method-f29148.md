@@ -1,12 +1,12 @@
 ---
 id: "f29148"
 title: The Moth Method
-status: todo
+status: done
 priority: medium
 labels:
   - docs
 created_at: 2026-10-03T16:32:30.797Z
-updated_at: 2026-10-03T16:32:30.931Z
+updated_at: 2026-10-03T16:49:00.438Z
 blocked_by:
   - "0bba83"
   - "b4c0eb"
@@ -33,7 +33,19 @@ How it ships. Options: a file `moth init` offers to write into the repo; a comma
 
 **Done when**
 
-- [ ] The method is written, covering every heading above
-- [ ] It ships in the chosen form, and a fresh agent in a fresh repo can load it
-- [ ] Every command and flag it names exists, checked by a test so the method cannot drift from the CLI
-- [ ] moth's own repo uses it in place of the borrowed skill mapping where they overlap
+- [x] The method is written, covering every heading above
+- [x] It ships in the chosen form, and a fresh agent in a fresh repo can load it
+- [x] Every command and flag it names exists, checked by a test so the method cannot drift from the CLI
+- [x] moth's own repo uses it in place of the borrowed skill mapping where they overlap
+
+## As built
+
+**Shipping, decided:** `skills/moth-method/SKILL.md` in the Agent Skills format, installable two ways from the one file. `npx skills add nikolasgioannou/moth --skill moth-method` reads it from the repository, and a skills.sh listing follows from installs, with no submission step. `moth skill install` writes the copy embedded in the binary, so it always matches the moth running it; `moth skill print` writes it to stdout. The Claude plugin marketplace was considered and left out, since `npx skills` already installs for Claude Code.
+
+`moth skill install` targets `--agent claude|codex|cursor` (repeatable or comma-separated), into the repo beside `.moth/` by default or under home with `--global`, or any `--dir`. At a terminal with no flags it asks which agents and where; without one it refuses with a usage error, so agents never meet a prompt. Repo paths are `.claude/skills` and `.agents/skills` (Codex and Cursor share it); global paths are `~/.claude/skills`, `~/.codex/skills`, `~/.cursor/skills`, as `npx skills` uses.
+
+A test pulls every `moth <command> --flag` out of the method's code and checks it against that command's help; it caught `board` and `stats` pointing at list's filters on its first run, and fails on an invented flag. The release script stamps `moth-version`, and a test requires it to match `package.json`.
+
+ADR-0006 records shipping a skill, which the spec had ruled out, and `skill install` becoming the second command that can prompt. moth's own `AGENTS.md` and `docs/agents/issue-tracker.md` now point at the method rather than restating it.
+
+Not verified: that Codex and Cursor read the global paths above. They come from the `npx skills` README, not from those agents' own docs.

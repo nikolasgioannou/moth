@@ -16,7 +16,7 @@ export const HELP: Record<string, CommandHelp> = {
   ...
   Writes moth.config.yml and creates the ticket directory.`,
     notes:
-      "The only command that asks questions. Running it again leaves an existing config alone.",
+      "Asks one question per status category; Enter accepts the default. Running it again leaves an existing config alone.",
   },
   new: {
     summary: "File a ticket",
@@ -88,6 +88,18 @@ export const HELP: Record<string, CommandHelp> = {
   $ moth stats --parent "Browser milestone"`,
     notes:
       "Every status in config is counted, including those at zero. With --parent, it is how far along that milestone or feature is.",
+  },
+  skill: {
+    summary: "Install the Moth Method, a skill for coding agents",
+    usage:
+      "moth skill install [--agent <claude|codex|cursor>] [--global] [--dir <path>] | moth skill print",
+    example: `  $ moth skill install --agent claude
+  installed moth-method 0.5.0 at .claude/skills/moth-method/SKILL.md
+
+  $ moth skill install --agent claude --agent codex --global
+  $ moth skill print`,
+    notes:
+      "Installs into this repo by default, beside the tickets, so it is committed with them; --global installs for every repo instead. --agent may be repeated. At a terminal with no flags it asks where. Run it again after upgrading moth to update the skill to match.",
   },
   check: {
     summary: "Report problems with the tickets on disk",

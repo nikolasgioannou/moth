@@ -16,6 +16,8 @@ export interface CaptureOptions {
   now?: () => Date;
   /** Scripted randomness. Defaults to the real source. */
   randomHex?: (bytes: number) => string;
+  /** The home directory. Defaults to the working directory, so nothing escapes the test. */
+  home?: string;
   /** Whether to pretend stdout is a terminal. Defaults to false, as when piped. */
   isTty?: boolean;
   /** Where the installed binary lives, or null for moth running from source. */
@@ -57,6 +59,7 @@ export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo
     },
     now: options.now ?? (() => new Date()),
     randomHex: options.randomHex ?? ((bytes) => randomBytes(bytes).toString("hex")),
+    home: options.home ?? cwd,
     isTty: options.isTty ?? false,
     out: () => out,
     err: () => err,

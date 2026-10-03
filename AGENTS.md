@@ -6,7 +6,7 @@ An opinionated issue tracker that lives in your repo. Tickets are markdown files
 
 ### Issue tracker
 
-This repository tracks its own work in moth: tickets are markdown files in `.moth/`. See `docs/agents/issue-tracker.md`.
+This repository tracks its own work in moth: tickets are markdown files in `.moth/`. Work them by the Moth Method, `skills/moth-method/SKILL.md`, which moth itself ships; `docs/agents/issue-tracker.md` maps the borrowed skills' vocabulary onto moth.
 
 ### Triage labels
 

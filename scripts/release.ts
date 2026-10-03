@@ -63,6 +63,17 @@ export function stampChangelog(
   );
 }
 
+/** Where the Moth Method lives, shipped in the binary and installable from the repo. */
+export const SKILL_PATH = join(REPO_ROOT, "skills", "moth-method", "SKILL.md");
+
+/**
+ * Sets the moth version a skill declares it was written for. A copy installed
+ * from the repository can then be compared with the moth that is running it.
+ */
+export function stampSkill(skill: string, version: string): string {
+  return skill.replace(/^(\s*moth-version:\s*)"[^"]*"/m, `$1"${version}"`);
+}
+
 /**
  * Cuts a release: checks the repository is in a fit state, bumps the version,
  * tags it, and pushes. Everything after the tag is CI's job.
@@ -106,9 +117,13 @@ export function release(requested: string, dryRun: boolean): void {
   }
   writeFileSync(changelogPath, stamped);
 
+  const skillBefore = readFileSync(SKILL_PATH, "utf8");
+  writeFileSync(SKILL_PATH, stampSkill(skillBefore, version));
+
   const restore = () => {
     writeFileSync(packagePath, original);
     writeFileSync(changelogPath, changelogBefore);
+    writeFileSync(SKILL_PATH, skillBefore);
   };
 
   try {
@@ -131,7 +146,7 @@ export function release(requested: string, dryRun: boolean): void {
     return;
   }
 
-  run(["git", "add", "package.json", "CHANGELOG.md"]);
+  run(["git", "add", "package.json", "CHANGELOG.md", SKILL_PATH]);
   // The first release of a version already declared in package.json has nothing
   // to commit; tagging the existing commit is correct in that case.
   if (run(["git", "status", "--porcelain"]) !== "") {

@@ -15,6 +15,7 @@ Each record states the decision in the present tense, the alternatives that lost
 | [0003](0003-random-hex-ticket-ids.md) | Ticket ids are six random hex characters | accepted |
 | [0004](0004-filenames-track-the-title.md) | A ticket's filename tracks its title | accepted |
 | [0005](0005-sub-tickets-nest-to-any-depth.md) | Sub-tickets nest to any depth | accepted |
+| [0006](0006-moth-ships-an-agent-skill.md) | moth ships an agent skill | accepted |
 
 Consult this table rather than following links between records. It is what tells you which decisions are current, so a superseded record is never mistaken for one, however long a chain of reversals grows.
 

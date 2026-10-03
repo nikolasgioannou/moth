@@ -54,9 +54,23 @@ Name a ticket however you remember it. `moth show 280f4d`, `moth show 280` and `
 
 `moth schema --json` reports exactly what this repository considers a legal ticket, which is how an agent learns the rules in one call.
 
+## For agents: the Moth Method
+
+The Moth Method is a skill that teaches a coding agent how to work with moth: writing tickets, grouping work under parent tickets, finding the next ticket, and closing it in the same commit as the work. Install it into your repository so it is committed beside your tickets:
+
+```sh
+moth skill install --agent claude      # or codex, cursor; add --global for every repo
+```
+
+`moth skill install` writes the copy built into your moth, so it always matches the version you run. It is also installable from this repository with [`npx skills`](https://skills.sh):
+
+```sh
+npx skills add nikolasgioannou/moth --skill moth-method
+```
+
 ## Commands
 
-Eleven, and that is the whole surface:
+Thirteen, and that is the whole surface:
 
 - `init` — set up a repository
 - `new` — file a ticket
@@ -69,6 +83,7 @@ Eleven, and that is the whole surface:
 - `stats` — ticket counts by status
 - `check` — validate every ticket against the schema
 - `schema` — this repository's rules, as JSON
+- `skill` — install the Moth Method for your coding agent
 - `upgrade` — update moth to the latest release
 
 Each one's `--help` carries its flags and a worked example, and `--json` is available on everything that returns a ticket.

@@ -21,11 +21,9 @@ with the body piped in on stdin, then set anything else with `moth edit`.
 
 Add `--json` to either for machine-readable output. `moth schema --json` reports every legal field, status and priority without reading config by hand.
 
-## Finding work
+## Finding and working tickets
 
-    moth list --status todo --unblocked
-
-lists what is specified, committed to, and not waiting on anything else. Run `moth check` before reporting a task complete.
+Follow the Moth Method in `skills/moth-method/SKILL.md`: how to find the next ticket, claim it, record what was built, and close it in the same commit as the work.
 
 ## The spec
 

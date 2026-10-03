@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { homedir } from "node:os";
 import { run } from "./run.ts";
 import { runningFromSource } from "./upgrade.ts";
 
@@ -14,6 +15,7 @@ const code = await run(process.argv.slice(2), {
   stdin: async () => await Bun.stdin.text(),
   now: () => new Date(),
   randomHex: (bytes) => randomBytes(bytes).toString("hex"),
+  home: homedir(),
   isTty: process.stdout.isTTY === true,
   installedAt: runningFromSource(Bun.main) ? null : process.execPath,
   // Only ever called by `moth upgrade`. moth makes no network request otherwise,

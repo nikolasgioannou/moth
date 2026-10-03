@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { nextVersion, stampChangelog } from "../scripts/release.ts";
+import { nextVersion, stampChangelog, stampSkill } from "../scripts/release.ts";
 
 const CHANGELOG = `# Changelog
 
@@ -72,4 +72,10 @@ test("a changelog with no Unreleased heading is left alone rather than mangled",
   const none = "# Changelog\n\n## [0.3.1] - 2026-09-02\n\n- A thing.\n";
 
   expect(stampChangelog(none, "0.4.0", "0.3.1", "2026-09-03")).toBe(none);
+});
+
+test("stamping the skill sets the moth version it declares", () => {
+  const skill = '---\nname: moth-method\nmetadata:\n  moth-version: "0.5.0"\n---\n\nBody.\n';
+
+  expect(stampSkill(skill, "0.6.0")).toBe(skill.replace('"0.5.0"', '"0.6.0"'));
 });

@@ -7,6 +7,8 @@ export interface Io {
   stdin(): Promise<string>;
   now(): Date;
   randomHex(bytes: number): string;
+  /** The user's home directory, where a global install of the skill goes. */
+  home: string;
   /** Whether stdout is a terminal, so output can drop colour when piped. */
   isTty: boolean;
   /**
