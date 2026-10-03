@@ -224,9 +224,46 @@ export function detachReferencesTo(tickets: Ticket[], deleted: string, now: Date
 export type ParentProblem = { reason: string } | null;
 
 /**
- * Why a ticket may not take this parent, or null when it may. Nesting is held
- * to one level, which also rules out cycles: a ticket that has a parent cannot
- * be one, and a ticket that is one cannot take a parent.
+ * A ticket's ancestors, nearest first. Stops at a parent that is missing or
+ * already seen, so a cycle in hand-edited files cannot loop forever.
+ */
+export function ancestorsOf(tickets: Ticket[], ticket: Ticket): Ticket[] {
+  const chain: Ticket[] = [];
+  const seen = new Set([ticket.id]);
+  let current = ticket;
+  while (current.parent !== undefined) {
+    const parent = tickets.find((candidate) => candidate.id === current.parent);
+    if (parent === undefined || seen.has(parent.id)) break;
+    chain.push(parent);
+    seen.add(parent.id);
+    current = parent;
+  }
+  return chain;
+}
+
+/**
+ * The parent cycle this ticket sits on, as ids from the ticket back round to
+ * itself, or null when following its parents ends without returning to it.
+ */
+export function parentCycle(tickets: Ticket[], ticket: Ticket): string[] | null {
+  const path = [ticket.id];
+  let current = ticket;
+  while (current.parent !== undefined) {
+    const id = current.parent;
+    if (id === ticket.id) return [...path, id];
+    if (path.includes(id)) return null;
+    const parent = tickets.find((candidate) => candidate.id === id);
+    if (parent === undefined) return null;
+    path.push(id);
+    current = parent;
+  }
+  return null;
+}
+
+/**
+ * Why a ticket may not take this parent, or null when it may. Nesting has no
+ * depth limit (ADR-0005), so the one rule is that the hierarchy stays a tree: a
+ * ticket cannot sit under itself, directly or through its descendants.
  */
 export function parentProblem(tickets: Ticket[], child: Ticket, parentId: string): ParentProblem {
   if (parentId === child.id) {
@@ -236,11 +273,11 @@ export function parentProblem(tickets: Ticket[], child: Ticket, parentId: string
   if (parent === undefined) {
     return { reason: `no ticket ${parentId} to be the parent` };
   }
-  if (parent.parent !== undefined) {
-    return { reason: "sub-tickets nest one level, and that ticket is already a sub-ticket" };
-  }
-  if (tickets.some((ticket) => ticket.parent === child.id)) {
-    return { reason: "sub-tickets nest one level, and that ticket already has sub-tickets" };
+  const above = ancestorsOf(tickets, parent).map((ticket) => ticket.id);
+  const at = above.indexOf(child.id);
+  if (at !== -1) {
+    const loop = [child.id, parent.id, ...above.slice(0, at + 1)].join(" -> ");
+    return { reason: `that would form a cycle: ${loop}` };
   }
   return null;
 }

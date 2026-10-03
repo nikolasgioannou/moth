@@ -9,6 +9,7 @@ import {
   blockingView,
   duplicateIds,
   filenameFor,
+  parentCycle,
   readTickets,
   saveTicket,
   type Ticket,
@@ -31,12 +32,17 @@ function findings(tickets: Ticket[], config: Config): string[] {
           `if it was deleted, run moth edit ${ticket.id} --unblock ${id}`,
       );
     }
-    if (ticket.parent !== undefined) {
-      const parent = tickets.find((candidate) => candidate.id === ticket.parent);
-      if (parent?.parent !== undefined) {
-        found.push(`ticket ${ticket.id} nests more than one level deep`);
-      }
-    }
+  }
+
+  // Each ticket on a cycle finds the same cycle, so report it once.
+  const cycles = new Set<string>();
+  for (const ticket of tickets) {
+    const cycle = parentCycle(tickets, ticket);
+    if (cycle === null) continue;
+    const key = [...new Set(cycle)].sort().join(",");
+    if (cycles.has(key)) continue;
+    cycles.add(key);
+    found.push(`parent links form a cycle: ${cycle.join(" -> ")}`);
   }
 
   for (const clashing of duplicateIds(tickets)) {

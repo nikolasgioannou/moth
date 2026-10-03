@@ -50,7 +50,7 @@ Having at least one blocker outstanding. Orthogonal to status — a ticket can b
 _Avoid_: startable, ready, waiting
 
 **Sub-ticket**:
-A ticket whose parent is another ticket. Nesting is one level deep.
+A ticket whose parent is another ticket. Nesting has no depth limit; a parent can stand for a milestone or a feature.
 _Avoid_: sub-issue, subtask, child ticket
 
 ### Artifacts

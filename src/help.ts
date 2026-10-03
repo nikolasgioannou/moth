@@ -63,7 +63,7 @@ export const HELP: Record<string, CommandHelp> = {
   $ printf '## As built\\n\\nShipped behind a flag.\\n' | moth edit a3f8c1 --append-body-file -
   $ moth show a3f8c1 --json | jq -r .body | sed s/foo/bar/ | moth edit a3f8c1 --body-file -`,
     notes:
-      "Changing a title renames the file to match. --body replaces the whole body, so read it first with moth show --json. --append-body adds text after the existing body, separated by a blank line, with nothing added of moth's own. --set only accepts fields declared in config.",
+      "Changing a title renames the file to match. --body replaces the whole body, so read it first with moth show --json. --append-body adds text after the existing body, separated by a blank line, with nothing added of moth's own. --parent none clears a parent. --set only accepts fields declared in config.",
   },
   delete: {
     summary: "Remove a ticket permanently",

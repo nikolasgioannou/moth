@@ -1,12 +1,12 @@
 ---
 id: "67cc1a"
 title: Sub-tickets can only nest one level deep
-status: todo
+status: done
 priority: medium
 labels:
   - cli
 created_at: 2026-10-03T16:32:30.771Z
-updated_at: 2026-10-03T16:32:30.851Z
+updated_at: 2026-10-03T16:40:42.766Z
 ---
 
 `a69404` held nesting to one level, which also ruled out cycles for free. With parent tickets now the way to group work into milestones and features, that limit blocks the natural shape: milestone → feature → task. Linear, the obvious comparison, nests sub-issues several levels deep.
@@ -29,8 +29,18 @@ Two related questions are deliberately out of scope until there are real trees t
 
 **Done when**
 
-- [ ] A sub-ticket can have sub-tickets, to any depth
-- [ ] A parent that would form a cycle is refused at write time, with a message naming the cycle
-- [ ] `moth check` reports a cycle on disk
-- [ ] `moth list` shows nesting depth
-- [ ] An ADR records the reversal of the one-level decision
+- [x] A sub-ticket can have sub-tickets, to any depth
+- [x] A parent that would form a cycle is refused at write time, with a message naming the cycle
+- [x] `moth check` reports a cycle on disk
+- [x] `moth list` shows nesting depth
+- [x] An ADR records the reversal of the one-level decision
+
+## As built
+
+`parentProblem` now refuses only a self-parent, a missing parent, or a cycle, naming it (`a -> c -> b -> a`). `ancestorsOf` and `parentCycle` in `src/ticket.ts` both stop on a repeat, so a cycle that arrives by hand edit cannot hang a command; `moth check` reports each cycle once.
+
+`moth list` shows the whole chain of parents on a sub-ticket's row, outermost first (`↳ m8 › browser`), rather than indenting. A missing parent still shows as the id the file names.
+
+`moth edit --parent none` clears a parent, closing the gap noted in `e74b8a`.
+
+ADR-0005 records the reversal. The one-level rule lived in the spec, not an ADR, so the spec now points at it; its out-of-scope "nesting beyond one level" entry is gone.

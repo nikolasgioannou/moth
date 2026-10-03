@@ -77,22 +77,20 @@ test("check reports two tickets sharing an id, and --fix reissues one", async ()
   expect(files(dir)).toContain(`alpha-${clashing}.md`);
 });
 
-test("check reports nesting deeper than one level", async () => {
+test("check reports a parent cycle in hand-edited files, once", async () => {
   const dir = await initedRepo();
-  const top = await newTicket(dir, "Parent");
-  const middle = await newTicket(dir, "Child");
-  const bottom = await newTicket(dir, "Grandchild");
-  await run(["edit", middle, "--parent", top], captureIo(dir));
-  const path = ticketPath(dir, bottom);
+  const first = await newTicket(dir, "First");
+  const second = await newTicket(dir, "Second", ["--parent", first]);
+  const path = ticketPath(dir, first);
   writeFileSync(
     path,
-    readFileSync(path, "utf8").replace("labels: []", `labels: []\nparent: "${middle}"`),
+    readFileSync(path, "utf8").replace("labels: []", `labels: []\nparent: "${second}"`),
   );
 
   const result = await check(dir);
 
   expect(result.code).not.toBe(0);
-  expect(result.output.toLowerCase()).toContain("one level");
+  expect(result.output.match(/cycle/g)).toHaveLength(1);
 });
 
 test("check reports undeclared fields and unknown statuses", async () => {

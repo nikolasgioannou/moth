@@ -108,7 +108,7 @@ title: Reject writes containing undeclared fields
 status: in-progress        # a repo-defined status; its category is resolved via config
 priority: high             # none | low | medium | high | urgent
 labels: [cli, validation]  # free-form
-parent: "1a2b3c"           # optional, at most one level of nesting
+parent: "1a2b3c"           # optional, nests to any depth
 blocked_by: ["9c4de1"]     # forward direction only; the reverse is derived on read
 created_at: 2026-08-30T11:04:22Z
 updated_at: 2026-08-30T14:51:09Z
@@ -137,9 +137,9 @@ Blocking is a relation, not a status: a ticket can be simultaneously unstarted a
 
 Dangling blocking references warn rather than error. On a feature branch, pointing at a ticket that exists only on another branch is a normal transient state, and hard-failing would make moth unpleasant to use exactly when it should be helping.
 
-Sub-tickets nest **one level only**. Arbitrary trees complicate every list view and traversal for a case that rarely earns it. Cycles are rejected at write time.
+Sub-tickets nest to any depth; v1 held them to one level, which [ADR-0005](adr/0005-sub-tickets-nest-to-any-depth.md) reverses. Cycles are rejected at write time.
 
-There is no project or epic concept above the ticket. Labels already group, and a project concept would require a registry, project statuses, and project queries.
+There is no project or epic concept above the ticket. Labels already group, a parent ticket can stand for a milestone or a feature, and a project concept would require a registry, project statuses, and project queries.
 
 ### Command surface
 
@@ -215,7 +215,6 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 - **A shipped agent skill.** `--help` carries this burden instead.
 - **Projects, epics, initiatives, cycles, sprints, estimates, and story points.**
 - **Manual ticket ordering.** A rank value across many files rewrites on every reorder, which is the merge-hostile shared state moth exists to avoid. Priority plus age is the ordering.
-- **Nesting beyond one level.**
 - **Storing tickets outside the repo.** Considered as a way to make sequential ids collision-free; rejected because tickets travelling with the code is the point, and supporting both modes would be the anti-opinionated move.
 - **A routing or readiness field.** Considered as `ready-for-agent` / `ready-for-human`, following the triage roles moth's interim tracker uses. Rejected for two reasons: the `backlog`/`unstarted` boundary already encodes the triage decision, so it would be a second field expressing a distinction the categories carry; and an agent-versus-human split encodes a capability boundary that moves every few months, which is a poor thing to freeze into a fixed, non-configurable schema. Anyone wanting the signal can use a label. Reconsider from evidence in real use, not from prediction.
 - **A claim field.** Moving a ticket into a `started` status is the claim. A dedicated `claimed_by` brings stale-claim handling — timeouts, manual clearing — for a problem an ordinary stale `in-progress` ticket already expresses in a way people know how to resolve.

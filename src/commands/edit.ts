@@ -63,7 +63,9 @@ export async function edit(argv: string[], io: Io): Promise<number> {
   if (priority === null) return 2;
 
   let parent = ticket.parent;
-  if (typeof values.parent === "string") {
+  if (typeof values.parent === "string" && values.parent.trim().toLowerCase() === "none") {
+    parent = undefined;
+  } else if (typeof values.parent === "string") {
     const candidate = resolveOrReport(all, values.parent, io, "parent");
     if (candidate === null) return 1;
     const problem = parentProblem(all, ticket, candidate.id);

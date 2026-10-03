@@ -2,7 +2,14 @@ import { openCommand } from "../command.ts";
 import { legalFields } from "../config.ts";
 import type { Io } from "../io.ts";
 import { categoryLookup, FILTER_OPTIONS, filterOrReport, statusOrder } from "../query.ts";
-import { blockingView, duplicateIds, metadataOf, readTickets, validate } from "../ticket.ts";
+import {
+  ancestorsOf,
+  blockingView,
+  duplicateIds,
+  metadataOf,
+  readTickets,
+  validate,
+} from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
   const opened = openCommand(argv, io, { json: { type: "boolean" }, ...FILTER_OPTIONS });
@@ -70,7 +77,16 @@ export async function list(argv: string[], io: Io): Promise<number> {
     for (const ticket of group) {
       const id = ticket.id.padEnd(idWidth);
       const title = ticket.title.padEnd(titleWidth);
-      const parent = ticket.parent === undefined ? "" : paint("2", `  \u21b3 ${ticket.parent}`);
+      // The whole chain, outermost first, so depth reads without indentation.
+      // A parent that is missing still shows, as the id the file names.
+      const ancestors = ancestorsOf(all, ticket);
+      const top = ancestors.at(-1) ?? ticket;
+      const ids = ancestors.map((ancestor) => ancestor.id);
+      if (top.parent !== undefined && !ids.includes(top.parent) && top.parent !== ticket.id) {
+        ids.push(top.parent);
+      }
+      const chain = ids.reverse().join(" \u203a ");
+      const parent = chain === "" ? "" : paint("2", `  \u21b3 ${chain}`);
       io.stdout(`  ${paint("2", id)}  ${title}  ${paint("2", ticket.priority)}${parent}\n`);
     }
     io.stdout("\n");

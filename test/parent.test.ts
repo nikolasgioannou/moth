@@ -46,27 +46,72 @@ test("a ticket cannot be its own parent", async () => {
   expect(fields(dir, only ?? "").parent).toBeUndefined();
 });
 
-test("nesting is held to one level", async () => {
-  const [dir, [top, middle, bottom]] = await repoWith("Parser", "Quoted strings", "Backslashes");
+test("sub-tickets nest to any depth", async () => {
+  const [dir, [top, middle, bottom]] = await repoWith(
+    "Browser",
+    "Chrome on the VM",
+    "Pin a version",
+  );
   await run(["edit", middle ?? "", "--parent", top ?? ""], captureIo(dir));
-  const io = captureIo(dir);
 
-  const code = await run(["edit", bottom ?? "", "--parent", middle ?? ""], io);
+  expect(await run(["edit", bottom ?? "", "--parent", middle ?? ""], captureIo(dir))).toBe(0);
 
-  expect(code).toBe(1);
-  expect(io.err().toLowerCase()).toContain("one level");
-  expect(fields(dir, bottom ?? "").parent).toBeUndefined();
+  expect(fields(dir, bottom ?? "").parent).toBe(middle ?? "");
+  expect(await run(["check"], captureIo(dir))).toBe(0);
 });
 
-test("a ticket that already has children cannot be given a parent", async () => {
-  const [dir, [top, middle, other]] = await repoWith("Parser", "Quoted strings", "Backslashes");
+test("a ticket that already has children can be given a parent", async () => {
+  const [dir, [top, middle, other]] = await repoWith("Parser", "Quoted strings", "Milestone");
   await run(["edit", middle ?? "", "--parent", top ?? ""], captureIo(dir));
+
+  expect(await run(["edit", top ?? "", "--parent", other ?? ""], captureIo(dir))).toBe(0);
+
+  expect(fields(dir, top ?? "").parent).toBe(other ?? "");
+});
+
+test("a parent that would form a cycle is refused, naming the cycle", async () => {
+  const [dir, [top, middle, bottom]] = await repoWith(
+    "Browser",
+    "Chrome on the VM",
+    "Pin a version",
+  );
+  await run(["edit", middle ?? "", "--parent", top ?? ""], captureIo(dir));
+  await run(["edit", bottom ?? "", "--parent", middle ?? ""], captureIo(dir));
   const io = captureIo(dir);
 
-  const code = await run(["edit", top ?? "", "--parent", other ?? ""], io);
+  expect(await run(["edit", top ?? "", "--parent", bottom ?? ""], io)).toBe(1);
 
-  expect(code).toBe(1);
-  expect(io.err().toLowerCase()).toContain("one level");
+  expect(io.err()).toContain(`cycle: ${top} -> ${bottom} -> ${middle} -> ${top}`);
+  expect(fields(dir, top ?? "").parent).toBeUndefined();
+});
+
+test("a parent can be cleared", async () => {
+  const [dir, [parent, child]] = await repoWith("Browser", "Chrome on the VM");
+  await run(["edit", child ?? "", "--parent", parent ?? ""], captureIo(dir));
+
+  expect(await run(["edit", child ?? "", "--parent", "none"], captureIo(dir))).toBe(0);
+
+  expect(fields(dir, child ?? "")).not.toHaveProperty("parent");
+});
+
+test("listing shows a sub-ticket's whole chain of parents, outermost first", async () => {
+  const [dir, [top, middle, bottom]] = await repoWith(
+    "Browser",
+    "Chrome on the VM",
+    "Pin a version",
+  );
+  await run(["edit", middle ?? "", "--parent", top ?? ""], captureIo(dir));
+  await run(["edit", bottom ?? "", "--parent", middle ?? ""], captureIo(dir));
+  const io = captureIo(dir);
+
+  await run(["list"], io);
+
+  const row =
+    io
+      .out()
+      .split("\n")
+      .find((line) => line.includes("Pin a version")) ?? "";
+  expect(row).toContain(`${top} \u203a ${middle}`);
 });
 
 test("listing shows which ticket a sub-ticket belongs to", async () => {
@@ -99,18 +144,15 @@ test("a parent whose id looks like a number survives the round trip", async () =
   expect(ticketText(dir, child)).toContain('parent: "66428e"');
 });
 
-test("a ticket with a number-like id still counts as having children", async () => {
+test("a cycle through a ticket with a number-like id is still refused", async () => {
   const dir = await initedRepo();
   const top = await newTicket(dir, "Parser", [], { randomHex: () => "66428e" });
   const child = await newTicket(dir, "Quoted strings");
-  const other = await newTicket(dir, "Backslashes");
   await run(["edit", child, "--parent", top], captureIo(dir));
   const io = captureIo(dir);
 
-  const code = await run(["edit", top, "--parent", other], io);
-
-  expect(code).toBe(1);
-  expect(io.err().toLowerCase()).toContain("one level");
+  expect(await run(["edit", top, "--parent", child], io)).toBe(1);
+  expect(io.err()).toContain("cycle");
 });
 
 test("a blocker whose id looks like a number survives the round trip", async () => {
