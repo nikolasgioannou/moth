@@ -35,8 +35,10 @@ export const HELP: Record<string, CommandHelp> = {
     usage:
       "moth list [--status <s>] [--category <c>] [--priority <p>] [--label <l>] [--search <text>] [--blocked | --unblocked] [--json]",
     example: `  $ moth list --category started
+  $ moth list --status todo,in-progress
   $ moth list --label cli --priority high --json`,
-    notes: "Filters combine. --category works in any repo; --status uses this repo's own names.",
+    notes:
+      "Filters combine. --status, --category and --priority each take several values, repeated or comma-separated, and match any of them. --category works in any repo; --status uses this repo's own names.",
   },
   show: {
     summary: "Show one ticket",

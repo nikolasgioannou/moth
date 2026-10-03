@@ -1,13 +1,13 @@
 import type { OptionSpec } from "./args.ts";
-import { stringList } from "./args.ts";
+import { anyOf, stringList } from "./args.ts";
 import type { Config } from "./config.ts";
 import { blockingView, type Ticket } from "./ticket.ts";
 
 /** The filters every command that lists tickets accepts, declared once. */
 export const FILTER_OPTIONS: OptionSpec = {
-  status: { type: "string" },
-  category: { type: "string" },
-  priority: { type: "string" },
+  status: { type: "string", multiple: true },
+  category: { type: "string", multiple: true },
+  priority: { type: "string", multiple: true },
   label: { type: "string", multiple: true },
   search: { type: "string" },
   blocked: { type: "boolean" },
@@ -24,14 +24,17 @@ export function categoryLookup(config: Config): (status: string) => string | und
 export function filterTickets(all: Ticket[], values: FlagValues, config: Config): Ticket[] {
   const categoryOf = categoryLookup(config);
   const wantedLabels = stringList(values.label);
+  const statuses = anyOf(values.status);
+  const categories = anyOf(values.category);
+  const priorities = anyOf(values.priority);
   const search = typeof values.search === "string" ? values.search.toLowerCase() : undefined;
 
   return all.filter((ticket) => {
-    if (typeof values.status === "string" && ticket.status !== values.status) return false;
-    if (typeof values.category === "string" && categoryOf(ticket.status) !== values.category) {
-      return false;
-    }
-    if (typeof values.priority === "string" && ticket.priority !== values.priority) return false;
+    // Within one filter, a ticket matches any of the values given.
+    if (statuses.length > 0 && !statuses.includes(ticket.status)) return false;
+    const category = categoryOf(ticket.status) ?? "";
+    if (categories.length > 0 && !categories.includes(category)) return false;
+    if (priorities.length > 0 && !priorities.includes(ticket.priority)) return false;
     if (!wantedLabels.every((label) => ticket.labels.includes(label))) return false;
     if (values.blocked === true || values.unblocked === true) {
       const isBlocked = blockingView(all, ticket, categoryOf).open.length > 0;

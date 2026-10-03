@@ -64,3 +64,32 @@ test("a filter matching nothing is an empty result, not an error", async () => {
   expect(code).toBe(0);
   expect(JSON.parse(io.out())).toEqual([]);
 });
+
+test("a filter given several values matches any of them", async () => {
+  expect(await ids("--status", "in-progress", "--status", "done")).toEqual(
+    [parser, redirect].sort(),
+  );
+  expect(await ids("--status", "in-progress,done")).toEqual([parser, redirect].sort());
+  expect(await ids("--category", "started,backlog")).toEqual([parser, binary].sort());
+  expect(await ids("--priority", "high", "--priority", "none")).toEqual(
+    [parser, binary, redirect].sort(),
+  );
+});
+
+test("a single-value flag given twice is refused, not silently narrowed", async () => {
+  const io = captureIo(dir);
+
+  expect(await run(["list", "--search", "parser", "--search", "binary"], io)).toBe(2);
+
+  expect(io.err()).toContain("--search");
+});
+
+test("the board takes several values for a filter too", async () => {
+  const io = captureIo(dir);
+
+  expect(await run(["board", "--status", "in-progress,done"], io)).toBe(0);
+
+  expect(io.out()).toContain(parser);
+  expect(io.out()).toContain(redirect);
+  expect(io.out()).not.toContain(binary);
+});
