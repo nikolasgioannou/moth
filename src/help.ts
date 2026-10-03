@@ -21,14 +21,14 @@ export const HELP: Record<string, CommandHelp> = {
   new: {
     summary: "File a ticket",
     usage:
-      'moth new "<title>" [--body <text> | --body-file <path>] [--priority <p>] [--label <l>] [--parent <ticket>] [--json]',
+      'moth new "<title>" [--body <text> | --body-file <path>] [--priority <p>] [--label <l>] [--parent <ticket>] [--blocked-by <ticket>] [--json]',
     example: `  $ moth new "Fix the login redirect"
   a3f8c1  Fix the login redirect
 
-  $ moth new "Ship the binary" --priority high --label release
+  $ moth new "Ship the binary" --priority high --label release --blocked-by a3f8c1
   $ printf 'Loops on a stale cookie.\\n' | moth new "Stale session" --body-file -`,
     notes:
-      "A title is required. --label may be given more than once. Use --body-file - to pipe markdown in without shell quoting mangling it.",
+      "A title is required. --label and --blocked-by may be given more than once. Use --body-file - to pipe markdown in without shell quoting mangling it.",
   },
   list: {
     summary: "List tickets, grouped by status",

@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { stringList } from "../args.ts";
 import { suppliedBody } from "../body.ts";
 import { mergeLabels, openCommand, priorityOrReport, resolveOrReport } from "../command.ts";
 import type { Config } from "../config.ts";
@@ -19,6 +20,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
     priority: { type: "string" },
     label: { type: "string", multiple: true },
     parent: { type: "string" },
+    "blocked-by": { type: "string", multiple: true },
   });
   if (!opened.ok) return opened.code;
   const { config, ticketsDir, values, positionals } = opened;
@@ -36,6 +38,15 @@ export async function create(argv: string[], io: Io): Promise<number> {
     if (parent === null) return 1;
     parentId = parent.id;
   }
+
+  // Resolved before anything is written, so an unknown blocker leaves no ticket behind.
+  const blockedBy: string[] = [];
+  for (const reference of stringList(values["blocked-by"])) {
+    const blocker = resolveOrReport(existing, reference, io, "blocker");
+    if (blocker === null) return 1;
+    if (!blockedBy.includes(blocker.id)) blockedBy.push(blocker.id);
+  }
+  blockedBy.sort();
 
   const priority = priorityOrReport(values, io, "none");
   if (priority === null) return 2;
@@ -58,6 +69,7 @@ export async function create(argv: string[], io: Io): Promise<number> {
     ...(parentId === undefined ? {} : { parent: parentId }),
     created_at: timestamp,
     updated_at: timestamp,
+    ...(blockedBy.length === 0 ? {} : { blocked_by: blockedBy }),
   };
 
   const supplied = await suppliedBody(values, io);

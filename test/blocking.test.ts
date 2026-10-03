@@ -146,3 +146,26 @@ test("check --fix leaves a missing blocker alone, and says how to remove it", as
   expect(fields(dir, blocked ?? "").blocked_by).toEqual(["abc123"]);
   expect(io.err()).toContain(`moth edit ${blocked} --unblock abc123`);
 });
+
+test("a ticket can be filed already blocked, by one ticket or several", async () => {
+  const [dir, [first, second]] = await repoWith("Design the schema", "Review the schema");
+
+  const blocked = await newTicket(dir, "Build the writer", [
+    "--blocked-by",
+    first ?? "",
+    "--blocked-by",
+    second ?? "",
+  ]);
+
+  expect(fields(dir, blocked).blocked_by).toEqual([first ?? "", second ?? ""].sort());
+  expect(await listed(dir, "--blocked")).toEqual([blocked]);
+});
+
+test("filing a ticket with an unknown blocker writes nothing", async () => {
+  const [dir] = await repoWith("Design the schema");
+  const io = captureIo(dir);
+
+  expect(await run(["new", "Build the writer", "--blocked-by", "nothing like it"], io)).toBe(1);
+
+  expect(await listed(dir)).toHaveLength(1);
+});
