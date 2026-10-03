@@ -23,7 +23,11 @@ function findings(tickets: Ticket[], config: Config): string[] {
   for (const ticket of tickets) {
     const wanted = filenameFor(ticket.id, ticket.title);
     if (basename(ticket.path) !== wanted) {
-      found.push(`${basename(ticket.path)} should be named ${wanted}`);
+      // Usually a title changed by hand. Name the repair, and how to avoid it next time.
+      found.push(
+        `${basename(ticket.path)} should be named ${wanted}; run moth check --fix, ` +
+          `and change titles with moth edit ${ticket.id} --title to keep them in step`,
+      );
     }
     for (const id of blockingView(tickets, ticket, categoryOf).dangling) {
       // Left alone by --fix: the blocker may exist on another branch.
@@ -46,7 +50,9 @@ function findings(tickets: Ticket[], config: Config): string[] {
   }
 
   for (const clashing of duplicateIds(tickets)) {
-    found.push(`id ${clashing} is held by more than one ticket`);
+    found.push(
+      `id ${clashing} is held by more than one ticket; moth check --fix renumbers all but the oldest`,
+    );
   }
 
   const statuses = config.statuses.map((entry) => entry.name);

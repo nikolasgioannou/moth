@@ -34,11 +34,11 @@ export const HELP: Record<string, CommandHelp> = {
     summary: "List tickets, grouped by status",
     usage:
       "moth list [--status <s>] [--category <c>] [--priority <p>] [--label <l>] [--parent <ticket>] [--search <text>] [--blocked | --unblocked] [--json]",
-    example: `  $ moth list --category started
+    example: `  $ moth list --status todo --unblocked     # ready to start; the first row is next
   $ moth list --status todo,in-progress
   $ moth list --label cli --priority high --json`,
     notes:
-      "Filters combine. --status, --category and --priority each take several values, repeated or comma-separated, and match any of them. --category works in any repo; --status uses this repo's own names. --parent lists a ticket's sub-tickets, or with none, tickets that have no parent.",
+      "Within each status, tickets are ordered by priority, then age, so the first ticket is the one to take. Filters combine. --status, --category and --priority each take several values, repeated or comma-separated, and match any of them. --category works in any repo; --status uses this repo's own names. --parent lists a ticket's sub-tickets, or with none, tickets that have no parent.",
   },
   show: {
     summary: "Show one ticket",

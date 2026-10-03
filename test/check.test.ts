@@ -33,6 +33,8 @@ test("check reports a filename whose slug no longer matches its title, and --fix
   const reported = await check(dir);
   expect(reported.code).not.toBe(0);
   expect(reported.output).toContain("stale-name-");
+  expect(reported.output).toContain("moth check --fix");
+  expect(reported.output).toContain(`moth edit ${id} --title`);
 
   const fixed = await check(dir, "--fix");
   expect(fixed.code).toBe(0);
@@ -65,6 +67,7 @@ test("check reports two tickets sharing an id, and --fix reissues one", async ()
   const reported = await check(dir);
   expect(reported.code).not.toBe(0);
   expect(reported.output).toContain(clashing);
+  expect(reported.output).toContain("moth check --fix");
 
   const fixed = await check(dir, "--fix");
   expect(fixed.code).toBe(0);

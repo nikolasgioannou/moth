@@ -1,12 +1,12 @@
 ---
 id: "b4c0eb"
 title: Errors and help do not point to the commands that fix the problem
-status: todo
+status: done
 priority: high
 labels:
   - cli
 created_at: 2026-10-03T16:22:02.321Z
-updated_at: 2026-10-03T16:32:30.683Z
+updated_at: 2026-10-03T16:41:05.242Z
 ---
 
 An agent tracking a 163-ticket project with moth asked for `moth check --fix` and `moth list --unblocked` as new features. Both already existed. It learned the commands it needed first and never read further, so the help it did not read could not help it.
@@ -23,6 +23,12 @@ It also kept a hand-written plan to decide which ready ticket came first, not kn
 
 **Done when**
 
-- [ ] A stale filename's message names `moth check --fix`
-- [ ] Every finding `--fix` can repair says so in its message
-- [ ] `moth list --help` has an `--unblocked` example and states the order: priority, then age
+- [x] A stale filename's message names `moth check --fix`
+- [x] Every finding `--fix` can repair says so in its message
+- [x] `moth list --help` has an `--unblocked` example and states the order: priority, then age
+
+## As built
+
+The two findings `--fix` repairs, a stale filename and a duplicate id, now name it; the stale filename also names `moth edit <id> --title` as the way not to cause it again. A dangling blocker's finding already names `moth edit --unblock` (from `e74b8a`), since `--fix` deliberately leaves it.
+
+`moth list --help` leads with `--status todo --unblocked` and says tickets are ordered by priority, then age, within each status.

@@ -56,3 +56,10 @@ test("the dispatch table and the help registry name exactly the same commands", 
   // how `moth doctor --help` once failed. Comparing both ways catches either drift.
   expect([...COMMAND_LIST].sort()).toEqual([...COMMAND_NAMES].sort());
 });
+
+test("list help shows how to find the next ticket, and says how tickets are ordered", async () => {
+  const out = await help("list", "--help");
+
+  expect(out).toContain("--status todo --unblocked");
+  expect(out).toContain("priority, then age");
+});
