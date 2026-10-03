@@ -6,6 +6,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **The Moth Method**, a skill that teaches a coding agent how to work with moth: writing tickets, grouping work under parents, finding the next ticket, and closing it in the same commit as the work. `moth skill install --agent claude|codex|cursor` writes it into the repository beside your tickets, or under home with `--global`; it is the copy built into your moth, so it always matches. It also installs with `npx skills add nikolasgioannou/moth --skill moth-method`.
+- Sub-tickets nest to any depth, so a parent ticket can stand for a milestone and its features have tasks of their own. A parent that would form a cycle is refused, naming it, and `moth check` reports one made by hand. `moth list` shows a sub-ticket's whole chain of parents.
+- `moth list --parent <ticket>` lists a ticket's sub-tickets, and `--parent none` lists top-level tickets. `moth board` takes it too.
+- `moth stats` counts tickets by status, takes the same filters as `moth list`, and has `--json`. `moth stats --parent <ticket>` is how far along a milestone or feature is.
+- `moth edit --append-body` and `--append-body-file` add text to the end of a body, after a blank line, with nothing of moth's own added.
+- `moth new --blocked-by`, as `moth edit` already had.
+- `moth edit --parent none` clears a parent.
+- `moth show --json` includes the ticket's file path.
+- `--status`, `--category` and `--priority` take several values, repeated or comma-separated, and match any of them.
+
+### Fixed
+
+- **`moth edit --unblock` did nothing when removing a ticket's only blocker.** It exited 0 and left the blocker in the file. Removing one of several worked, which is how it went unnoticed. `--unblock` also now removes a blocker whose ticket no longer exists.
+- `moth delete` left every ticket blocked by, or nested under, the deleted one pointing at nothing. It now removes those links and lists each one.
+- `moth check` findings say how to repair them: `moth check --fix` for a stale filename or a duplicate id, and `moth edit --unblock` for a blocker naming a missing ticket, which `--fix` leaves alone because it may exist on another branch.
+
+### Changed
+
+- A single-value flag given twice is a usage error (exit `2`). It used to keep the last value silently, so `moth list --status todo --status done` listed only done tickets.
+
 ## [0.5.0] - 2026-09-05
 
 ### Added
