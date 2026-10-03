@@ -1,7 +1,7 @@
 import { openCommand } from "../command.ts";
 import { legalFields } from "../config.ts";
 import type { Io } from "../io.ts";
-import { categoryLookup, FILTER_OPTIONS, filterTickets, statusOrder } from "../query.ts";
+import { categoryLookup, FILTER_OPTIONS, filterOrReport, statusOrder } from "../query.ts";
 import { blockingView, duplicateIds, metadataOf, readTickets, validate } from "../ticket.ts";
 
 export async function list(argv: string[], io: Io): Promise<number> {
@@ -11,7 +11,8 @@ export async function list(argv: string[], io: Io): Promise<number> {
 
   const all = readTickets(ticketsDir);
 
-  const tickets = filterTickets(all, values, config);
+  const tickets = filterOrReport(all, values, config, io);
+  if (tickets === null) return 1;
 
   for (const problem of validate(
     all,

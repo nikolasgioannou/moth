@@ -1,6 +1,6 @@
 import { openCommand } from "../command.ts";
 import type { Io } from "../io.ts";
-import { FILTER_OPTIONS, filterTickets, statusOrder } from "../query.ts";
+import { FILTER_OPTIONS, filterOrReport, statusOrder } from "../query.ts";
 import { readTickets } from "../ticket.ts";
 
 export async function board(argv: string[], io: Io): Promise<number> {
@@ -9,7 +9,8 @@ export async function board(argv: string[], io: Io): Promise<number> {
   const { config, ticketsDir, values } = opened;
 
   const all = readTickets(ticketsDir);
-  const tickets = filterTickets(all, values, config);
+  const tickets = filterOrReport(all, values, config, io);
+  if (tickets === null) return 1;
 
   io.stdout("# Tickets\n");
   for (const status of statusOrder(config, tickets)) {

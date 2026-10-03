@@ -1,6 +1,8 @@
 import type { OptionSpec } from "./args.ts";
 import { anyOf, stringList } from "./args.ts";
+import { resolveOrReport } from "./command.ts";
 import type { Config } from "./config.ts";
+import type { Io } from "./io.ts";
 import { blockingView, type Ticket } from "./ticket.ts";
 
 /** The filters every command that lists tickets accepts, declared once. */
@@ -12,6 +14,7 @@ export const FILTER_OPTIONS: OptionSpec = {
   search: { type: "string" },
   blocked: { type: "boolean" },
   unblocked: { type: "boolean" },
+  parent: { type: "string", multiple: true },
 };
 
 export type FlagValues = Record<string, string | boolean | (string | boolean)[] | undefined>;
@@ -20,7 +23,34 @@ export function categoryLookup(config: Config): (status: string) => string | und
   return (status) => config.statuses.find((entry) => entry.name === status)?.category;
 }
 
-/** Narrows a set of tickets by every filter the caller supplied. */
+/**
+ * Narrows a set of tickets by every filter the caller supplied, or returns null
+ * having reported why it could not: a parent that names no ticket is a mistake
+ * to point out, not an empty result to print.
+ */
+export function filterOrReport(
+  all: Ticket[],
+  values: FlagValues,
+  config: Config,
+  io: Io,
+): Ticket[] | null {
+  // `none` asks for tickets with no parent; anything else names a ticket.
+  const parents: (string | undefined)[] = [];
+  for (const reference of anyOf(values.parent)) {
+    if (reference.toLowerCase() === "none") {
+      parents.push(undefined);
+      continue;
+    }
+    const parent = resolveOrReport(all, reference, io, "parent");
+    if (parent === null) return null;
+    parents.push(parent.id);
+  }
+  const narrowed = filterTickets(all, values, config);
+  if (parents.length === 0) return narrowed;
+  return narrowed.filter((ticket) => parents.includes(ticket.parent));
+}
+
+/** Narrows a set of tickets by every filter except parent, which needs resolving. */
 export function filterTickets(all: Ticket[], values: FlagValues, config: Config): Ticket[] {
   const categoryOf = categoryLookup(config);
   const wantedLabels = stringList(values.label);

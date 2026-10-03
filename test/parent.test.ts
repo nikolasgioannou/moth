@@ -123,3 +123,44 @@ test("a blocker whose id looks like a number survives the round trip", async () 
   expect(fields(dir, blocked).blocked_by).toEqual(["50735e"]);
   expect(await run(["check"], captureIo(dir))).toBe(0);
 });
+
+async function listedIds(dir: string, ...args: string[]): Promise<string[]> {
+  const io = captureIo(dir);
+  await run(["list", "--json", ...args], io);
+  return (JSON.parse(io.out()) as { id: string }[]).map((ticket) => ticket.id).sort();
+}
+
+test("listing by parent gives that ticket's sub-tickets, and none gives top-level tickets", async () => {
+  const dir = await initedRepo();
+  const milestone = await newTicket(dir, "Browser milestone");
+  const other = await newTicket(dir, "Billing milestone");
+  const chrome = await newTicket(dir, "Chrome on the VM", ["--parent", milestone]);
+  const locks = await newTicket(dir, "Domain locks", ["--parent", milestone]);
+  const invoices = await newTicket(dir, "Invoices", ["--parent", other]);
+
+  expect(await listedIds(dir, "--parent", milestone)).toEqual([chrome, locks].sort());
+  expect(await listedIds(dir, "--parent", `${milestone},${other}`)).toEqual(
+    [chrome, locks, invoices].sort(),
+  );
+  expect(await listedIds(dir, "--parent", "none")).toEqual([milestone, other].sort());
+});
+
+test("listing by a parent that names no ticket is an error, not an empty list", async () => {
+  const dir = await initedRepo();
+  await newTicket(dir, "Browser milestone");
+  const io = captureIo(dir);
+
+  expect(await run(["list", "--parent", "no such thing"], io)).toBe(1);
+  expect(io.err()).toContain("no parent matches");
+});
+
+test("the board takes the parent filter too", async () => {
+  const dir = await initedRepo();
+  const milestone = await newTicket(dir, "Browser milestone");
+  const chrome = await newTicket(dir, "Chrome on the VM", ["--parent", milestone]);
+  const io = captureIo(dir);
+
+  expect(await run(["board", "--parent", milestone], io)).toBe(0);
+  expect(io.out()).toContain(chrome);
+  expect(io.out()).not.toContain(`**${milestone}**`);
+});
