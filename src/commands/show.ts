@@ -1,3 +1,4 @@
+import { relative } from "node:path";
 import { openCommand, resolveOrReport } from "../command.ts";
 import type { Io } from "../io.ts";
 import { blocks, metadataOf, readTickets } from "../ticket.ts";
@@ -12,7 +13,10 @@ export async function show(argv: string[], io: Io): Promise<number> {
   if (ticket === null) return 1;
 
   if (values.json === true) {
-    io.stdout(`${JSON.stringify({ ...metadataOf(ticket), body: ticket.body }, null, 2)}\n`);
+    // The path is for tools that edit the file directly, relative to where moth
+    // was run so it opens from there without searching the ticket directory.
+    const path = relative(io.cwd, ticket.path);
+    io.stdout(`${JSON.stringify({ ...metadataOf(ticket), path, body: ticket.body }, null, 2)}\n`);
     return 0;
   }
   io.stdout(`${ticket.id}  ${ticket.title}\n`);

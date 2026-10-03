@@ -1,5 +1,5 @@
 import { stringList } from "../args.ts";
-import { suppliedBody } from "../body.ts";
+import { APPEND, suppliedBody } from "../body.ts";
 import { mergeLabels, openCommand, priorityOrReport, resolveOrReport } from "../command.ts";
 import { legalFields } from "../config.ts";
 import type { Io } from "../io.ts";
@@ -11,6 +11,8 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     title: { type: "string" },
     body: { type: "string" },
     "body-file": { type: "string" },
+    "append-body": { type: "string" },
+    "append-body-file": { type: "string" },
     priority: { type: "string" },
     label: { type: "string", multiple: true },
     "remove-label": { type: "string", multiple: true },
@@ -38,7 +40,24 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     io.stderr(`moth: ${supplied.message}\n`);
     return 1;
   }
-  const body = supplied.body ?? ticket.body;
+  const appended = await suppliedBody(values, io, APPEND);
+  if (!appended.ok) {
+    io.stderr(`moth: ${appended.message}\n`);
+    return 1;
+  }
+  if (supplied.body !== undefined && appended.body !== undefined) {
+    io.stderr("moth: replace the body or append to it, not both\n");
+    return 2;
+  }
+  // Appended text is added verbatim after one blank line. moth adds no heading:
+  // the body has no schema, so how it is organised is the caller's to decide.
+  const existing = ticket.body.replace(/\n+$/, "");
+  const body =
+    appended.body === undefined
+      ? (supplied.body ?? ticket.body)
+      : existing === ""
+        ? appended.body
+        : `${existing}\n\n${appended.body}`;
 
   const priority = priorityOrReport(values, io, ticket.priority);
   if (priority === null) return 2;

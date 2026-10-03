@@ -2,11 +2,17 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Io } from "./io.ts";
 
-/** The flags a body can arrive through, as the argument parser leaves them. */
-interface BodyFlags {
-  body?: unknown;
-  "body-file"?: unknown;
+/** Parsed flag values, of which a body reads only its own two. */
+type BodyFlags = Record<string, unknown>;
+
+/** The pair of flags a body arrives through: as text, or from a file or stdin. */
+export interface BodySource {
+  text: string;
+  file: string;
 }
+
+const REPLACE: BodySource = { text: "body", file: "body-file" };
+export const APPEND: BodySource = { text: "append-body", file: "append-body-file" };
 
 export type BodyResult = { ok: true; body: string | undefined } | { ok: false; message: string };
 
@@ -19,8 +25,12 @@ export type BodyResult = { ok: true; body: string | undefined } | { ok: false; m
  * file. moth reads no further into it than that; the body has no schema, so
  * nothing here inspects or reshapes what the caller wrote.
  */
-export async function suppliedBody(values: BodyFlags, io: Io): Promise<BodyResult> {
-  const file = values["body-file"];
+export async function suppliedBody(
+  values: BodyFlags,
+  io: Io,
+  source: BodySource = REPLACE,
+): Promise<BodyResult> {
+  const file = values[source.file];
   if (file === "-") return { ok: true, body: (await io.stdin()).replace(/\n+$/, "") };
   if (typeof file === "string") {
     try {
@@ -32,5 +42,6 @@ export async function suppliedBody(values: BodyFlags, io: Io): Promise<BodyResul
       return { ok: false, message: `cannot read '${file}'` };
     }
   }
-  return { ok: true, body: typeof values.body === "string" ? values.body : undefined };
+  const text = values[source.text];
+  return { ok: true, body: typeof text === "string" ? text : undefined };
 }

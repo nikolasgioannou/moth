@@ -236,3 +236,45 @@ test("a value illegal only in this repo exits 1, not 2", async () => {
   const field = captureIo(dir);
   expect(await run(["edit", id, "--set", "customer=acme"], field)).toBe(1);
 });
+
+test("--append-body-file - adds text after the body, separated by one blank line", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Stale cookie."]);
+  const io = captureIo(dir, { stdin: "## As built\n\nCleared on logout.\n" });
+
+  expect(await run(["edit", id, "--append-body-file", "-"], io)).toBe(0);
+
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe(
+    "Stale cookie.\n\n## As built\n\nCleared on logout.\n",
+  );
+});
+
+test("appending to an empty body adds no leading blank line", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect");
+
+  await run(["edit", id, "--append-body", "First note."], captureIo(dir));
+
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe("First note.\n");
+});
+
+test("appending moves updated_at", async () => {
+  const dir = await initedRepo();
+  const created = new Date("2026-01-01T00:00:00.000Z");
+  const id = await newTicket(dir, "Fix login redirect", [], { now: () => created });
+  const later = new Date("2026-02-01T00:00:00.000Z");
+
+  await run(["edit", id, "--append-body", "Progress."], captureIo(dir, { now: () => later }));
+
+  expect(fields(dir, id).updated_at).toBe(later.toISOString());
+});
+
+test("appending and replacing the body at once is a usage error", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix login redirect", ["--body", "Original."]);
+
+  const code = await run(["edit", id, "--body", "New.", "--append-body", "More."], captureIo(dir));
+
+  expect(code).toBe(2);
+  expect(parseFrontmatter(ticketText(dir, id)).body).toBe("Original.\n");
+});

@@ -57,12 +57,13 @@ export const HELP: Record<string, CommandHelp> = {
   edit: {
     summary: "Change a ticket's title, body, priority, labels, parent or blockers",
     usage:
-      "moth edit <ticket> [--title <text>] [--body <text> | --body-file <path>] [--priority <p>] [--label <l>] [--remove-label <l>] [--parent <ticket>] [--blocked-by <ticket>] [--unblock <ticket>] [--set <field>=<value>] [--json]",
+      "moth edit <ticket> [--title <text>] [--body <text> | --body-file <path> | --append-body <text> | --append-body-file <path>] [--priority <p>] [--label <l>] [--remove-label <l>] [--parent <ticket>] [--blocked-by <ticket>] [--unblock <ticket>] [--set <field>=<value>] [--json]",
     example: `  $ moth edit a3f8c1 --priority high --label cli
   $ moth edit a3f8c1 --title "Rewrite the auth flow"
+  $ printf '## As built\\n\\nShipped behind a flag.\\n' | moth edit a3f8c1 --append-body-file -
   $ moth show a3f8c1 --json | jq -r .body | sed s/foo/bar/ | moth edit a3f8c1 --body-file -`,
     notes:
-      "Changing a title renames the file to match. --body replaces the whole body, so read it first with moth show --json. --set only accepts fields declared in config.",
+      "Changing a title renames the file to match. --body replaces the whole body, so read it first with moth show --json. --append-body adds text after the existing body, separated by a blank line, with nothing added of moth's own. --set only accepts fields declared in config.",
   },
   delete: {
     summary: "Remove a ticket permanently",

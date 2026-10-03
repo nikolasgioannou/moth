@@ -125,3 +125,13 @@ test("show renders a ticket's labels", async () => {
   expect(io.out()).toContain("auth");
   expect(io.out()).toContain("cli");
 });
+
+test("show --json gives the ticket's path, relative to where moth ran", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Fix the login redirect");
+  const io = captureIo(dir);
+
+  await run(["show", id, "--json"], io);
+
+  expect(JSON.parse(io.out()).path).toBe(join(".moth", `fix-the-login-redirect-${id}.md`));
+});

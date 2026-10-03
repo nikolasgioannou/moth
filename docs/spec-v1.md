@@ -209,7 +209,7 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 - **Assignees.** No user registry, no accounts, no "me". Nothing in moth records who is working on what; coordination lives outside it.
 - **A `moth next` command.** Composable filters on `moth list` cover it.
 - **Git integration.** No branch creation, no branch-name parsing, no auto-transition on commit or merge. Hooks are per-clone and therefore unreliable, and tickets changing status without anyone asking contradicts the passive model.
-- **An activity log and comments.** Git is the history. moth has no append operation, because appending is what a comment is, and a body moth has opinions about is a body moth has to parse.
+- **An activity log and comments.** Git is the history. `moth edit --append-body` adds text to the end of a body verbatim, but it is not a comment: it records no author or time and adds no heading, because a body moth has opinions about is a body moth has to parse. It exists because read-modify-write through `jq` was too easy to get wrong for the commonest edit, adding a section at the end.
 - **A TUI.**
 - **An MCP server.**
 - **A shipped agent skill.** `--help` carries this burden instead.
