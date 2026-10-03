@@ -1,12 +1,12 @@
 ---
 id: "5ff899"
 title: moth stats
-status: todo
+status: done
 priority: low
 labels:
   - cli
 created_at: 2026-10-03T16:22:02.468Z
-updated_at: 2026-10-03T16:32:30.904Z
+updated_at: 2026-10-03T16:41:37.327Z
 blocked_by:
   - "0bba83"
 ---
@@ -21,6 +21,10 @@ On a finished project the only way to count tickets by status was `moth list | g
 
 **Done when**
 
-- [ ] Counts by status, in config order
-- [ ] Filters apply, including `--parent`
-- [ ] `--json` gives the same counts
+- [x] Counts by status, in config order
+- [x] Filters apply, including `--parent`
+- [x] `--json` gives the same counts
+
+## As built
+
+Every status in config appears, at zero if need be, followed by any status a ticket uses that config no longer declares. `--json` gives `{ total, statuses }` with statuses in the same order. It shares `filterOrReport` with `list` and `board`, so an unknown `--parent` exits 1 here too.

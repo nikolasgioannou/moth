@@ -9,6 +9,7 @@ import { create } from "./commands/new.ts";
 import { remove } from "./commands/remove.ts";
 import { schema } from "./commands/schema.ts";
 import { show } from "./commands/show.ts";
+import { stats } from "./commands/stats.ts";
 import { upgrade } from "./commands/upgrade.ts";
 import { commandHelp, topLevelHelp } from "./help.ts";
 import type { Io } from "./io.ts";
@@ -29,6 +30,7 @@ const COMMANDS: Record<string, Command> = {
   delete: remove,
   schema,
   show,
+  stats,
   upgrade,
 };
 

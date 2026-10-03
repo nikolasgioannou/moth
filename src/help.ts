@@ -79,6 +79,16 @@ export const HELP: Record<string, CommandHelp> = {
   $ moth board --category started`,
     notes: "Writes nothing itself; redirect it if you want the board committed.",
   },
+  stats: {
+    summary: "Count tickets by status",
+    usage: "moth stats [same filters as list] [--json]",
+    example: `  $ moth stats
+  done 161 \u00b7 canceled 2 \u00b7 todo 0
+
+  $ moth stats --parent "Browser milestone"`,
+    notes:
+      "Every status in config is counted, including those at zero. With --parent, it is how far along that milestone or feature is.",
+  },
   check: {
     summary: "Report problems with the tickets on disk",
     usage: "moth check [--fix]",

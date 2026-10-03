@@ -66,6 +66,7 @@ Eleven, and that is the whole surface:
 - `edit` — change any field, the body included
 - `delete` — remove a ticket
 - `board` — a markdown board, grouped by status
+- `stats` — ticket counts by status
 - `check` — validate every ticket against the schema
 - `schema` — this repository's rules, as JSON
 - `upgrade` — update moth to the latest release
