@@ -65,8 +65,26 @@ export async function edit(argv: string[], io: Io): Promise<number> {
     return ids;
   };
 
+  // A blocker being removed is looked for among this ticket's own blockers
+  // first, so one whose ticket no longer exists can still be removed.
+  const toRemovedIds = (references: string[]): string[] | null => {
+    const ids: string[] = [];
+    for (const reference of references) {
+      const wanted = reference.trim().toLowerCase();
+      const own = (ticket.blocked_by ?? []).filter((id) => id.startsWith(wanted));
+      if (own.length === 1 && own[0] !== undefined) {
+        ids.push(own[0]);
+        continue;
+      }
+      const match = resolveOrReport(all, reference, io, "blocker");
+      if (match === null) return null;
+      ids.push(match.id);
+    }
+    return ids;
+  };
+
   const addedBlockers = toIds(stringList(values["blocked-by"]));
-  const removedBlockers = toIds(stringList(values.unblock));
+  const removedBlockers = toRemovedIds(stringList(values.unblock));
   if (addedBlockers === null || removedBlockers === null) return 1;
   const blockedBy = [...new Set([...(ticket.blocked_by ?? []), ...addedBlockers])]
     .filter((id) => !removedBlockers.includes(id))
@@ -110,7 +128,9 @@ export async function edit(argv: string[], io: Io): Promise<number> {
         priority,
         labels,
         parent,
-        ...(blockedBy.length === 0 ? {} : { blocked_by: blockedBy }),
+        // Undefined rather than omitted: `...ticket` already carries the old list,
+        // so leaving the key out would keep a blocker that was just removed.
+        blocked_by: blockedBy.length === 0 ? undefined : blockedBy,
         updated_at: io.now().toISOString(),
       })
     : ticket;

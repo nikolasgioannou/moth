@@ -25,7 +25,11 @@ function findings(tickets: Ticket[], config: Config): string[] {
       found.push(`${basename(ticket.path)} should be named ${wanted}`);
     }
     for (const id of blockingView(tickets, ticket, categoryOf).dangling) {
-      found.push(`ticket ${ticket.id} is blocked by ${id}, which does not exist`);
+      // Left alone by --fix: the blocker may exist on another branch.
+      found.push(
+        `ticket ${ticket.id} is blocked by ${id}, which does not exist here; ` +
+          `if it was deleted, run moth edit ${ticket.id} --unblock ${id}`,
+      );
     }
     if (ticket.parent !== undefined) {
       const parent = tickets.find((candidate) => candidate.id === ticket.parent);

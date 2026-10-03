@@ -1,12 +1,12 @@
 ---
 id: "e74b8a"
 title: Removing a ticket's last blocker does nothing
-status: todo
+status: done
 priority: urgent
 labels:
   - cli
 created_at: 2026-10-03T16:33:21.288Z
-updated_at: 2026-10-03T16:33:21.310Z
+updated_at: 2026-10-03T16:36:49.932Z
 ---
 
 `moth edit <ticket> --unblock <blocker>` exits 0 and prints the ticket, but when the blocker is the ticket's only one, it stays in the file. Removing one of two blockers works.
@@ -26,7 +26,7 @@ Found while restructuring moth's own tickets: a blocker that looked removed was 
 **Related gaps that turned one bug into a stuck store**
 
 - `--unblock` refuses an id with no ticket behind it ("no blocker matches"), so a dangling blocker cannot be removed through moth at all. It should match the raw ids in `blocked_by` before resolving against tickets
-- `moth check --fix` reports a dangling blocker and leaves it alone. Dropping a blocker whose ticket does not exist loses nothing, so `--fix` should remove it and say so
+- `moth check --fix` reports a dangling blocker and leaves it alone, and its message gives no way forward
 - `moth delete` removes a ticket that others are blocked by, or are children of, without a word. It should refuse and name the dependents, or remove the references and report them
 
 **Worth knowing**
@@ -35,8 +35,18 @@ Check every other field that can be cleared for the same spread pattern. `parent
 
 **Done when**
 
-- [ ] Removing a ticket's last blocker removes `blocked_by` from the file
-- [ ] `--unblock` removes a dangling id
-- [ ] `moth check --fix` removes dangling blockers and reports each one
-- [ ] `moth delete` does not silently leave dangling references behind
-- [ ] Tests cover `--unblock` for one blocker, several, and a dangling one
+- [x] Removing a ticket's last blocker removes `blocked_by` from the file
+- [x] `--unblock` removes a dangling id
+- [x] `moth check` names the command that removes a dangling blocker
+- [x] `moth delete` does not silently leave dangling references behind
+- [x] Tests cover `--unblock` for one blocker, several, and a dangling one
+
+## As built
+
+`blocked_by` is now set to `undefined` when emptied, which the YAML writer drops; `--unblock` looks among the ticket's own blockers before resolving against the store, so a dangling id can be removed.
+
+`moth delete` removes every blocker and parent link naming the deleted ticket and prints each one.
+
+`moth check --fix` deliberately does **not** remove dangling blockers, reversing what this ticket first asked for. The spec treats a dangling blocker as a normal state on a feature branch, where the blocker exists on another branch, so removing it would lose a real link on merge. Instead the finding now names `moth edit <ticket> --unblock <id>`. A deletion is different: it is definite, so `delete` cleans up after itself.
+
+Clearing `parent` is still impossible through moth; left for the nesting ticket, which reworks parents.

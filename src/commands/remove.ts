@@ -1,7 +1,7 @@
 import { rmSync } from "node:fs";
 import { openCommand, resolveOrReport } from "../command.ts";
 import type { Io } from "../io.ts";
-import { readTickets } from "../ticket.ts";
+import { detachReferencesTo, readTickets } from "../ticket.ts";
 
 export async function remove(argv: string[], io: Io): Promise<number> {
   const opened = openCommand(argv, io, {
@@ -21,5 +21,10 @@ export async function remove(argv: string[], io: Io): Promise<number> {
 
   rmSync(ticket.path);
   io.stdout(`deleted ${ticket.id}  ${ticket.title}\n`);
+  // Tickets that pointed at this one would otherwise be left naming a ticket
+  // that no longer exists, and nothing short of a hand edit could clear them.
+  for (const line of detachReferencesTo(readTickets(ticketsDir), ticket.id, io.now())) {
+    io.stdout(`${line}\n`);
+  }
   return 0;
 }

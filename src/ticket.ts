@@ -196,6 +196,31 @@ export function saveTicket(ticket: Ticket): Ticket {
   return moved;
 }
 
+/**
+ * Removes every blocker and parent link naming a deleted ticket, saving each
+ * ticket it changes, and returns what it removed so the caller can say so.
+ * Only for a deletion: a link to a ticket that is merely absent may name one on
+ * another branch, and is left for `moth check` to report instead.
+ */
+export function detachReferencesTo(tickets: Ticket[], deleted: string, now: Date): string[] {
+  const detached: string[] = [];
+  for (const ticket of tickets) {
+    const blocked = (ticket.blocked_by ?? []).includes(deleted);
+    const orphaned = ticket.parent === deleted;
+    if (!blocked && !orphaned) continue;
+    const kept = (ticket.blocked_by ?? []).filter((id) => id !== deleted);
+    saveTicket({
+      ...ticket,
+      blocked_by: kept.length === 0 ? undefined : kept,
+      parent: orphaned ? undefined : ticket.parent,
+      updated_at: now.toISOString(),
+    });
+    if (blocked) detached.push(`${ticket.id} is no longer blocked by ${deleted}`);
+    if (orphaned) detached.push(`${ticket.id} no longer has parent ${deleted}`);
+  }
+  return detached;
+}
+
 export type ParentProblem = { reason: string } | null;
 
 /**

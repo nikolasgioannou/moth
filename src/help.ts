@@ -67,7 +67,7 @@ export const HELP: Record<string, CommandHelp> = {
     usage: "moth delete <ticket> --yes",
     example: `  $ moth delete a3f8c1 --yes`,
     notes:
-      "For mistakes only. To record that work will not be done, move it to a cancelled status instead and keep its history. Never prompts, so --yes is required.",
+      "For mistakes only. To record that work will not be done, move it to a cancelled status instead and keep its history. Tickets blocked by or nested under the deleted one lose that link, and each is reported. Never prompts, so --yes is required.",
   },
   board: {
     summary: "Print a markdown board",
