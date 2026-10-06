@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`moth open`**, a read-only view of your tickets in the browser, for the person directing agents rather than the agents. Columns by status, with blocked tickets marked and sub-ticket progress on each card; a page per ticket with its body rendered, its parents, its sub-tickets to any depth, and what blocks it; and a list with `moth list`'s filters, kept in the URL so a view can be bookmarked. It updates live as tickets change on disk, from the CLI or anywhere else, and shows anything `moth check` would report. It changes nothing itself: each ticket page shows the `moth` commands to copy instead. It serves `127.0.0.1` only, on port 6684 or any free one; `--port` and `--no-open` are its options.
+
+### Fixed
+
+- **One ticket file with broken frontmatter crashed every command** with a stack trace. Such a file is now set aside: `moth check` reports it and exits 1, `moth list` warns about it and lists the rest, and every other command works on the tickets it can read.
+
 ## [0.6.0] - 2026-10-03
 
 ### Added

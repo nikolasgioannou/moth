@@ -20,7 +20,7 @@ The enforcement is the product. moth rejects writes that a bare filesystem would
 
 On top of that guarantee sits a query layer. Because the shape of the data is known, "show me unblocked urgent tickets" is a command rather than a grep an agent has to get right. That is the second half of the value: not just that the data is consistent, but that consistency makes it worth querying.
 
-Everything else follows from those two ideas. Tickets are committed to the repo, so they travel with the code through branches, clones, and pull requests, and git provides history for free. The CLI is the only interface, because a filesystem layout optimised for `ls` is a filesystem layout compromised as a database. And the feature set is deliberately small: every workflow feature that would make moth harder for an agent to use correctly was cut.
+Everything else follows from those two ideas. Tickets are committed to the repo, so they travel with the code through branches, clones, and pull requests, and git provides history for free. The CLI is the only way to change a ticket, because a filesystem layout optimised for `ls` is a filesystem layout compromised as a database. And the feature set is deliberately small: every workflow feature that would make moth harder for an agent to use correctly was cut.
 
 ## User Stories
 
@@ -143,7 +143,7 @@ There is no project or epic concept above the ticket. Labels already group, a pa
 
 ### Command surface
 
-A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `delete`, `board`, `stats`, `check`, `schema`, `skill`, and `upgrade`.
+A flat surface, one command per verb: `init`, `new`, `list`, `show`, `move`, `edit`, `delete`, `board`, `stats`, `check`, `schema`, `open`, `skill`, and `upgrade`.
 
 A noun-verb shape after `gh` — `moth ticket create`, with the flat forms as aliases — was specified first and dropped. `gh`'s shape earns itself because it has many nouns to disambiguate: issues, pull requests, repositories, releases. moth has one. A noun layer over a single noun is ceremony that every caller pays for and no caller benefits from, and the argument for it was familiarity, which the flat verbs already have.
 
@@ -154,7 +154,7 @@ Conventions, all of which exist to make the tool safe for a non-interactive call
 - Colour and progress output are suppressed automatically when stdout is not a terminal.
 - Exit codes: `0` success, `1` operation failed, `2` usage error. Documented, because agents branch on them. The line between `1` and `2` is whether the value could ever have been legal: a priority outside the fixed set, or `--set body=`, is wrong in every repository and exits `2`, while a status this config does not define, or a field it has not declared, could be legal elsewhere and exits `1`.
 - No command prompts interactively, with two exceptions: `moth init`, which is human-only setup, and `moth skill install` run at a terminal with no flags saying where to install ([ADR-0006](adr/0006-moth-ships-an-agent-skill.md)). Without a terminal, it refuses rather than asks.
-- No command contacts the network, with exactly one exception: `moth upgrade`, and only when it is run. There is no background version check, because the startup budget in ADR-0002 is measured in milliseconds and a request is measured in hundreds. An upgrade also never overwrites an install that Homebrew or npm owns: it prints that installer's command, because replacing the binary underneath a package manager leaves it convinced it still has the old version, and the next `brew upgrade` silently reverts it.
+- No command contacts the network, with exactly one exception: `moth upgrade`, and only when it is run. `moth open` listens rather than contacts, and only on `127.0.0.1`. There is no background version check, because the startup budget in ADR-0002 is measured in milliseconds and a request is measured in hundreds. An upgrade also never overwrites an install that Homebrew or npm owns: it prints that installer's command, because replacing the binary underneath a package manager leaves it convinced it still has the old version, and the next `brew upgrade` silently reverts it.
 - Every mutation prints the resulting ticket, so confirming a change never costs a second invocation.
 - Mutations are idempotent. Moving a ticket to a status it already occupies exits `0`. Agents retry, and a retry should not look like a failure.
 
@@ -164,7 +164,7 @@ Conventions, all of which exist to make the tool safe for a non-interactive call
 
 ### Interface scope
 
-The CLI is the only interface. There is no TUI, which would be a second complete interface competing for the same job before the data model has been proven. There is no MCP server: it would load tool schemas into context in every session to expose operations an agent can already discover from `--help`, and the CLI is strictly cheaper.
+The CLI is the only interface that writes. v1 had no other interface at all, and cut a TUI as a second complete interface competing for the same job before the data model had been proven. [ADR-0007](adr/0007-moth-open-a-read-only-view-for-people.md) adds `moth open`, a read-only page in the browser that updates live as tickets change, for the person directing agents rather than for the agents. It answers every request by running the CLI, so it cannot disagree with it, and it shows the `moth` command for a change rather than making one. There is no MCP server: it would load tool schemas into context in every session to expose operations an agent can already discover from `--help`, and the CLI is strictly cheaper.
 
 Because no skill ships with moth, **`--help` is load-bearing** — it is both the API reference and the only place usage guidance can live. Every command's help text requires a worked example, and this is a v1 requirement rather than polish.
 
@@ -192,9 +192,11 @@ This is the highest seam that stays fast and debuggable. It exercises everything
 
 **No git fixtures**, because moth never invokes git.
 
+**A second seam for `moth open`: the request handler.** A server runs until interrupted, so `run` alone cannot test what it serves. The handler is a plain function from a `Request` to a `Response`, built over the same injected environment, so tests call it in-process against a temp directory and compare its JSON byte for byte with what `run` prints for the matching `--json` command.
+
 ### The smoke layer
 
-A small number of tests — on the order of five — run the actual compiled binary as a subprocess. They exist to cover the one thing the in-process seam cannot: that the artifact being shipped starts at all. Binary builds, shebang resolves, `--version` and `--help` respond, an exit code propagates through the process boundary, stdin piping works end to end.
+A small number of tests — on the order of five — run the actual compiled binary as a subprocess. They exist to cover the one thing the in-process seam cannot: that the artifact being shipped starts at all. Binary builds, shebang resolves, `--version` and `--help` respond, an exit code propagates through the process boundary, stdin piping works end to end, and `moth open` serves a page from the embedded assets and stops on SIGINT.
 
 Without this layer, a broken build or a bad shebang passes CI green. With it, the whole suite stays fast because only a handful of tests pay for a subprocess.
 
@@ -210,7 +212,7 @@ Each of these was considered explicitly and cut. They are recorded here so they 
 - **A `moth next` command.** Composable filters on `moth list` cover it.
 - **Git integration.** No branch creation, no branch-name parsing, no auto-transition on commit or merge. Hooks are per-clone and therefore unreliable, and tickets changing status without anyone asking contradicts the passive model.
 - **An activity log and comments.** Git is the history. `moth edit --append-body` adds text to the end of a body verbatim, but it is not a comment: it records no author or time and adds no heading, because a body moth has opinions about is a body moth has to parse. It exists because read-modify-write through `jq` was too easy to get wrong for the commonest edit, adding a section at the end.
-- **A TUI.**
+- **A TUI.** A read-only browser view was added instead; see [ADR-0007](adr/0007-moth-open-a-read-only-view-for-people.md).
 - **An MCP server.**
 - **Projects, epics, initiatives, cycles, sprints, estimates, and story points.**
 - **Manual ticket ordering.** A rank value across many files rewrites on every reorder, which is the merge-hostile shared state moth exists to avoid. Priority plus age is the ordering.

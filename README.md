@@ -54,6 +54,8 @@ Name a ticket however you remember it. `moth show 280f4d`, `moth show 280` and `
 
 `moth schema --json` reports exactly what this repository considers a legal ticket, which is how an agent learns the rules in one call.
 
+To watch the work rather than query it, `moth open` opens the tickets in your browser: columns by status, each ticket in full with its sub-tickets and blockers, and the list with its filters. It is read-only, and it updates as agents change tickets in the terminal.
+
 ## For agents: the Moth Method
 
 The Moth Method is a skill that teaches a coding agent how to work with moth: writing tickets, grouping work under parent tickets, finding the next ticket, and closing it in the same commit as the work. Install it into your repository so it is committed beside your tickets:
@@ -70,7 +72,7 @@ npx skills add nikolasgioannou/moth --skill moth-method
 
 ## Commands
 
-Thirteen, and that is the whole surface:
+Fourteen, and that is the whole surface:
 
 - `init` — set up a repository
 - `new` — file a ticket
@@ -83,6 +85,7 @@ Thirteen, and that is the whole surface:
 - `stats` — ticket counts by status
 - `check` — validate every ticket against the schema
 - `schema` — this repository's rules, as JSON
+- `open` — a live, read-only view in your browser, for people
 - `skill` — install the Moth Method for your coding agent
 - `upgrade` — update moth to the latest release
 
@@ -103,7 +106,7 @@ The refusals are the design, not gaps:
 - **No undeclared fields.** Custom fields are allowed, but must be declared in config first, so an agent can never introduce one.
 - **No comments, no activity log.** `git log -p` on a ticket is already a complete, attributed history.
 - **No background update checks.** `moth upgrade` contacts the network when you run it, and never otherwise. A tool that starts in 12ms should not spend longer than that asking about itself.
-- **No cycles, sprints, estimates, projects or manual ordering. No web UI, no TUI.**
+- **No cycles, sprints, estimates, projects or manual ordering. No TUI, and no way to edit from the browser:** `moth open` is read-only, and the CLI is the one place tickets change.
 
 Every rejection, with its reasoning, is in [the spec](docs/spec-v1.md#out-of-scope).
 
