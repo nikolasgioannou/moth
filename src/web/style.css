@@ -677,3 +677,27 @@ table.list .parent {
     margin: 12px 16px 0;
   }
 }
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.live.is-lost {
+  color: var(--blocked);
+}
+
+.live.is-lost::before {
+  background: var(--blocked);
+}

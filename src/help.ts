@@ -88,7 +88,7 @@ export const HELP: Record<string, CommandHelp> = {
 
   $ moth open --port 8080 --no-open`,
     notes:
-      "For people, not agents: an agent gets everything here from list and show. The page never changes a ticket; it shows the moth command for each change instead. Serves this machine only, on 127.0.0.1. Uses port 6684, or any free port if that is taken; --port insists on one, and --port 0 takes any. Opens a browser when run at a terminal, unless --no-open. Runs until interrupted.",
+      "For people, not agents: an agent gets everything here from list and show. The page updates as tickets change on disk, whoever changes them, and never changes a ticket itself; it shows the moth command for each change instead. Serves this machine only, on 127.0.0.1. Uses port 6684, or any free port if that is taken; --port insists on one, and --port 0 takes any. Opens a browser when run at a terminal, unless --no-open. Runs until interrupted.",
   },
   stats: {
     summary: "Count tickets by status",

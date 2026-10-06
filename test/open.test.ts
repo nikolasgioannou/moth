@@ -411,3 +411,99 @@ test("the page reports what moth check finds, and a broken file stops nothing el
   expect(tickets.map((ticket) => ticket.id)).toEqual([blocked]);
   expect((await store.fetch(get(`/api/tickets/${blocked}`))).status).toBe(200);
 });
+
+/** Reads an event stream, collecting the events it names as they arrive. */
+function listen(response: Response) {
+  const events: string[] = [];
+  const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+  const decoder = new TextDecoder();
+  let buffered = "";
+  (async () => {
+    for (;;) {
+      const { value, done } = await reader.read().catch(() => ({ value: undefined, done: true }));
+      if (done) return;
+      buffered += decoder.decode(value);
+      for (const match of buffered.matchAll(/^event: (\w+)$/gm)) events.push(match[1] as string);
+      buffered = buffered.slice(buffered.lastIndexOf("\n") + 1);
+    }
+  })();
+  /** Settles once `count` events have arrived, or fails after a second. */
+  const until = async (count: number) => {
+    const deadline = Date.now() + 1000;
+    while (events.length < count) {
+      if (Date.now() > deadline) throw new Error(`saw ${events.length} events, wanted ${count}`);
+      await Bun.sleep(10);
+    }
+  };
+  return { events, until, stop: () => reader.cancel() };
+}
+
+test("a change made from the CLI reaches an open page within a second", async () => {
+  const dir = await initedRepo();
+  const store = openStore(captureIo(dir));
+  const response = await store.fetch(get("/api/events"));
+  expect(response.headers.get("content-type")).toBe("text/event-stream");
+  const stream = listen(response);
+
+  const id = await newTicket(dir, "Chrome on the VM");
+  await stream.until(1);
+  await run(["move", id, "done"], captureIo(dir));
+  await stream.until(2);
+  await run(["edit", id, "--title", "Chrome on the build VM"], captureIo(dir));
+  await stream.until(3);
+  await run(["delete", id, "--yes"], captureIo(dir));
+  await stream.until(4);
+
+  expect(stream.events.every((event) => event === "change")).toBe(true);
+  await stream.stop();
+  store.close();
+});
+
+test("editing the config reaches an open page, since it decides the columns", async () => {
+  const dir = await initedRepo();
+  const store = openStore(captureIo(dir));
+  const stream = listen(await store.fetch(get("/api/events")));
+  await Bun.sleep(50);
+
+  const config = join(dir, "moth.config.yml");
+  writeFileSync(
+    config,
+    readFileSync(config, "utf8").replace(
+      "  - name: done",
+      "  - name: in-review\n    category: started\n  - name: done",
+    ),
+  );
+
+  await stream.until(1);
+  await stream.stop();
+  store.close();
+});
+
+test("a burst of writes becomes a handful of notices, not one per file", async () => {
+  const dir = await initedRepo();
+  const store = openStore(captureIo(dir));
+  const stream = listen(await store.fetch(get("/api/events")));
+  await Bun.sleep(50);
+
+  for (let n = 0; n < 30; n++) {
+    writeFileSync(join(dir, ".moth", `burst-${n}.md`), "---\ntitle: x\n---\n");
+  }
+  await stream.until(1);
+  await Bun.sleep(300);
+
+  expect(stream.events.length).toBeLessThanOrEqual(2);
+  await stream.stop();
+  store.close();
+});
+
+test("closing the store ends every open event stream", async () => {
+  const dir = await initedRepo();
+  const store = openStore(captureIo(dir));
+  const response = await store.fetch(get("/api/events"));
+  const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+  await reader.read();
+
+  store.close();
+
+  expect((await reader.read()).done).toBe(true);
+});

@@ -620,7 +620,11 @@ async function renderProblems() {
   );
 }
 
+/** Counts redraws, so a slow one cannot land on top of a newer one. */
+let drawn = 0;
+
 async function render() {
+  const generation = ++drawn;
   renderProblems();
   const current = route(location.pathname);
   for (const link of document.querySelectorAll("[data-route]")) {
@@ -635,11 +639,20 @@ async function render() {
   // box mid-word, is found again by id and given its caret back.
   const focused = document.activeElement?.id || null;
   const caret = document.activeElement?.selectionStart ?? null;
+  let nodes;
   try {
-    main.replaceChildren(await view(current));
+    nodes = await view(current);
   } catch (error) {
-    main.replaceChildren(h("p", { class: "error" }, error.message));
+    nodes = h("p", { class: "error" }, error.message);
   }
+  if (generation !== drawn) return;
+  // Where the reader was, page and columns both, so a redraw does not move them.
+  const scrollY = window.scrollY;
+  const scrollX = main.querySelector(".columns")?.scrollLeft ?? 0;
+  main.replaceChildren(nodes);
+  const columns = main.querySelector(".columns");
+  if (columns !== null) columns.scrollLeft = scrollX;
+  window.scrollTo(0, scrollY);
   const refocus = focused === null ? null : document.getElementById(focused);
   if (refocus !== null) {
     refocus.focus();
@@ -667,5 +680,30 @@ document.addEventListener("click", (event) => {
 });
 
 window.addEventListener("popstate", () => render());
+
+/**
+ * Redraws whenever the server says the store changed on disk, whoever changed
+ * it. The browser reconnects by itself when the server goes away; the first
+ * connection after that redraws too, to catch up on anything missed.
+ */
+function listen() {
+  const status = document.getElementById("live");
+  const events = new EventSource("/api/events");
+  let lost = false;
+  events.addEventListener("open", () => {
+    status.textContent = "live";
+    status.className = "live";
+    if (lost) render();
+    lost = false;
+  });
+  events.addEventListener("change", () => render());
+  events.addEventListener("error", () => {
+    lost = true;
+    status.textContent = "disconnected, reconnecting…";
+    status.className = "live is-lost";
+  });
+}
+
+listen();
 
 render();

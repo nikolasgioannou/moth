@@ -1,5 +1,7 @@
+import { type FSWatcher, watch } from "node:fs";
 import type { Io } from "../io.ts";
 import { FILTER_OPTIONS } from "../query.ts";
+import { CONFIG_FILENAME, openRepo } from "../repo.ts";
 import { run } from "../run.ts";
 import app from "./app.js" with { type: "text" };
 import style from "./style.css" with { type: "text" };
@@ -131,6 +133,7 @@ const PAGE = `<!doctype html>
         <a href="/list" data-route="list">List</a>
       </nav>
       <span class="readonly">read-only</span>
+      <span id="live" class="live">connecting…</span>
     </header>
     <div id="problems"></div>
     <main id="view" aria-live="polite"></main>
@@ -140,6 +143,109 @@ const PAGE = `<!doctype html>
 
 /** Paths the page itself handles, each answered with the same document. */
 const PAGES = [/^\/$/, /^\/list$/, /^\/tickets\/[^/]+$/];
+
+/** How long a burst of writes may go quiet before pages are told about it. */
+const SETTLE_MS = 75;
+/** The longest a steady stream of writes can hold back a notice. */
+const MAX_WAIT_MS = 500;
+/** Under Bun's idle timeout, so an open event stream is never cut off as idle. */
+const HEARTBEAT_MS = 5000;
+
+/**
+ * Tells every open page when the store changes on disk. A burst of writes,
+ * such as `moth check --fix` renaming many files, becomes one notice rather
+ * than one per file, and pages refetch what they show.
+ */
+class Changes {
+  private readonly pages = new Set<ReadableStreamDefaultController<Uint8Array>>();
+  private watchers: FSWatcher[] = [];
+  private heartbeat: ReturnType<typeof setInterval> | undefined;
+  private pending: ReturnType<typeof setTimeout> | undefined;
+  private since: number | undefined;
+  private readonly encoder = new TextEncoder();
+
+  constructor(private readonly cwd: string) {}
+
+  /** An event stream for one page, watching the store from the first one on. */
+  stream(signal: AbortSignal): Response {
+    this.start();
+    let page: ReadableStreamDefaultController<Uint8Array> | undefined;
+    const body = new ReadableStream<Uint8Array>({
+      start: (controller) => {
+        page = controller;
+        this.pages.add(controller);
+        // Reconnect a second after the server goes away, which is how a page
+        // finds a restarted server on its own.
+        controller.enqueue(this.encoder.encode("retry: 1000\n: connected\n\n"));
+      },
+      cancel: () => {
+        if (page !== undefined) this.pages.delete(page);
+      },
+    });
+    signal.addEventListener("abort", () => {
+      if (page !== undefined) this.pages.delete(page);
+    });
+    return new Response(body, {
+      headers: {
+        "content-type": "text/event-stream",
+        "cache-control": "no-store",
+        ...SECURITY_HEADERS,
+      },
+    });
+  }
+
+  private start(): void {
+    if (this.watchers.length > 0) return;
+    const opened = openRepo(this.cwd);
+    if (!opened.ok) return;
+    const { root, ticketsDir } = opened.repo;
+    this.watchers.push(watch(ticketsDir, () => this.changed()));
+    // The config decides the columns, so a status added to it is a change too.
+    // Its directory is watched rather than the file, because an editor that
+    // saves by replacing the file would leave a watch on the file orphaned.
+    this.watchers.push(
+      watch(root, (_event, name) => {
+        if (name === CONFIG_FILENAME) this.changed();
+      }),
+    );
+    this.heartbeat = setInterval(() => this.send(": ping\n\n"), HEARTBEAT_MS);
+  }
+
+  private changed(): void {
+    const now = Date.now();
+    this.since ??= now;
+    clearTimeout(this.pending);
+    const wait = now - this.since >= MAX_WAIT_MS ? 0 : SETTLE_MS;
+    this.pending = setTimeout(() => {
+      this.since = undefined;
+      this.send("event: change\ndata: {}\n\n");
+    }, wait);
+  }
+
+  private send(text: string): void {
+    const bytes = this.encoder.encode(text);
+    for (const page of this.pages) {
+      try {
+        page.enqueue(bytes);
+      } catch {
+        this.pages.delete(page);
+      }
+    }
+  }
+
+  close(): void {
+    for (const watcher of this.watchers) watcher.close();
+    this.watchers = [];
+    clearInterval(this.heartbeat);
+    clearTimeout(this.pending);
+    for (const page of this.pages) {
+      try {
+        page.close();
+      } catch {}
+    }
+    this.pages.clear();
+  }
+}
 
 export interface Store {
   /** Answers one request. A plain function, so tests call it without a socket. */
@@ -154,6 +260,7 @@ export interface Store {
  * same place would.
  */
 export function openStore(io: Io): Store {
+  const changes = new Changes(io.cwd);
   return {
     async fetch(request) {
       if (!addressedLocally(request)) {
@@ -192,6 +299,8 @@ export function openStore(io: Io): Store {
         return ran.code === 0 ? json(ran.out) : failure(ran, 500);
       }
 
+      if (path === "/api/events") return changes.stream(request.signal);
+
       if (path === "/api/check") {
         // check has no JSON form; its findings are one indented line each.
         const ran = await runCaptured(["check"], io);
@@ -204,6 +313,8 @@ export function openStore(io: Io): Store {
 
       return respond("not found\n", "text/plain", 404);
     },
-    close() {},
+    close() {
+      changes.close();
+    },
   };
 }
