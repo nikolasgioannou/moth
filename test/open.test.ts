@@ -1,5 +1,6 @@
 import { afterAll, expect, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { DEFAULT_PORT } from "../src/commands/open.ts";
 import { run } from "../src/run.ts";
 import { openStore } from "../src/web/server.ts";
@@ -213,4 +214,58 @@ test("outside a moth repo, moth open fails as moth list does", async () => {
   expect(await run(["open", "--no-open"], open)).toBe(1);
   expect(await run(["list"], list)).toBe(1);
   expect(open.err()).toBe(list.err());
+});
+
+test("the tickets a card marks as blocked are exactly those moth list does not call unblocked", async () => {
+  const dir = await initedRepo();
+  const chrome = await newTicket(dir, "Chrome on the VM");
+  const finished = await newTicket(dir, "Pick a VM image");
+  await run(["move", finished, "done"], captureIo(dir));
+  await newTicket(dir, "Domain locks", ["--blocked-by", chrome]);
+  await newTicket(dir, "Screenshots", ["--blocked-by", finished]);
+  await newTicket(dir, "Downloads", ["--blocked-by", chrome, "--blocked-by", finished]);
+  const store = openStore(captureIo(dir));
+
+  const ids = (tickets: { id: string }[]) => tickets.map((ticket) => ticket.id).sort();
+  const blocked = ids(
+    (await (await store.fetch(get("/api/tickets?blocked"))).json()) as { id: string }[],
+  );
+  const all = ids(JSON.parse(await cli(dir, "list", "--json")));
+  const unblocked = ids(JSON.parse(await cli(dir, "list", "--unblocked", "--json")));
+
+  expect(blocked).toHaveLength(2);
+  expect(blocked).toEqual(all.filter((id) => !unblocked.includes(id)));
+});
+
+test("columns follow the config's status order, and cards within one follow moth list", async () => {
+  const dir = await initedRepo();
+  const config = join(dir, "moth.config.yml");
+  writeFileSync(
+    config,
+    readFileSync(config, "utf8").replace(
+      "  - name: done",
+      "  - name: in-review\n    category: started\n  - name: done",
+    ),
+  );
+  const old = await newTicket(dir, "Old and low", ["--priority", "low"]);
+  const urgent = await newTicket(dir, "New and urgent", ["--priority", "urgent"]);
+  for (const id of [old, urgent]) await run(["move", id, "in-review"], captureIo(dir));
+  const store = openStore(captureIo(dir));
+
+  const schema = (await (await store.fetch(get("/api/schema"))).json()) as {
+    statuses: { name: string }[];
+  };
+  const names = schema.statuses.map((status) => status.name);
+  expect(names.indexOf("in-review")).toBe(names.indexOf("in-progress") + 1);
+
+  const tickets = (await (await store.fetch(get("/api/tickets"))).json()) as {
+    id: string;
+    status: string;
+  }[];
+  const column = tickets.filter((ticket) => ticket.status === "in-review").map((t) => t.id);
+  const listed = JSON.parse(await cli(dir, "list", "--status", "in-review", "--json")) as {
+    id: string;
+  }[];
+  expect(column).toEqual(listed.map((ticket) => ticket.id));
+  expect(column).toEqual([urgent, old]);
 });

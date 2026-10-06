@@ -159,3 +159,123 @@ main {
     padding-right: 16px;
   }
 }
+
+.columns {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+
+.column {
+  flex: 0 0 290px;
+  background: var(--sunk);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+
+.column.is-collapsed {
+  flex-basis: 170px;
+}
+
+.column-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 4px 10px;
+}
+
+.column-name {
+  font-weight: 600;
+}
+
+.column-count {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.column-category {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.column-toggle {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.column-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.card.is-blocked {
+  border-left: 3px solid var(--blocked);
+}
+
+.card-title a {
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.card-title a:hover {
+  text-decoration: underline;
+}
+
+.card-meta,
+.card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.card-labels {
+  gap: 4px;
+}
+
+.blocked {
+  color: var(--blocked);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: help;
+}
+
+.progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  display: inline-block;
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
