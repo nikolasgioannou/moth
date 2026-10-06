@@ -369,6 +369,198 @@ async function ticketView(current) {
   );
 }
 
+/** Filters that take several values, each shown as a group of checkboxes. */
+function choiceGroup(legend, name, options, chosen, hint) {
+  return h(
+    "fieldset",
+    { class: "choices" },
+    h("legend", {}, legend, hint ? h("span", { class: "hint" }, hint) : null),
+    options.length === 0 ? h("span", { class: "empty" }, "none yet") : null,
+    options.map((option) =>
+      h(
+        "label",
+        {},
+        h("input", {
+          type: "checkbox",
+          name,
+          value: option,
+          checked: chosen.includes(option),
+        }),
+        option,
+      ),
+    ),
+  );
+}
+
+/**
+ * The query string as the form writes it. Each checked box is its own
+ * parameter, as a repeated flag would be, so `?status=todo&status=done` is
+ * `moth list --status todo --status done`.
+ */
+function formQuery(form) {
+  const params = new URLSearchParams();
+  for (const [name, value] of new FormData(form)) {
+    if (name === "blocking") {
+      if (value !== "") params.append(value, "");
+      continue;
+    }
+    if (typeof value === "string" && value.trim() !== "") params.append(name, value.trim());
+  }
+  return params.toString().replace(/=(?=&|$)/g, "");
+}
+
+function listTable(store, tickets) {
+  if (tickets.length === 0) return h("p", { class: "empty" }, "No tickets match those filters.");
+  return h(
+    "table",
+    { class: "list" },
+    h(
+      "thead",
+      {},
+      h(
+        "tr",
+        {},
+        ["Id", "Title", "Status", "Priority", "Labels", "Parent", ""].map((name) =>
+          h("th", {}, name),
+        ),
+      ),
+    ),
+    h(
+      "tbody",
+      {},
+      tickets.map((ticket) => {
+        const parent = ticket.parent === undefined ? undefined : store.byId.get(ticket.parent);
+        return h(
+          "tr",
+          {},
+          h("td", { class: "id" }, ticket.id),
+          h("td", {}, ticketLink(ticket)),
+          h("td", {}, h("span", { class: "status-pill" }, ticket.status)),
+          h("td", {}, priorityBadge(ticket.priority)),
+          h("td", { class: "labels" }, labelList(ticket.labels)),
+          h(
+            "td",
+            { class: "parent" },
+            ticket.parent === undefined
+              ? null
+              : parent === undefined
+                ? ticket.parent
+                : ticketLink(parent),
+          ),
+          h("td", {}, blockedMarker(store, ticket)),
+        );
+      }),
+    ),
+  );
+}
+
+async function listView() {
+  const params = new URLSearchParams(location.search);
+  const store = await loadStore();
+  const results = h("div", { class: "results" });
+
+  const fill = async (query) => {
+    try {
+      const tickets = await api(`/api/tickets${query === "" ? "" : `?${query}`}`);
+      results.replaceChildren(
+        h("p", { class: "count" }, `${tickets.length} of ${store.tickets.length} tickets`),
+        listTable(store, tickets),
+      );
+    } catch (error) {
+      results.replaceChildren(h("p", { class: "error" }, error.message));
+    }
+  };
+
+  const labels = [...new Set(store.tickets.flatMap((ticket) => ticket.labels))].sort();
+  const parents = store.tickets.filter((ticket) => store.childrenOf(ticket).length > 0);
+  const chosenParent = params.get("parent") ?? "";
+  const blocking = params.has("blocked") ? "blocked" : params.has("unblocked") ? "unblocked" : "";
+
+  const form = h(
+    "form",
+    { class: "filters", role: "search" },
+    h(
+      "label",
+      { class: "search" },
+      h("span", {}, "Search"),
+      h("input", {
+        id: "filter-search",
+        type: "search",
+        name: "search",
+        value: params.get("search") ?? "",
+        placeholder: "Title or body",
+      }),
+    ),
+    choiceGroup(
+      "Status",
+      "status",
+      store.schema.statuses.map((entry) => entry.name),
+      params.getAll("status"),
+    ),
+    choiceGroup("Category", "category", store.schema.categories, params.getAll("category")),
+    choiceGroup(
+      "Priority",
+      "priority",
+      [...store.schema.priorities].reverse(),
+      params.getAll("priority"),
+    ),
+    choiceGroup("Labels", "label", labels, params.getAll("label"), "has all of"),
+    h(
+      "label",
+      { class: "select" },
+      h("span", {}, "Parent"),
+      h(
+        "select",
+        { name: "parent" },
+        h("option", { value: "", selected: chosenParent === "" }, "any"),
+        h("option", { value: "none", selected: chosenParent === "none" }, "none (top level)"),
+        parents.map((parent) =>
+          h(
+            "option",
+            { value: parent.id, selected: chosenParent === parent.id },
+            `${parent.id} ${parent.title}`,
+          ),
+        ),
+      ),
+    ),
+    h(
+      "fieldset",
+      { class: "choices" },
+      h("legend", {}, "Blocked"),
+      [
+        ["", "any"],
+        ["blocked", "blocked"],
+        ["unblocked", "unblocked"],
+      ].map(([value, text]) =>
+        h(
+          "label",
+          {},
+          h("input", { type: "radio", name: "blocking", value, checked: blocking === value }),
+          text,
+        ),
+      ),
+    ),
+    h("a", { class: "clear", href: "/list" }, "Clear filters"),
+  );
+
+  let typing;
+  const update = () => {
+    const query = formQuery(form);
+    history.replaceState(null, "", query === "" ? "/list" : `/list?${query}`);
+    fill(query);
+  };
+  form.addEventListener("change", update);
+  form.addEventListener("submit", (event) => event.preventDefault());
+  form.addEventListener("input", (event) => {
+    if (event.target.name !== "search") return;
+    clearTimeout(typing);
+    typing = setTimeout(update, 200);
+  });
+
+  await fill(location.search.slice(1));
+  return h("div", { class: "list-view" }, form, results);
+}
+
 /** The views, by route name. Each returns the nodes to show. */
 const VIEWS = {
   async columns() {
@@ -383,6 +575,7 @@ const VIEWS = {
     );
   },
   ticket: ticketView,
+  list: listView,
 };
 
 /** The routes this page draws; the server answers each with the same document. */
@@ -405,10 +598,19 @@ async function render() {
   document.title = "moth";
   const view = VIEWS[current.name] ?? VIEWS.columns;
   const main = document.getElementById("view");
+  // A redraw replaces every element, so whatever had focus, such as the search
+  // box mid-word, is found again by id and given its caret back.
+  const focused = document.activeElement?.id || null;
+  const caret = document.activeElement?.selectionStart ?? null;
   try {
     main.replaceChildren(await view(current));
   } catch (error) {
     main.replaceChildren(h("p", { class: "error" }, error.message));
+  }
+  const refocus = focused === null ? null : document.getElementById(focused);
+  if (refocus !== null) {
+    refocus.focus();
+    if (caret !== null) refocus.setSelectionRange?.(caret, caret);
   }
 }
 

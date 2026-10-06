@@ -320,3 +320,66 @@ test("a ticket's URL is its id, so it survives a rename", async () => {
   );
   expect((await store.fetch(get(`/tickets/${id}`))).status).toBe(200);
 });
+
+test("every list filter in the query string answers what moth list does with that flag", async () => {
+  const dir = await initedRepo();
+  const milestone = await newTicket(dir, "Browser milestone", ["--priority", "high"]);
+  const chrome = await newTicket(dir, "Chrome on the VM", [
+    "--parent",
+    milestone,
+    "--label",
+    "vm",
+    "--label",
+    "browser",
+  ]);
+  await newTicket(dir, "Domain locks", ["--parent", milestone, "--label", "browser"]);
+  await newTicket(dir, "Screenshots", ["--blocked-by", chrome, "--priority", "low"]);
+  await newTicket(dir, "Downloads", ["--body", "Saved to the VM's disk."]);
+  await run(["move", chrome, "in-progress"], captureIo(dir));
+  const store = openStore(captureIo(dir));
+
+  const cases: [string, string[]][] = [
+    ["status=backlog", ["--status", "backlog"]],
+    ["status=backlog&status=in-progress", ["--status", "backlog", "--status", "in-progress"]],
+    ["status=backlog,in-progress", ["--status", "backlog,in-progress"]],
+    ["category=started", ["--category", "started"]],
+    ["priority=high&priority=low", ["--priority", "high", "--priority", "low"]],
+    ["label=browser", ["--label", "browser"]],
+    ["label=browser&label=vm", ["--label", "browser", "--label", "vm"]],
+    [`parent=${milestone}`, ["--parent", milestone]],
+    ["parent=none", ["--parent", "none"]],
+    ["parent=browser%20milestone", ["--parent", "browser milestone"]],
+    ["search=disk", ["--search", "disk"]],
+    ["blocked", ["--blocked"]],
+    ["unblocked", ["--unblocked"]],
+    [
+      "unblocked&label=browser&status=backlog",
+      ["--unblocked", "--label", "browser", "--status", "backlog"],
+    ],
+  ];
+  for (const [query, flags] of cases) {
+    const response = await store.fetch(get(`/api/tickets?${query}`));
+    expect({ query, body: await response.text() }).toEqual({
+      query,
+      body: await cli(dir, "list", "--json", ...flags),
+    });
+  }
+});
+
+test("a filter moth list refuses is refused with its message, and unknown parameters are ignored", async () => {
+  const dir = await initedRepo();
+  await newTicket(dir, "Chrome on the VM");
+  const store = openStore(captureIo(dir));
+
+  const missing = await store.fetch(get("/api/tickets?parent=nothing-called-this"));
+  expect(missing.status).toBe(422);
+  expect(((await missing.json()) as { error: string }).error).toBe(
+    "no parent matches 'nothing-called-this'",
+  );
+
+  const twice = await store.fetch(get("/api/tickets?search=a&search=b"));
+  expect(twice.status).toBe(400);
+
+  const ignored = await store.fetch(get("/api/tickets?json&fix&body=x"));
+  expect(await ignored.text()).toBe(await cli(dir, "list", "--json"));
+});
