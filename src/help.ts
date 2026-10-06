@@ -79,6 +79,17 @@ export const HELP: Record<string, CommandHelp> = {
   $ moth board --category started`,
     notes: "Writes nothing itself; redirect it if you want the board committed.",
   },
+  open: {
+    summary: "Open a live, read-only view of the tickets in a browser",
+    usage: "moth open [--port <n>] [--no-open]",
+    example: `  $ moth open
+  http://127.0.0.1:6684
+  moth: serving tickets read-only; press Ctrl-C to stop
+
+  $ moth open --port 8080 --no-open`,
+    notes:
+      "For people, not agents: an agent gets everything here from list and show. The page never changes a ticket; it shows the moth command for each change instead. Serves this machine only, on 127.0.0.1. Uses port 6684, or any free port if that is taken; --port insists on one, and --port 0 takes any. Opens a browser when run at a terminal, unless --no-open. Runs until interrupted.",
+  },
   stats: {
     summary: "Count tickets by status",
     usage: "moth stats [same filters as list] [--json]",

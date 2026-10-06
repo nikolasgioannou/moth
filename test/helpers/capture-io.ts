@@ -5,6 +5,8 @@ export interface CapturedIo extends Io {
   out(): string;
   err(): string;
   asked(): { question: string; defaultValue: string }[];
+  /** Every URL a command asked to open in a browser. */
+  opened(): string[];
 }
 
 export interface CaptureOptions {
@@ -24,6 +26,11 @@ export interface CaptureOptions {
   installedAt?: string | null;
   /** The newest published version. Defaults to unreachable, as when offline. */
   latestVersion?: () => Promise<string | null>;
+  /**
+   * Settles to end a long-running command. Defaults to never, so a test that
+   * starts one must say when it stops.
+   */
+  untilInterrupted?: () => Promise<void>;
 }
 
 export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo {
@@ -31,6 +38,7 @@ export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo
   let err = "";
   const asked: { question: string; defaultValue: string }[] = [];
   let next = 0;
+  const opened: string[] = [];
 
   return {
     cwd,
@@ -59,10 +67,15 @@ export function captureIo(cwd: string, options: CaptureOptions = {}): CapturedIo
     },
     now: options.now ?? (() => new Date()),
     randomHex: options.randomHex ?? ((bytes) => randomBytes(bytes).toString("hex")),
+    openUrl: (url) => {
+      opened.push(url);
+    },
+    untilInterrupted: options.untilInterrupted ?? (() => new Promise<void>(() => {})),
     home: options.home ?? cwd,
     isTty: options.isTty ?? false,
     out: () => out,
     err: () => err,
     asked: () => asked,
+    opened: () => opened,
   };
 }

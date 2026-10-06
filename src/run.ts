@@ -6,6 +6,7 @@ import { init } from "./commands/init.ts";
 import { list } from "./commands/list.ts";
 import { move } from "./commands/move.ts";
 import { create } from "./commands/new.ts";
+import { open } from "./commands/open.ts";
 import { remove } from "./commands/remove.ts";
 import { schema } from "./commands/schema.ts";
 import { show } from "./commands/show.ts";
@@ -29,6 +30,7 @@ const COMMANDS: Record<string, Command> = {
   list,
   move,
   delete: remove,
+  open,
   schema,
   show,
   skill,

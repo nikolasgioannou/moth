@@ -19,4 +19,8 @@ export interface Io {
   installedAt: string | null;
   /** The newest published version, or null when it cannot be reached. */
   latestVersion(): Promise<string | null>;
+  /** Opens a URL in the user's browser. Only `moth open` calls it, and only at a terminal. */
+  openUrl(url: string): void;
+  /** Settles when the user interrupts a long-running command, as with Ctrl-C. */
+  untilInterrupted(): Promise<void>;
 }

@@ -1,0 +1,161 @@
+:root {
+  --bg: #fbfaf8;
+  --panel: #ffffff;
+  --sunk: #f2f0ec;
+  --text: #1d1c1a;
+  --muted: #6b6862;
+  --faint: #9a968f;
+  --line: #e4e1db;
+  --accent: #6d4fc2;
+  --blocked: #b4441c;
+  --ok: #2f7d4f;
+  --urgent: #c2341c;
+  --high: #c76a12;
+  --medium: #8a7a12;
+  --low: #4d7aa8;
+  --radius: 8px;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161514;
+    --panel: #1f1e1c;
+    --sunk: #121110;
+    --text: #ecebe8;
+    --muted: #a19d96;
+    --faint: #75716b;
+    --line: #2f2d2a;
+    --accent: #a993f0;
+    --blocked: #f08a5d;
+    --ok: #6cc28f;
+    --urgent: #f2765d;
+    --high: #f0a04b;
+    --medium: #d8c35a;
+    --low: #86b3e0;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    15px / 1.5 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+code,
+.id {
+  font-family: var(--mono);
+  font-size: 0.86em;
+}
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.top nav {
+  display: flex;
+  gap: 4px;
+}
+
+.top nav a {
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.top nav a[aria-current="page"] {
+  background: var(--sunk);
+  color: var(--text);
+}
+
+.readonly {
+  margin-left: auto;
+  color: var(--faint);
+  font-size: 13px;
+}
+
+main {
+  padding: 24px;
+}
+
+.empty,
+.error {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--blocked);
+}
+
+.priority {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.priority-urgent {
+  color: var(--urgent);
+}
+
+.priority-high {
+  color: var(--high);
+}
+
+.priority-medium {
+  color: var(--medium);
+}
+
+.priority-low {
+  color: var(--low);
+}
+
+.priority-none {
+  color: var(--faint);
+}
+
+.label {
+  display: inline-block;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .top,
+  main {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

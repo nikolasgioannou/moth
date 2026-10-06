@@ -1,13 +1,13 @@
 ---
 id: "f0fc70"
 title: moth open serves the store and opens a browser
-status: todo
+status: done
 priority: high
 labels:
   - web
 parent: "095fa5"
 created_at: 2026-10-06T20:57:54.343Z
-updated_at: 2026-10-06T20:57:54.732Z
+updated_at: 2026-10-06T21:10:00.314Z
 ---
 
 The foundation the views are built on: the command, the server, and the seam its tests use.
@@ -24,7 +24,20 @@ The foundation the views are built on: the command, the server, and the seam its
 
 **Done when**
 
-- [ ] `moth open --no-open` in a moth repo serves a page at the printed URL, and the server refuses connections on any address but `127.0.0.1`
-- [ ] Each JSON endpoint's body is byte-identical to its CLI `--json` counterpart, asserted by a test
-- [ ] Outside a moth repo it exits `1` with the same error as `moth list`
-- [ ] A smoke test starts the compiled binary, fetches `/`, and stops it
+- [x] `moth open --no-open` in a moth repo serves a page at the printed URL, and the server refuses connections on any address but `127.0.0.1`
+- [x] Each JSON endpoint's body is byte-identical to its CLI `--json` counterpart, asserted by a test
+- [x] Outside a moth repo it exits `1` with the same error as `moth list`
+- [x] A smoke test starts the compiled binary, fetches `/`, and stops it
+
+## As built
+
+The server answers by running the CLI in-process through `run(argv, io)` with output captured, so the JSON endpoints are the CLI's own output rather than a reimplementation: `/api/tickets` is `moth list --json` (query parameters become `moth list`'s filter flags, and nothing else), `/api/tickets/<id>` is `moth show --json`, and `/api/schema` is `moth schema --json`. `/api/check` returns `moth check`'s findings as `{ "problems": [...] }`, since check has no JSON form.
+
+Beyond the plan:
+
+- Requests whose `Host` is not `127.0.0.1` or `localhost` are refused, so a page that rebinds its own domain to 127.0.0.1 cannot read the store.
+- Every response carries a content security policy with no inline script, so a ticket body rendered as HTML can never run code.
+- Anything but GET and HEAD is a 405.
+- `Io` gained `openUrl` and `untilInterrupted`, so tests drive the whole command, browser and Ctrl-C included.
+
+The default port is 6684, "MOTH" on a phone keypad. The page shell is inlined in `src/web/server.ts`, because Bun types `*.html` imports as HTML bundles; the stylesheet and `app.js` are imported as text.

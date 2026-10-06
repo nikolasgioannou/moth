@@ -34,6 +34,23 @@ const code = await run(process.argv.slice(2), {
       return null;
     }
   },
+  openUrl: (url) => {
+    const command =
+      process.platform === "darwin"
+        ? ["open", url]
+        : process.platform === "win32"
+          ? ["cmd", "/c", "start", "", url]
+          : ["xdg-open", url];
+    // Best effort: with no browser to open, the printed URL is still there to click.
+    try {
+      Bun.spawn(command, { stdout: "ignore", stderr: "ignore" }).unref();
+    } catch {}
+  },
+  untilInterrupted: () =>
+    new Promise((resolve) => {
+      process.once("SIGINT", () => resolve());
+      process.once("SIGTERM", () => resolve());
+    }),
 });
 
 process.exit(code);
