@@ -7,7 +7,7 @@ import {
   blockingView,
   duplicateIds,
   metadataOf,
-  readTickets,
+  readStore,
   validate,
 } from "../ticket.ts";
 
@@ -16,11 +16,14 @@ export async function list(argv: string[], io: Io): Promise<number> {
   if (!opened.ok) return opened.code;
   const { config, ticketsDir, values } = opened;
 
-  const all = readTickets(ticketsDir);
+  const { tickets: all, unreadable } = readStore(ticketsDir);
 
   const tickets = filterOrReport(all, values, config, io);
   if (tickets === null) return 1;
 
+  for (const { file, reason } of unreadable) {
+    io.stderr(`moth: ${file} cannot be read as a ticket (${reason}), so it is not listed\n`);
+  }
   for (const problem of validate(
     all,
     legalFields(config),

@@ -185,3 +185,24 @@ test("check reports a parent that does not exist, as it does a blocker", async (
   expect(io.err()).toContain("nowhere");
   expect(io.err()).toContain("does not exist");
 });
+
+test("a ticket file that cannot be parsed is reported, not fatal to every other command", async () => {
+  const dir = await initedRepo();
+  const fine = await newTicket(dir, "Chrome on the VM");
+  writeFileSync(join(dir, ".moth", "notes-abc123.md"), "Just some notes, no frontmatter.\n");
+  writeFileSync(join(dir, ".moth", "typo-def456.md"), "---\ntitle: [unclosed\n---\n\nBody.\n");
+
+  const check = captureIo(dir);
+  expect(await run(["check"], check)).toBe(1);
+  expect(check.err()).toContain("notes-abc123.md cannot be read as a ticket (no frontmatter)");
+  expect(check.err()).toContain("typo-def456.md cannot be read as a ticket");
+  expect(check.err()).toContain("fix its frontmatter by hand");
+
+  const list = captureIo(dir);
+  expect(await run(["list"], list)).toBe(0);
+  expect(list.out()).toContain("Chrome on the VM");
+  expect(list.err()).toContain("notes-abc123.md cannot be read as a ticket");
+
+  expect(await run(["show", fine], captureIo(dir))).toBe(0);
+  expect(await run(["move", fine, "done"], captureIo(dir))).toBe(0);
+});

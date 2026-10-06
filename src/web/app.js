@@ -588,7 +588,40 @@ function route(pathname) {
   return { name: "columns" };
 }
 
+/**
+ * What `moth check` would report, above every view. Each finding is check's own
+ * sentence, which names the command that repairs it.
+ */
+async function renderProblems() {
+  const banner = document.getElementById("problems");
+  let problems;
+  try {
+    ({ problems } = await api("/api/check"));
+  } catch {
+    return;
+  }
+  if (problems.length === 0) {
+    banner.replaceChildren();
+    return;
+  }
+  const wasOpen = banner.querySelector("details")?.open ?? false;
+  const count = `${problems.length} problem${problems.length === 1 ? "" : "s"}`;
+  banner.replaceChildren(
+    h(
+      "details",
+      { class: "problems", open: wasOpen },
+      h("summary", {}, `moth check found ${count} with the tickets on disk`),
+      h(
+        "ul",
+        {},
+        problems.map((problem) => h("li", {}, problem)),
+      ),
+    ),
+  );
+}
+
 async function render() {
+  renderProblems();
   const current = route(location.pathname);
   for (const link of document.querySelectorAll("[data-route]")) {
     const here = link.dataset.route === current.name;

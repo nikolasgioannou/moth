@@ -23,9 +23,13 @@ function parse(raw: string, path: string): Ticket {
   const frontmatter = match?.[1];
   const body = match?.[2];
   if (frontmatter === undefined || body === undefined) {
-    throw new Error("ticket has no frontmatter");
+    throw new Error("no frontmatter");
   }
-  const data = Bun.YAML.parse(frontmatter) as Omit<Ticket, "body" | "path">;
+  const parsed: unknown = Bun.YAML.parse(frontmatter);
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("frontmatter is not a set of fields");
+  }
+  const data = parsed as Omit<Ticket, "body" | "path">;
   return { ...data, labels: data.labels ?? [], path, body: body.replace(/^\n/, "") };
 }
 
@@ -63,14 +67,38 @@ export function allocateId(
   return null;
 }
 
+/** A ticket file moth could not parse, and why. */
+export interface Unreadable {
+  file: string;
+  reason: string;
+}
+
+/**
+ * Every ticket on disk, and every file that could not be read as one. A file
+ * with broken frontmatter is set aside rather than thrown, so one bad edit by
+ * hand cannot stop every command from listing the other tickets.
+ */
+export function readStore(ticketsDir: string): { tickets: Ticket[]; unreadable: Unreadable[] } {
+  const tickets: Ticket[] = [];
+  const unreadable: Unreadable[] = [];
+  for (const name of readdirSync(ticketsDir).filter((entry) => entry.endsWith(".md"))) {
+    const path = join(ticketsDir, name);
+    try {
+      tickets.push(parse(readFileSync(path, "utf8"), path));
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      unreadable.push({ file: name, reason: reason.split("\n")[0] ?? reason });
+    }
+  }
+  return {
+    tickets: tickets.sort(byPriorityThenAge),
+    unreadable: unreadable.sort((a, b) => a.file.localeCompare(b.file)),
+  };
+}
+
+/** The tickets that could be read. Commands that only report problems use readStore. */
 export function readTickets(ticketsDir: string): Ticket[] {
-  return readdirSync(ticketsDir)
-    .filter((name) => name.endsWith(".md"))
-    .map((name) => {
-      const path = join(ticketsDir, name);
-      return parse(readFileSync(path, "utf8"), path);
-    })
-    .sort(byPriorityThenAge);
+  return readStore(ticketsDir).tickets;
 }
 
 /**

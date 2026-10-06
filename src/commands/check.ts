@@ -10,14 +10,20 @@ import {
   duplicateIds,
   filenameFor,
   parentCycle,
+  readStore,
   readTickets,
   saveTicket,
   type Ticket,
+  type Unreadable,
   validate,
 } from "../ticket.ts";
 
-function findings(tickets: Ticket[], config: Config): string[] {
+function findings(tickets: Ticket[], unreadable: Unreadable[], config: Config): string[] {
   const found: string[] = [];
+  for (const { file, reason } of unreadable) {
+    // Nothing in moth can repair a file it cannot read; the fix is by hand.
+    found.push(`${file} cannot be read as a ticket (${reason}); fix its frontmatter by hand`);
+  }
   const categoryOf = categoryLookup(config);
 
   for (const ticket of tickets) {
@@ -107,7 +113,8 @@ export async function check(argv: string[], io: Io): Promise<number> {
     }
   }
 
-  const remaining = findings(readTickets(ticketsDir), config);
+  const store = readStore(ticketsDir);
+  const remaining = findings(store.tickets, store.unreadable, config);
   if (remaining.length === 0) {
     io.stdout("moth: no problems found\n");
     return 0;

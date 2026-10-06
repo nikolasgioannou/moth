@@ -132,6 +132,7 @@ const PAGE = `<!doctype html>
       </nav>
       <span class="readonly">read-only</span>
     </header>
+    <div id="problems"></div>
     <main id="view" aria-live="polite"></main>
   </body>
 </html>

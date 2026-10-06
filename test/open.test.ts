@@ -383,3 +383,31 @@ test("a filter moth list refuses is refused with its message, and unknown parame
   const ignored = await store.fetch(get("/api/tickets?json&fix&body=x"));
   expect(await ignored.text()).toBe(await cli(dir, "list", "--json"));
 });
+
+test("the page reports what moth check finds, and a broken file stops nothing else", async () => {
+  const dir = await initedRepo();
+  const blocked = await newTicket(dir, "Domain locks");
+  const path = ticketPath(dir, blocked);
+  writeFileSync(
+    path,
+    readFileSync(path, "utf8").replace("labels:", 'blocked_by:\n  - "ffffff"\nlabels:'),
+  );
+  writeFileSync(join(dir, ".moth", "notes-abc123.md"), "No frontmatter here.\n");
+  const store = openStore(captureIo(dir));
+
+  const io = captureIo(dir);
+  await run(["check"], io);
+  const { problems } = (await (await store.fetch(get("/api/check"))).json()) as {
+    problems: string[];
+  };
+
+  expect(problems).toHaveLength(2);
+  expect(io.err()).toContain(problems[0] as string);
+  expect(io.err()).toContain(problems[1] as string);
+  expect(problems.some((problem) => problem.includes(`blocked by ffffff`))).toBe(true);
+  expect(problems.some((problem) => problem.includes("notes-abc123.md cannot be read"))).toBe(true);
+
+  const tickets = (await (await store.fetch(get("/api/tickets"))).json()) as { id: string }[];
+  expect(tickets.map((ticket) => ticket.id)).toEqual([blocked]);
+  expect((await store.fetch(get(`/api/tickets/${blocked}`))).status).toBe(200);
+});
