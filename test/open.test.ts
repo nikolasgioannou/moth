@@ -269,3 +269,54 @@ test("columns follow the config's status order, and cards within one follow moth
   expect(column).toEqual(listed.map((ticket) => ticket.id));
   expect(column).toEqual([urgent, old]);
 });
+
+test("a body renders as HTML, with markdown intact and nothing able to run", async () => {
+  const dir = await initedRepo();
+  const body = [
+    "Intro with `code` and <b>raw html</b>.",
+    "",
+    "<script>alert(1)</script>",
+    "",
+    "| host | allowed |",
+    "| --- | --- |",
+    "| example.com | yes |",
+    "",
+    "```ts",
+    "if (a < b) run();",
+    "```",
+    "",
+    "- [x] done",
+    "- [ ] not yet",
+    "",
+    "[a link](javascript:alert(1)) and [a real one](https://example.com)",
+  ].join("\n");
+  const id = await newTicket(dir, "Domain locks", ["--body-file", "-"], { stdin: body });
+  const store = openStore(captureIo(dir));
+
+  const response = await store.fetch(get(`/api/tickets/${id}/body`));
+  const html = await response.text();
+
+  expect(response.headers.get("content-type")).toContain("text/html");
+  expect(html).toContain("<table>");
+  expect(html).toContain('<code class="language-ts">if (a &lt; b) run();');
+  expect(html).toContain('type="checkbox" class="task-list-item-checkbox" disabled checked');
+  expect(html).toContain("&lt;b&gt;raw html&lt;/b&gt;");
+  expect(html).not.toContain("<script");
+  expect(html).not.toContain("javascript:");
+  expect(html).toContain('href="https://example.com"');
+});
+
+test("a ticket's URL is its id, so it survives a rename", async () => {
+  const dir = await initedRepo();
+  const id = await newTicket(dir, "Domain locks");
+  const store = openStore(captureIo(dir));
+
+  await run(["edit", id, "--title", "Lock browsing to listed domains"], captureIo(dir));
+
+  const response = await store.fetch(get(`/api/tickets/${id}`));
+  expect(response.status).toBe(200);
+  expect(((await response.json()) as { title: string }).title).toBe(
+    "Lock browsing to listed domains",
+  );
+  expect((await store.fetch(get(`/tickets/${id}`))).status).toBe(200);
+});

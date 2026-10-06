@@ -102,6 +102,17 @@ function failure(ran: Ran, notFound = 404): Response {
   return json(`${JSON.stringify({ error: message }, null, 2)}\n`, status);
 }
 
+/**
+ * A ticket body as HTML. Raw HTML in the markdown is shown as text rather than
+ * passed through, and a `javascript:` link loses its target; the content
+ * security policy would stop both anyway, and this way nothing even tries.
+ */
+export function renderBody(markdown: string): string {
+  return Bun.markdown
+    .html(markdown, { noHtmlBlocks: true, noHtmlSpans: true, autolinks: true })
+    .replace(/href="\s*(?:javascript|vbscript|data):[^"]*"/gi, 'href="#"');
+}
+
 /** The one document every page route answers with; app.js draws the rest. */
 const PAGE = `<!doctype html>
 <html lang="en">
@@ -165,11 +176,14 @@ export function openStore(io: Io): Store {
         return ran.code === 0 ? json(ran.out) : failure(ran, 422);
       }
 
-      const ticket = /^\/api\/tickets\/([^/]+)$/.exec(path);
+      const ticket = /^\/api\/tickets\/([^/]+)(\/body)?$/.exec(path);
       if (ticket !== null) {
         const id = decodeURIComponent(ticket[1] ?? "");
         const ran = await runCaptured(["show", id, "--json"], io);
-        return ran.code === 0 ? json(ran.out) : failure(ran);
+        if (ran.code !== 0) return failure(ran);
+        if (ticket[2] === undefined) return json(ran.out);
+        const { body } = JSON.parse(ran.out) as { body: string };
+        return respond(renderBody(body), "text/html; charset=utf-8");
       }
 
       if (path === "/api/schema") {

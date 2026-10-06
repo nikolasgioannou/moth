@@ -163,6 +163,212 @@ function column(store, status) {
   );
 }
 
+/** A ticket as a small inline reference: status, id and title, linked. */
+function ticketRef(store, id) {
+  const ticket = store.byId.get(id);
+  if (ticket === undefined) {
+    return h(
+      "span",
+      { class: "ref is-missing" },
+      h("span", { class: "id" }, id),
+      " not in this store",
+    );
+  }
+  return h(
+    "span",
+    { class: store.finished(ticket) ? "ref is-finished" : "ref" },
+    h("span", { class: "status-pill" }, ticket.status),
+    h("span", { class: "id" }, ticket.id),
+    ticketLink(ticket),
+  );
+}
+
+/** Sub-tickets to any depth. `seen` stops a hand-made cycle from recursing forever. */
+function subTree(store, ticket, seen = new Set([ticket.id])) {
+  const children = store.childrenOf(ticket).filter((child) => !seen.has(child.id));
+  if (children.length === 0) return null;
+  return h(
+    "ul",
+    { class: "tree" },
+    children.map((child) => {
+      seen.add(child.id);
+      return h("li", {}, ticketRef(store, child.id), subTree(store, child, seen));
+    }),
+  );
+}
+
+/** Outermost ancestor first. A parent that is missing still shows, as its id. */
+function ancestry(store, ticket) {
+  const chain = [];
+  const seen = new Set([ticket.id]);
+  let parent = ticket.parent;
+  while (parent !== undefined && !seen.has(parent)) {
+    seen.add(parent);
+    chain.unshift(parent);
+    parent = store.byId.get(parent)?.parent;
+  }
+  return chain;
+}
+
+/** A command the reader can copy, since the page itself changes nothing. */
+function command(text) {
+  const code = h("code", {}, text);
+  const button = h("button", { type: "button", class: "copy" }, "copy");
+  button.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(code.textContent);
+      button.textContent = "copied";
+    } catch {
+      button.textContent = "select it instead";
+    }
+    setTimeout(() => {
+      button.textContent = "copy";
+    }, 1500);
+  });
+  return h("div", { class: "command" }, code, button);
+}
+
+function moveCommand(store, ticket) {
+  const others = store.schema.statuses.filter((entry) => entry.name !== ticket.status);
+  if (others.length === 0) return null;
+  const line = command(`moth move ${ticket.id} ${others[0].name}`);
+  const select = h(
+    "select",
+    { "aria-label": "Status to move to" },
+    others.map((entry) => h("option", { value: entry.name }, entry.name)),
+  );
+  select.addEventListener("change", () => {
+    line.querySelector("code").textContent = `moth move ${ticket.id} ${select.value}`;
+  });
+  return h("div", { class: "move" }, line, select);
+}
+
+/** Fields the header and sections already show, so the table lists the rest. */
+const SHOWN_ELSEWHERE = [
+  "id",
+  "title",
+  "status",
+  "priority",
+  "labels",
+  "parent",
+  "blocked_by",
+  "body",
+];
+
+function fieldTable(shown) {
+  const rows = Object.entries(shown)
+    .filter(([name]) => !SHOWN_ELSEWHERE.includes(name))
+    .map(([name, value]) =>
+      h(
+        "tr",
+        {},
+        h("th", {}, name),
+        h("td", {}, Array.isArray(value) ? value.join(", ") : String(value)),
+      ),
+    );
+  return h("table", { class: "fields" }, h("tbody", {}, rows));
+}
+
+async function ticketView(current) {
+  const [store, shown] = await Promise.all([
+    loadStore(),
+    api(`/api/tickets/${encodeURIComponent(current.id)}`),
+  ]);
+  const ticket = store.byId.get(shown.id) ?? shown;
+  const response = await fetch(`/api/tickets/${encodeURIComponent(shown.id)}/body`);
+  const body = h("div", { class: "body" });
+  // The one place markup is trusted: the server renders it with raw HTML
+  // disabled, and the content security policy forbids any script within it.
+  body.innerHTML = await response.text();
+
+  const blockedBy = shown.blocked_by ?? [];
+  const blocking = store.tickets.filter((other) => (other.blocked_by ?? []).includes(shown.id));
+  const category = store.categoryOf(shown.status);
+  const crumbs = ancestry(store, shown);
+  const tree = subTree(store, ticket);
+
+  document.title = `${shown.title} · moth`;
+  return h(
+    "article",
+    { class: "ticket" },
+    crumbs.length > 0
+      ? h(
+          "nav",
+          { class: "crumbs", "aria-label": "Parents" },
+          crumbs.map((id) => {
+            const parent = store.byId.get(id);
+            return h(
+              "span",
+              {},
+              parent === undefined ? h("span", { class: "id" }, id) : ticketLink(parent),
+              h("span", { class: "sep" }, "›"),
+            );
+          }),
+        )
+      : null,
+    h("h1", {}, shown.title),
+    h(
+      "div",
+      { class: "ticket-meta" },
+      h("span", { class: "id" }, shown.id),
+      h("span", { class: "status-pill" }, shown.status),
+      h("span", { class: "muted" }, category ?? "not in config"),
+      priorityBadge(shown.priority),
+      store.blocked.has(shown.id) ? h("span", { class: "blocked" }, "blocked") : null,
+      labelList(shown.labels),
+    ),
+    h(
+      "div",
+      { class: "ticket-grid" },
+      h(
+        "div",
+        { class: "ticket-main" },
+        shown.body.trim() === "" ? h("p", { class: "empty" }, "No description.") : body,
+        tree === null
+          ? null
+          : h("section", {}, h("h2", {}, "Sub-tickets ", progress(store, ticket)), tree),
+      ),
+      h(
+        "aside",
+        { class: "ticket-side" },
+        h(
+          "section",
+          {},
+          h("h2", {}, "Blocked by"),
+          blockedBy.length === 0
+            ? h("p", { class: "empty" }, "Nothing")
+            : h(
+                "ul",
+                { class: "refs" },
+                blockedBy.map((id) => h("li", {}, ticketRef(store, id))),
+              ),
+        ),
+        h(
+          "section",
+          {},
+          h("h2", {}, "Blocks"),
+          blocking.length === 0
+            ? h("p", { class: "empty" }, "Nothing")
+            : h(
+                "ul",
+                { class: "refs" },
+                blocking.map((other) => h("li", {}, ticketRef(store, other.id))),
+              ),
+        ),
+        h("section", {}, h("h2", {}, "Fields"), fieldTable(shown)),
+        h(
+          "section",
+          {},
+          h("h2", {}, "Commands"),
+          moveCommand(store, shown),
+          command(`moth show ${shown.id}`),
+          command(`moth edit ${shown.id} --body-file -`),
+        ),
+      ),
+    ),
+  );
+}
+
 /** The views, by route name. Each returns the nodes to show. */
 const VIEWS = {
   async columns() {
@@ -176,7 +382,11 @@ const VIEWS = {
       statusOrder(store).map((status) => column(store, status)),
     );
   },
+  ticket: ticketView,
 };
+
+/** The routes this page draws; the server answers each with the same document. */
+const PAGES = [/^\/$/, /^\/list$/, /^\/tickets\/[^/]+$/];
 
 function route(pathname) {
   if (pathname === "/list") return { name: "list" };
@@ -192,6 +402,7 @@ async function render() {
     if (here) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
+  document.title = "moth";
   const view = VIEWS[current.name] ?? VIEWS.columns;
   const main = document.getElementById("view");
   try {
@@ -213,7 +424,9 @@ document.addEventListener("click", (event) => {
   if (link === null || event.defaultPrevented || event.button !== 0) return;
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const url = new URL(link.href);
-  if (url.origin !== location.origin) return;
+  // Only the page's own routes; a body's relative link to a repo file is left
+  // to the server, which says it has no such page.
+  if (url.origin !== location.origin || !PAGES.some((page) => page.test(url.pathname))) return;
   event.preventDefault();
   navigate(url.pathname + url.search);
 });

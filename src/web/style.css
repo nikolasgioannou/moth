@@ -279,3 +279,240 @@ main {
   height: 100%;
   background: var(--ok);
 }
+
+.muted {
+  color: var(--muted);
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 0 7px;
+  border-radius: 4px;
+  background: var(--sunk);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ticket {
+  max-width: 1100px;
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.crumbs a {
+  text-decoration: none;
+}
+
+.crumbs a:hover {
+  text-decoration: underline;
+}
+
+.crumbs .sep {
+  margin-left: 6px;
+  color: var(--faint);
+}
+
+.ticket h1 {
+  margin: 8px 0 6px;
+  font-size: 26px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.ticket section > h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ticket-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.ticket-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.ticket-main > section,
+.ticket-side > section {
+  margin-bottom: 24px;
+}
+
+.body {
+  margin-bottom: 32px;
+  overflow-wrap: anywhere;
+}
+
+.body :first-child {
+  margin-top: 0;
+}
+
+.body pre {
+  overflow-x: auto;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--sunk);
+}
+
+.body code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--sunk);
+}
+
+.body pre code {
+  padding: 0;
+  background: none;
+}
+
+.body table {
+  border-collapse: collapse;
+}
+
+.body th,
+.body td {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.body blockquote {
+  margin-left: 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--line);
+  color: var(--muted);
+}
+
+.body .task-list-item {
+  list-style: none;
+}
+
+.body .task-list-item-checkbox {
+  margin: 0 8px 0 -20px;
+}
+
+.tree,
+.refs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree .tree {
+  margin-left: 18px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
+
+.tree li,
+.refs li {
+  margin: 4px 0;
+}
+
+.ref {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ref a {
+  text-decoration: none;
+}
+
+.ref a:hover {
+  text-decoration: underline;
+}
+
+.ref.is-finished a {
+  color: var(--muted);
+}
+
+.ref.is-missing {
+  color: var(--blocked);
+}
+
+.fields {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.fields th {
+  width: 40%;
+  padding: 3px 0;
+  color: var(--muted);
+  font-weight: 400;
+  text-align: left;
+  vertical-align: top;
+}
+
+.fields td {
+  overflow-wrap: anywhere;
+}
+
+.command {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.command code {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.copy,
+.move select {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--sunk);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.move {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.move .command {
+  flex: 1;
+}
+
+.move select {
+  padding: 6px;
+}
+
+@media (max-width: 860px) {
+  .ticket-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
