@@ -208,98 +208,51 @@ function card(store, ticket) {
   );
 }
 
-/**
- * Finished columns the reader has opened. Held for the life of the page, so a
- * live update redraws them as they were left rather than collapsing them.
- */
-const expanded = new Set();
-
-function column(store, status) {
+function column(store, status, tickets) {
   const category = store.categoryOf(status);
-  const tickets = store.tickets.filter((ticket) => ticket.status === status);
-  const collapsible = TERMINAL.includes(category);
-  const open = !collapsible || expanded.has(status);
-  const toggle = () => {
-    if (expanded.has(status)) expanded.delete(status);
-    else expanded.add(status);
-    render();
-  };
   return h(
     "section",
-    {
-      class: `column tone-${toneOf(category)}${open ? "" : " is-collapsed"}`,
-      "data-status": status,
-    },
+    { class: `column tone-${toneOf(category)}`, "data-status": status },
     h(
       "header",
       { class: "column-head" },
       statusPill(store, status),
       h("span", { class: "count" }, tickets.length),
-      collapsible
-        ? h(
-            "button",
-            {
-              class: "icon-button column-toggle",
-              type: "button",
-              onclick: toggle,
-              "aria-expanded": open,
-              "aria-label": open ? `Hide ${status}` : `Show ${status}`,
-            },
-            icon("chevronRight"),
-          )
-        : null,
     ),
-    open
-      ? h(
-          "div",
-          { class: "column-cards" },
-          tickets.map((ticket) => card(store, ticket)),
-        )
-      : null,
+    h(
+      "div",
+      { class: "column-cards" },
+      tickets.map((ticket) => card(store, ticket)),
+    ),
   );
 }
 
-/** The tabs over the columns, by the categories each shows. */
-const TABS = [
-  { key: "all", text: "All", categories: null },
-  { key: "active", text: "Active", categories: ["unstarted", "started"] },
-  { key: "backlog", text: "Backlog", categories: ["backlog"] },
-];
+/**
+ * The statuses the board has columns for. A status or category filter limits
+ * them to what it names, so a filtered board does not fill up with empty
+ * columns; otherwise every status has one, empty or not.
+ */
+function boardStatuses(store, params, tickets) {
+  const statuses = params.getAll("status").flatMap((value) => value.split(","));
+  const categories = params.getAll("category").flatMap((value) => value.split(","));
+  return statusOrder(store, tickets).filter((status) => {
+    if (statuses.length > 0 && !statuses.includes(status)) return false;
+    if (categories.length > 0 && !categories.includes(store.categoryOf(status))) return false;
+    return true;
+  });
+}
 
-async function columnsView() {
-  const params = new URLSearchParams(location.search);
-  const tab = TABS.find((entry) => entry.key === params.get("show")) ?? TABS[0];
-  const store = await loadStore();
-  const statuses = statusOrder(store).filter(
-    (status) => tab.categories === null || tab.categories.includes(store.categoryOf(status)),
-  );
+function board(store, params, tickets) {
   return h(
     "div",
-    { class: "page page-wide" },
-    pageHeader(
-      "Tickets",
-      h(
-        "nav",
-        { class: "segmented", "aria-label": "Show" },
-        TABS.map((entry) =>
-          h(
-            "a",
-            {
-              href: entry.key === "all" ? "/" : `/?show=${entry.key}`,
-              "aria-current": entry.key === tab.key ? "page" : null,
-            },
-            entry.text,
-          ),
-        ),
+    { class: "columns" },
+    boardStatuses(store, params, tickets).map((status) =>
+      column(
+        store,
+        status,
+        tickets.filter((ticket) => ticket.status === status),
       ),
     ),
-    store.tickets.length === 0
-      ? emptyState("No tickets yet", 'Create one with moth new "a title".')
-      : h(
-          "div",
-          { class: "columns" },
-          statuses.map((status) => column(store, status)),
-        ),
   );
 }
 
@@ -607,18 +560,8 @@ function grouped(store, tickets) {
 /** Menus left open across a redraw, so a live update does not snap one shut. */
 const openMenus = new Set();
 
-async function listView() {
-  const params = new URLSearchParams(location.search);
-  const store = await loadStore();
-  const query = location.search.slice(1);
-  let tickets = [];
-  let failure = null;
-  try {
-    tickets = await api(`/api/tickets${query === "" ? "" : `?${query}`}`);
-  } catch (error) {
-    failure = error.message;
-  }
-
+/** The filter bar, the same on the board and the list, writing the query string. */
+function filterBar(store, params, path) {
   const labels = [...new Set(store.tickets.flatMap((ticket) => ticket.labels))].sort();
   const parents = store.tickets.filter((ticket) => store.childrenOf(ticket).length > 0);
   const blocking = params.has("blocked") ? "blocked" : params.has("unblocked") ? "unblocked" : "";
@@ -686,7 +629,7 @@ async function listView() {
       [blocking],
       "radio",
     ),
-    params.size > 0 ? h("a", { class: "button ghost", href: "/list" }, "Clear") : null,
+    params.size > 0 ? h("a", { class: "button ghost", href: path }, "Clear") : null,
   );
   for (const menu of form.querySelectorAll("details")) {
     const name = menu.dataset.menu;
@@ -700,7 +643,7 @@ async function listView() {
   let typing;
   const update = () => {
     const next = formQuery(form);
-    history.replaceState(null, "", next === "" ? "/list" : `/list?${next}`);
+    history.replaceState(null, "", next === "" ? path : `${path}?${next}`);
     render();
   };
   form.addEventListener("change", update);
@@ -710,28 +653,77 @@ async function listView() {
     clearTimeout(typing);
     typing = setTimeout(update, 200);
   });
+  return form;
+}
+
+/** The two layouts of the tickets page, each at its own path. */
+const LAYOUTS = [
+  { name: "board", text: "Board", path: "/" },
+  { name: "list", text: "List", path: "/list" },
+];
+
+/**
+ * The tickets, as a board or a list. Both read the same filters from the same
+ * query string, so switching between them keeps what is shown.
+ */
+async function ticketsView(current) {
+  const layout = LAYOUTS.find((entry) => entry.name === current.name) ?? LAYOUTS[0];
+  const params = new URLSearchParams(location.search);
+  const query = location.search.slice(1);
+  const store = await loadStore();
+  let tickets = [];
+  let failure = null;
+  try {
+    tickets = query === "" ? store.tickets : await api(`/api/tickets?${query}`);
+  } catch (error) {
+    failure = error.message;
+  }
+
+  let content;
+  if (failure !== null) content = h("p", { class: "error" }, failure);
+  else if (store.tickets.length === 0) {
+    content = emptyState("No tickets yet", 'Create one with moth new "a title".');
+  } else if (layout.name === "board") content = board(store, params, tickets);
+  else content = h("div", { class: "groups" }, grouped(store, tickets));
 
   return h(
     "div",
-    { class: "page page-list" },
+    { class: `page page-${layout.name}` },
     pageHeader(
-      "List",
+      "Tickets",
+      h(
+        "nav",
+        { class: "segmented", "aria-label": "Layout" },
+        LAYOUTS.map((entry) =>
+          h(
+            "a",
+            {
+              href: `${entry.path}${location.search}`,
+              "aria-current": entry.name === layout.name ? "page" : null,
+            },
+            icon(entry.name === "board" ? "kanban" : "list"),
+            entry.text,
+          ),
+        ),
+      ),
+    ),
+    h(
+      "div",
+      { class: "toolbar" },
+      filterBar(store, params, layout.path),
       failure === null
-        ? h("span", { class: "subtle" }, `${tickets.length} of ${store.tickets.length}`)
+        ? h("span", { class: "subtle total" }, `${tickets.length} of ${store.tickets.length}`)
         : null,
     ),
-    form,
-    failure === null
-      ? h("div", { class: "groups" }, grouped(store, tickets))
-      : h("p", { class: "error" }, failure),
+    content,
   );
 }
 
 /** The views, by route name. Each returns the page to show. */
 const VIEWS = {
-  columns: columnsView,
+  board: ticketsView,
+  list: ticketsView,
   ticket: ticketView,
-  list: listView,
 };
 
 /** The routes this page draws; the server answers each with the same document. */
@@ -741,43 +733,7 @@ function route(pathname) {
   if (pathname === "/list") return { name: "list" };
   const ticket = /^\/tickets\/([^/]+)$/.exec(pathname);
   if (ticket !== null) return { name: "ticket", id: decodeURIComponent(ticket[1]) };
-  return { name: "columns" };
-}
-
-/** Top-level tickets with sub-tickets, in the sidebar, each opening its sub-tickets. */
-async function renderParents() {
-  let store;
-  try {
-    store = await loadStore();
-  } catch {
-    return;
-  }
-  const parents = store.tickets.filter(
-    (ticket) => ticket.parent === undefined && store.childrenOf(ticket).length > 0,
-  );
-  const here = `${location.pathname}${location.search}`;
-  document.getElementById("parents").replaceChildren(
-    ...(parents.length === 0
-      ? [h("span", { class: "side-empty" }, "None yet")]
-      : parents.map((parent) => {
-          const href = `/list?parent=${parent.id}`;
-          return h(
-            "a",
-            {
-              class: "side-item",
-              href,
-              "aria-current": here === href ? "page" : null,
-              title: parent.title,
-            },
-            h(
-              "span",
-              { class: "side-icon" },
-              h("span", { class: `pill-dot tone-${toneOf(store.categoryOf(parent.status))}` }),
-            ),
-            h("span", {}, parent.title),
-          );
-        })),
-  );
+  return { name: "board" };
 }
 
 /**
@@ -818,14 +774,8 @@ let drawn = 0;
 async function render() {
   const generation = ++drawn;
   renderProblems();
-  renderParents();
   const current = route(location.pathname);
-  for (const link of document.querySelectorAll("[data-route]")) {
-    const here = link.dataset.route === current.name;
-    if (here) link.setAttribute("aria-current", "page");
-    else link.removeAttribute("aria-current");
-  }
-  const view = VIEWS[current.name] ?? VIEWS.columns;
+  const view = VIEWS[current.name] ?? VIEWS.board;
   const main = document.querySelector(".main");
   const target = document.getElementById("view");
   // A redraw replaces every element, so whatever had focus, such as the search
@@ -892,10 +842,6 @@ document.addEventListener("click", (event) => {
 
 window.addEventListener("popstate", () => render());
 
-for (const slot of document.querySelectorAll("[data-icon]")) {
-  slot.append(icon(slot.dataset.icon));
-}
-
 /**
  * Redraws whenever the server says the store changed on disk, whoever changed
  * it. The browser reconnects by itself when the server goes away; the first
@@ -903,7 +849,7 @@ for (const slot of document.querySelectorAll("[data-icon]")) {
  */
 function listen() {
   const show = (tone, text) =>
-    document.getElementById("live").replaceWith(pill(tone, text, { id: "live" }));
+    document.getElementById("live").replaceWith(pill(tone, text, { id: "live", class: "live" }));
   const events = new EventSource("/api/events");
   let lost = false;
   events.addEventListener("open", () => {

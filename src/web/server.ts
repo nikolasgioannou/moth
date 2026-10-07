@@ -126,25 +126,11 @@ const PAGE = `<!doctype html>
     <script src="/app.js" defer></script>
   </head>
   <body>
-    <div class="app">
-      <aside class="sidebar">
-        <nav class="side-nav" aria-label="Views">
-          <a class="workspace" href="/"><span class="logo" aria-hidden="true">m</span><span>moth</span></a>
-          <a class="side-item" href="/" data-route="columns"><span class="side-icon" data-icon="kanban"></span><span>Tickets</span></a>
-          <a class="side-item" href="/list" data-route="list"><span class="side-icon" data-icon="list"></span><span>List</span></a>
-          <div class="side-label">Parents</div>
-          <div id="parents" class="side-group"></div>
-        </nav>
-        <div class="side-foot">
-          <span id="live" class="pill tone-neutral"><span class="pill-dot"></span>Connecting</span>
-          <span class="side-note">Read-only</span>
-        </div>
-      </aside>
-      <main class="main">
-        <div id="problems"></div>
-        <div id="view" aria-live="polite"></div>
-      </main>
-    </div>
+    <main class="main">
+      <div id="problems"></div>
+      <div id="view" aria-live="polite"></div>
+    </main>
+    <span id="live" class="pill tone-neutral live"><span class="pill-dot"></span>Connecting</span>
   </body>
 </html>
 `;
