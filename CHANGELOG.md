@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-07
+
 ### Added
 
 - **`moth open`**, a read-only view of your tickets in the browser, for the person directing agents rather than the agents. The tickets as a board of columns by status or as a list, both filtered with `moth list`'s filters and kept in the URL so a view can be bookmarked, with blocked tickets marked and sub-ticket progress shown; and a page per ticket with its body rendered, its parents, its sub-tickets to any depth, and what blocks it. It updates live as tickets change on disk, from the CLI or anywhere else, and shows anything `moth check` would report. It changes nothing itself: each ticket page shows the `moth` commands to copy instead. It serves `127.0.0.1` only, on port 6684 or any free one; `--port` and `--no-open` are its options.
@@ -123,7 +125,8 @@ First release. An issue tracker that lives in your repository: tickets are markd
 - `--json` on every command that returns a ticket
 - Single-binary distribution via Homebrew, npm, an install script and release archives
 
-[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/nikolasgioannou/moth/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/nikolasgioannou/moth/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/nikolasgioannou/moth/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/nikolasgioannou/moth/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/nikolasgioannou/moth/compare/v0.3.1...v0.4.0
